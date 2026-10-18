@@ -1,96 +1,84 @@
+// Piano Tunah: tillstånd, DOM och händelser. Beräkningar finns i theory.js och
+// dsp.js, ritning i draw.js, ljud i mic.js/tone.js, sparning i saver.js.
+
 import {
   KEY_COUNT, A4, TEMPERAMENTS, PIANO_KINDS, STRETCH_PRESETS, OCTAVE_TYPES, sizeClass,
-  computeTargets, defaultPartial, partialFreq, centsBetween,
-  noteName, pcName, pitchClass, isBlack, octave,
+  computeTargets, defaultPartial, partialFreq, centsBetween, noteName, pcName, pitchClass, isBlack,
 } from './theory.js';
 import { Analyzer, rmsDb, median } from './dsp.js';
 import { listTunings, getTuning, saveTuning, deleteTuning, newTuning, normalize, duplicateTuning } from './store.js';
+import { num, fmtC, fmtHz, fmtB } from './format.js';
+import { Mic } from './mic.js';
+import { TonePlayer } from './tone.js';
+import { Saver } from './saver.js';
+import { readColors, drawMeter, drawStrobe, drawSpectro, drawBeat, drawChart } from './draw.js';
+import * as mapping from './mapping.js';
 
 const $ = (id) => document.getElementById(id);
-const LAST_ID = 'pianotunah.lastTuning';
-const TONE_MODE = 'pianotunah.toneMode';
-const THEME = 'pianotunah.theme';
-const FRAME_MS = 90;
-const SPEC_COLS = 100; // ≈ 9 s historik i svävningsvyn
+
+const FRAME_MS = 90; // analysintervall
+const SPEC_COLS = 100; // spektrogrammets historik, ≈ 9 s
 const SPEC_BINS = 48;
 const SPEC_CENTS = 30;
-// Kartläggning: per tangent samlas tonhöjdsavläsningar och B-skattningar. B ges
-// upp efter MAP_B_MS klingtid (svaga övertoner); interpoleras då från grannarna.
-const MAP_PITCH = 8;
-const MAP_B = 5;
-const MAP_B_MS = 3000;
-// Snabbmätning: B på sju A:n (A0–A6) räcker för att forma kurvan, eftersom B
-// interpoleras mellan uppmätta tangenter. A0 är med eftersom de lägsta
-// strängarna ofta avviker från modellen och ger störst stretch.
-const QUICK_KEYS = [1, 13, 25, 37, 49, 61, 73];
-const QUICK_B_MS = 6000;
-const MAP_PLAN = 'pianotunah.mapPlan';
+const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan' };
+
+const mic = new Mic();
+const tones = new TonePlayer();
 
 const state = {
   tuning: null,
-  T: null, // beräknade mål
+  T: null, // mål från computeTargets
   list: [],
   key: A4,
   mode: 'auto', // auto | lock | map
-  audio: null,
   analyzer: null,
-  buf: null,
   timer: 0,
   level: -100,
   prevLevel: -100,
   noise: -70,
   signal: false,
-  readings: [],
+  readings: [], // senaste avläsningarna för aktuell tangent: { c, hz }
   display: NaN, // avvikelse mot (ev. överdragsjusterat) mål
   stable: false,
-  spec: [], // kolumner { col: Float32Array | null, c }
+  spec: [], // spektrogramkolumner, se drawSpectro
   frameCol: null,
   beatHz: NaN,
   beatPhase: 0,
   partialDevs: [],
-  cand: 0,
+  cand: 0, // kandidattangent i auto-läget och antal bildrutor i rad
   candCount: 0,
-  autoFrames: 0, // bildrutor i rad som aktuell tangent varit klar vinnare i auto-läget
+  autoFrames: 0, // bildrutor i rad som aktuell tangent varit klar vinnare
   bReadings: [],
-  measureB: null, // { k, until }
-  map: null, // kartläggning av aktuell tangent, se mapKeyState()
-  mapPlan: 'quick', // quick (A0–A6) | full (alla tangenter)
-  dirty: false,
-  saveTimer: 0,
-  saveState: 'idle',
-  wakeLock: null,
-  toneCtx: null,
+  measureB: null, // { k, until } vid manuell B-mätning
+  map: null, // kartläggning av aktuell tangent, se mapping.newKeyState
+  mapPlan: 'quick',
   toneMode: 'off', // off | piano | sine
-  sine: null,
-  refUntil: 0, // referenston hörs i mikrofonen till denna tid (performance.now)
+  refUntil: 0, // referenston hörs i mikrofonen till denna tidpunkt
   refTainted: false,
+  wakeLock: null,
   strobePhase: [0, 0, 0],
   lastAnim: 0,
   colors: {},
+  chartGeo: null,
 };
 
 // ---------------------------------------------------------------------------
-// Formatering
+// Härledda värden
 
-const num = (x, d = 1) => Math.abs(x).toFixed(d).replace('.', ',');
-const fmtC = (c, d = 1) => (Number.isFinite(c) ? (c > 0.049 ? '+' : c < -0.049 ? '−' : '±') + num(c, d) : '–');
-const fmtHz = (f, d = 2) => f.toFixed(d).replace('.', ',') + ' Hz';
-const kName = (k) => noteName(k);
 const S = () => state.tuning.settings;
-// Pianots högsta tangent: C8 (88), eller A7 (85) för äldre pianon.
-const top = () => (Number(S().keyCount) === 85 ? 85 : KEY_COUNT);
+const kName = (k) => noteName(k);
+const tolerance = () => Number(S().tolerance) || 1;
+const top = () => (Number(S().keyCount) === 85 ? 85 : KEY_COUNT); // A7 på äldre pianon, annars C8
+const partialOf = (k) => state.tuning.partials[k] || defaultPartial(k);
 
-// ---------------------------------------------------------------------------
-// Avvikelser per tangent. Mätningar sparas som frekvensen på den delton som
-// mättes, så att de förblir korrekta när referens, temperatur eller stretch ändras.
-
-function devOf(k, hz, n) {
-  if (!hz || !n) return NaN;
-  return centsBetween(hz, partialFreq(state.T.freq[k], state.T.B[k], n));
-}
+// Mätningar sparas som frekvensen för den delton som mättes, så att de förblir
+// rätt när referens, temperatur, stretch eller B ändras.
 const keyRec = (k) => state.tuning.keys[k];
-const curDev = (k) => (keyRec(k) ? devOf(k, keyRec(k).hz, keyRec(k).n) : NaN);
-const beforeDev = (k) => (keyRec(k) ? devOf(k, keyRec(k).bhz, keyRec(k).bn) : NaN);
+const devOf = (k, hz, n) => (hz && n ? centsBetween(hz, partialFreq(state.T.freq[k], state.T.B[k], n)) : NaN);
+const curDev = (k) => devOf(k, keyRec(k)?.hz, keyRec(k)?.n);
+const beforeDev = (k) => devOf(k, keyRec(k)?.bhz, keyRec(k)?.bn);
+
+// Överdrag: stäm förbi målet med en andel av hur långt tangenten låg från början.
 function goal(k) {
   const b = beforeDev(k);
   const p = Number(S().overpull) || 0;
@@ -100,103 +88,70 @@ const statusDev = (k) => curDev(k) - goal(k);
 
 function statusClass(d) {
   if (!Number.isFinite(d)) return 'none';
-  const tol = Number(S().tolerance) || 1;
   const a = Math.abs(d);
-  if (a <= tol) return 'good';
-  if (a <= Math.max(5, tol * 2)) return 'warn';
-  return 'bad';
+  if (a <= tolerance()) return 'good';
+  return a <= Math.max(5, tolerance() * 2) ? 'warn' : 'bad';
 }
-const partialOf = (k) => state.tuning.partials[k] || defaultPartial(k);
-// Mikrofonen har ekoreducering avstängd och hör högtalaren. Medan en referenston
-// klingar (plus analysbuffertens ~0,7 s) sparas inga mätningar.
-const refPlaying = () => !!state.sine || performance.now() < state.refUntil;
+
+// Mikrofonen hör högtalaren (ingen ekoreducering). Medan en referenston klingar
+// sparas inga mätningar.
+const refPlaying = () => tones.sineOn || performance.now() < state.refUntil;
+
+function midBefore() {
+  const d = [];
+  for (let k = 28; k <= 64; k++) if (Number.isFinite(beforeDev(k))) d.push(beforeDev(k));
+  return d;
+}
 
 // ---------------------------------------------------------------------------
-// Meddelanden
+// Meddelanden. ms = 0: ligger kvar tills det stängs. tag: kan tas bort när
+// orsaken försvinner.
 
-// ms = 0 betyder att meddelandet ligger kvar tills det stängs. tag gör att
-// ett meddelande kan tas bort när orsaken försvinner (t.ex. servern svarar igen).
 let msgTimer = 0;
 function message(text, kind = 'info', ms = 6000, tag = '') {
   const el = $('message');
   $('message-text').textContent = text;
-  el.dataset.kind = kind;
-  el.dataset.tag = tag;
+  Object.assign(el.dataset, { kind, tag });
   el.hidden = false;
   clearTimeout(msgTimer);
   if (ms) msgTimer = setTimeout(() => (el.hidden = true), ms);
 }
 
 function clearMessage(tag) {
-  const el = $('message');
-  if (!el.hidden && el.dataset.tag === tag) el.hidden = true;
+  if (!$('message').hidden && $('message').dataset.tag === tag) $('message').hidden = true;
 }
 
 // ---------------------------------------------------------------------------
 // Sparande
 
-function setSaveState(s) {
-  state.saveState = s;
-  const el = $('save-status');
-  el.dataset.state = s;
-  el.textContent = { idle: 'Sparad', dirty: 'Ändrad', saving: 'Sparar …', error: 'Ej sparad' }[s] || s;
-  el.title = s === 'error' ? 'Servern svarar inte. Försöker igen.' : '';
-}
-
-function markDirty() {
-  state.dirty = true;
-  if (state.saveState !== 'saving') setSaveState('dirty');
-  if (!state.saveTimer) state.saveTimer = setTimeout(flushSave, 2500);
-}
-
-// Sparningar körs i tur och ordning så att en långsam sparning aldrig kan bli
-// klar efter en senare och skriva över den.
-let saveChain = Promise.resolve();
-function flushSave() {
-  clearTimeout(state.saveTimer);
-  state.saveTimer = 0;
-  saveChain = saveChain.then(saveNow, saveNow);
-  return saveChain;
-}
-
-async function saveNow() {
-  const t = state.tuning;
-  if (!state.dirty || !t) return;
-  state.dirty = false;
-  t.updatedAt = new Date().toISOString();
-  setSaveState('saving');
-  try {
-    const r = await saveTuning(t);
-    if (r?.rev) t.rev = r.rev;
+const saver = new Saver({
+  current: () => state.tuning,
+  onState: setSaveState,
+  onSaved(t) {
     clearMessage('server');
-    if (t !== state.tuning) return;
-    setSaveState(state.dirty ? 'dirty' : 'idle');
     const item = state.list.find((x) => x.id === t.id);
     if (item && item.name !== t.name) {
       item.name = t.name;
       renderTuningSelect();
     }
-  } catch (e) {
-    if (t !== state.tuning) return;
-    if (e.status === 409) return reloadAfterConflict(t);
-    state.dirty = true;
-    setSaveState('error');
-    state.saveTimer = setTimeout(flushSave, 10000);
-  }
+  },
+  onConflict: reloadAfterConflict,
+});
+const markDirty = () => saver.markDirty();
+
+function setSaveState(s) {
+  const el = $('save-status');
+  el.dataset.state = s;
+  el.textContent = { idle: 'Sparad', dirty: 'Ändrad', saving: 'Sparar …', error: 'Ej sparad' }[s];
+  el.title = s === 'error' ? 'Servern svarar inte. Försöker igen.' : '';
 }
 
-// Någon annan (en annan flik eller enhet) har sparat stämningen sedan den
-// laddades här. Ladda den senaste i stället för att skriva över den.
 async function reloadAfterConflict(t) {
   try {
     const latest = await getTuning(t.id);
-    state.dirty = false;
+    saver.dirty = false;
     await openTuning(latest);
-    message(
-      'Stämningen har sparats från en annan flik eller enhet. Den senaste versionen är laddad, och ändringarna du gjorde här sparades inte.',
-      'warn',
-      0,
-    );
+    message('Stämningen har sparats från en annan flik eller enhet. Den senaste versionen är laddad; ändringarna här sparades inte.', 'warn', 0);
   } catch {
     setSaveState('error');
     message('Stämningen har ändrats någon annanstans men kunde inte laddas om. Ladda om sidan.', 'error', 0);
@@ -204,7 +159,7 @@ async function reloadAfterConflict(t) {
 }
 
 // ---------------------------------------------------------------------------
-// Stämningar (profiler)
+// Sparade stämningar
 
 async function refreshList() {
   state.list = await listTunings();
@@ -213,21 +168,14 @@ async function refreshList() {
 
 function renderTuningSelect() {
   const sel = $('tuning-select');
-  sel.replaceChildren(
-    ...state.list.map((t) => {
-      const o = document.createElement('option');
-      o.value = t.id;
-      o.textContent = t.name || 'Namnlös';
-      return o;
-    }),
-  );
+  sel.replaceChildren(...state.list.map((t) => option(t.id, t.name || 'Namnlös')));
   if (state.tuning) sel.value = state.tuning.id;
 }
 
 async function openTuning(t) {
-  await flushSave();
+  await saver.flush();
   state.tuning = normalize(t);
-  try { localStorage.setItem(LAST_ID, t.id); } catch { /* valfritt */ }
+  try { localStorage.setItem(LS.tuning, t.id); } catch { /* valfritt */ }
   resetReadings();
   recompute();
   renderSettings();
@@ -241,31 +189,10 @@ async function createAndOpen(t) {
   await openTuning(t);
 }
 
-async function boot() {
-  buildStaticUi();
-  readColors();
-  try {
-    await refreshList();
-    let id = null;
-    try { id = localStorage.getItem(LAST_ID); } catch { /* valfritt */ }
-    const pick = state.list.find((t) => t.id === id) || state.list[0];
-    if (pick) await openTuning(await getTuning(pick.id));
-    else await createAndOpen(newTuning('Mitt piano'));
-  } catch {
-    // Servern nås inte: kör ändå, men utan sparande.
-    state.tuning = newTuning('Mitt piano');
-    recompute();
-    renderSettings();
-    setSaveState('error');
-    message('Kunde inte nå servern. Mätningar sparas inte förrän den svarar.', 'warn', 0, 'server');
-  }
-  bindEvents();
-  updateReadout();
-  requestAnimationFrame(animate);
-}
-
 // ---------------------------------------------------------------------------
-// Beräkning och rendering
+// Rendering
+
+const option = (value, text) => Object.assign(document.createElement('option'), { value, textContent: text });
 
 function recompute() {
   state.T = computeTargets(S(), state.tuning.inharmonicity);
@@ -273,43 +200,36 @@ function recompute() {
   renderKeyboard();
   renderRef();
   renderPass();
-  drawChart();
+  renderChart();
   if ($('table-details').open) renderTable();
 }
 
 function buildStaticUi() {
-  const opt = (v, t) => Object.assign(document.createElement('option'), { value: v, textContent: t });
-  $('set-kind').replaceChildren(...Object.entries(PIANO_KINDS).map(([k, v]) => opt(k, v.name)));
-  $('set-temperament').replaceChildren(...Object.entries(TEMPERAMENTS).map(([k, v]) => opt(k, v.name)));
-  $('set-stretch').replaceChildren(...Object.entries(STRETCH_PRESETS).map(([k, v]) => opt(k, v.name)));
-  for (const id of ['set-bass', 'set-mid', 'set-treble']) {
-    $(id).replaceChildren(...Object.keys(OCTAVE_TYPES).map((k) => opt(k, k)));
-  }
+  $('set-kind').replaceChildren(...Object.entries(PIANO_KINDS).map(([k, v]) => option(k, v.name)));
+  $('set-temperament').replaceChildren(...Object.entries(TEMPERAMENTS).map(([k, v]) => option(k, v.name)));
+  $('set-stretch').replaceChildren(...Object.entries(STRETCH_PRESETS).map(([k, v]) => option(k, v.name)));
+  for (const id of ['set-bass', 'set-mid', 'set-treble']) $(id).replaceChildren(...Object.keys(OCTAVE_TYPES).map((k) => option(k, k)));
+  $('set-root').replaceChildren(...Array.from({ length: 12 }, (_, pc) => option(pc, pcName(pc))));
 }
 
-// Klaviatur: vita tangenter i ett flex-led, svarta absolut positionerade.
-// Byggs om när antalet tangenter ändras (88 eller 85).
+// Vita tangenter i flex, svarta absolut positionerade mellan dem. Byggs om
+// bara när antalet tangenter ändras.
 function buildKeyboard(n) {
   const kb = $('keyboard');
   if (kb.children.length === n) return;
-  let whiteCount = 0;
-  for (let k = 1; k <= n; k++) if (!isBlack(k)) whiteCount++;
+  let whites = 0;
+  for (let k = 1; k <= n; k++) if (!isBlack(k)) whites++;
   const keys = [];
   let wi = 0;
   for (let k = 1; k <= n; k++) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'key ' + (isBlack(k) ? 'black' : 'white');
+    const b = Object.assign(document.createElement('button'), { type: 'button', className: 'key ' + (isBlack(k) ? 'black' : 'white') });
     b.dataset.k = k;
     if (isBlack(k)) {
-      b.style.left = `${(wi / whiteCount) * 100}%`;
-      b.dataset.cx = (wi / whiteCount) * 100;
+      b.style.left = `${(wi / whites) * 100}%`;
+      b.dataset.cx = (wi / whites) * 100;
     } else {
-      b.dataset.cx = ((wi + 0.5) / whiteCount) * 100;
-      wi++;
-      const lbl = document.createElement('span');
-      lbl.className = 'klabel';
-      b.append(lbl);
+      b.dataset.cx = ((wi++ + 0.5) / whites) * 100;
+      b.append(Object.assign(document.createElement('span'), { className: 'klabel' }));
     }
     keys.push(b);
   }
@@ -317,22 +237,11 @@ function buildKeyboard(n) {
   renderKeyboard.scrolledTo = 0;
 }
 
-// Bygg klaviaturen för pianots antal tangenter och flytta aktuell tangent
-// innanför om den hamnat ovanför (t.ex. C8 på ett 85-tangenters piano).
 function applyKeyCount() {
   buildKeyboard(top());
   if (state.key > top()) selectKey(top(), false);
   renderKeyboard();
-  drawChart();
-}
-
-function renderRootSelect() {
-  const sel = $('set-root');
-  sel.replaceChildren(
-    ...Array.from({ length: 12 }, (_, pc) =>
-      Object.assign(document.createElement('option'), { value: pc, textContent: pcName(pc) }),
-    ),
-  );
+  renderChart();
 }
 
 function renderSettings() {
@@ -343,7 +252,6 @@ function renderSettings() {
   $('set-size').value = s.sizeCm;
   $('set-keys').value = String(top());
   $('set-temperament').value = s.temperament;
-  renderRootSelect();
   $('set-root').value = s.root;
   $('set-stretch').value = s.stretch;
   $('set-bass').value = s.bassOctave;
@@ -359,17 +267,15 @@ function renderSettings() {
 
 function renderSettingDescs() {
   const s = S();
-  $('temperament-desc').textContent = (TEMPERAMENTS[s.temperament] || {}).desc || '';
-  $('stretch-desc').textContent = (STRETCH_PRESETS[s.stretch] || {}).desc || '';
-  $('custom-oct').hidden = s.stretch !== 'custom';
   const kind = PIANO_KINDS[s.pianoKind] || PIANO_KINDS.upright;
-  $('size-label').textContent = kind.size;
-  $('set-size').min = kind.min;
-  $('set-size').max = kind.max;
-  $('out-size').textContent = sizeClass(s.pianoKind, Number(s.sizeCm));
-  $('size-desc').textContent =
-    `Mät ${kind.how}. Storleken används som startgissning för strängarnas inharmonicitet tills pianot är kartlagt.`;
+  $('temperament-desc').textContent = TEMPERAMENTS[s.temperament]?.desc || '';
+  $('stretch-desc').textContent = STRETCH_PRESETS[s.stretch]?.desc || '';
+  $('custom-oct').hidden = s.stretch !== 'custom';
   $('set-root').disabled = s.temperament === 'et';
+  $('size-label').textContent = kind.size;
+  Object.assign($('set-size'), { min: kind.min, max: kind.max });
+  $('out-size').textContent = sizeClass(s.pianoKind, Number(s.sizeCm));
+  $('size-desc').textContent = `Mät ${kind.how}. Används som startgissning för strängarnas inharmonicitet tills pianot är kartlagt.`;
   $('out-extra-treble').textContent = fmtC(Number(s.extraTreble), 0) + ' cent vid C8';
   $('out-extra-bass').textContent = (Number(s.extraBass) ? '−' + num(Number(s.extraBass), 0) : '±0') + ' cent vid A0';
   $('out-overpull').textContent = s.overpull + ' %';
@@ -382,68 +288,60 @@ function renderRef() {
   $('ref-cents').textContent = Math.abs(c) < 0.05 ? 'Standardstämton' : `${fmtC(c)} cent mot 440 Hz`;
   for (const b of $('ref-presets').children) b.classList.toggle('on', Number(b.dataset.hz) === ref);
 
-  // Råd om pianot ligger långt från målet.
-  const mid = [];
-  for (let k = 28; k <= 64; k++) {
-    const d = beforeDev(k);
-    if (Number.isFinite(d)) mid.push(d);
+  const mid = midBefore();
+  if (mid.length < 3) {
+    $('ref-advice').textContent = 'Kartlägg eller mät några tangenter i mitten så kan appen föreslå en referens som passar pianot.';
+    return;
   }
-  const adv = $('ref-advice');
-  if (mid.length >= 3) {
-    const m = median(mid);
-    const hz = ref * 2 ** (m / 1200);
-    adv.textContent =
-      Math.abs(m) < 3
-        ? `Pianot låg nära målet (${fmtC(m)} cent i mitten) när omgången började.`
-        : `Pianot låg ${fmtC(m)} cent från målet i mitten (≈ A4 = ${fmtHz(hz, 1)}). ` +
-          (m < -15
-            ? 'Sänk referensen för en snabb stämning, eller dra upp med 20–30 % överdrag och räkna med en andra omgång.'
-            : 'Små avvikelser stäms direkt utan överdrag.');
-  } else {
-    adv.textContent = 'Kartlägg eller mät några tangenter i mitten så kan appen föreslå en referens som passar pianot.';
-  }
+  const m = median(mid);
+  $('ref-advice').textContent =
+    Math.abs(m) < 3
+      ? `Pianot låg nära målet (${fmtC(m)} cent i mitten) när omgången började.`
+      : `Pianot låg ${fmtC(m)} cent från målet i mitten (≈ A4 = ${fmtHz(ref * 2 ** (m / 1200), 1)}). ` +
+        (m < -15
+          ? 'Sänk referensen för en snabb stämning, eller dra upp med 20–30 % överdrag och räkna med en andra omgång.'
+          : 'Små avvikelser stäms direkt utan överdrag.');
 }
 
 function renderKeyInfo() {
   const k = state.key;
   const T = state.T;
   const n = partialOf(k);
-  const fp = partialFreq(T.freq[k], T.B[k], n);
+  const g = goal(k);
   $('note-name').textContent = kName(k);
   $('note-sub').textContent = `tangent ${k} · mål ${fmtC(T.cents[k])} cent`;
-  const g = goal(k);
   $('targetline').textContent =
     `Grundton ${fmtHz(T.freq[k])}` +
-    (n > 1 ? ` · delton ${n} ${fmtHz(fp)}` : '') +
+    (n > 1 ? ` · delton ${n} ${fmtHz(partialFreq(T.freq[k], T.B[k], n))}` : '') +
     (g ? ` · överdrag ${fmtC(g)} cent` : '');
   $('partial-val').textContent = n;
-  const measured = state.tuning.inharmonicity[k];
-  $('bval').textContent = `B = ${T.B[k].toExponential(2).replace('.', ',')}` + (measured ? ' (uppmätt)' : ' (modell)');
-  updateSine();
+  $('bval').textContent = `B = ${fmtB(T.B[k])} (${state.tuning.inharmonicity[k] ? 'uppmätt' : 'modell'})`;
+  if (tones.sineOn) tones.setSine(sineFreq());
 }
 
 function renderKeyboard() {
-  buildKeyboard(top()); // gör inget om klaviaturen redan har rätt antal tangenter
+  buildKeyboard(top());
   const cur = Math.min(state.key, top());
+  const quickPlan = state.map && state.mapPlan === 'quick';
   for (const el of $('keyboard').children) {
     const k = Number(el.dataset.k);
+    const label = `${kName(k)}, ${Number.isFinite(curDev(k)) ? fmtC(statusDev(k)) + ' cent' : 'ej mätt'}`;
     el.dataset.s = statusClass(statusDev(k));
     el.classList.toggle('current', k === cur);
     el.classList.toggle('has-b', !!state.tuning.inharmonicity[k]);
-    el.classList.toggle('plan', !!state.map && isQuick() && QUICK_KEYS.includes(k));
-    const lbl = el.firstChild;
-    if (lbl) lbl.textContent = pitchClass(k) === 0 || k === 1 ? kName(k) : '';
-    el.setAttribute('aria-label', `${kName(k)}, ${Number.isFinite(curDev(k)) ? fmtC(statusDev(k)) + ' cent' : 'ej mätt'}`);
-    el.setAttribute('aria-current', k === cur ? 'true' : 'false');
-    el.title = el.getAttribute('aria-label');
+    el.classList.toggle('plan', !!quickPlan && mapping.QUICK_KEYS.includes(k));
+    if (el.firstChild) el.firstChild.textContent = pitchClass(k) === 0 || k === 1 ? kName(k) : '';
+    el.setAttribute('aria-label', label);
+    el.setAttribute('aria-current', k === cur);
+    el.title = label;
   }
   const curEl = $('keyboard').children[cur - 1];
   const marker = $('kb-marker');
   marker.style.left = `calc(10px + (100% - 20px) * ${Number(curEl.dataset.cx) / 100})`;
   marker.dataset.s = statusClass(statusDev(cur));
   $('kb-marker-name').textContent = kName(cur);
-  // Håll aktuell tangent synlig när klaviaturen scrollar (smala skärmar), men
-  // bara när tangenten byts, så att man kan scrolla själv mellan mätningarna.
+  // Scrolla fram aktuell tangent på smal skärm, men bara vid byte så att man
+  // kan scrolla själv mellan mätningarna.
   const sc = $('kb-scroll');
   if (cur !== renderKeyboard.scrolledTo && sc.scrollWidth > sc.clientWidth) {
     renderKeyboard.scrolledTo = cur;
@@ -467,27 +365,20 @@ function renderPass() {
     stat(`${measured}`, 'uppmätta'),
     stat(since.toLocaleDateString('sv-SE'), 'påbörjad'),
   );
-  const h = $('history');
-  h.replaceChildren(
-    ...[...state.tuning.history].reverse().map((p) => {
-      const li = document.createElement('li');
-      const d = new Date(p.startedAt).toLocaleDateString('sv-SE');
-      li.textContent =
-        `${d}: ${p.measured} tangenter, ref ${num(p.refA4, 1)} Hz, ` +
-        `före ${num(p.meanAbsBefore)} cent → efter ${num(p.meanAbsAfter)} cent i snitt`;
-      return li;
-    }),
+  $('history').replaceChildren(
+    ...[...state.tuning.history].reverse().map((p) =>
+      Object.assign(document.createElement('li'), {
+        textContent:
+          `${new Date(p.startedAt).toLocaleDateString('sv-SE')}: ${p.measured} tangenter, ref ${num(p.refA4, 1)} Hz, ` +
+          `före ${num(p.meanAbsBefore)} cent → efter ${num(p.meanAbsAfter)} cent i snitt`,
+      }),
+    ),
   );
 }
 
-function stat(v, l) {
-  const d = document.createElement('div');
-  d.className = 'stat';
-  const b = document.createElement('b');
-  b.textContent = v;
-  const s = document.createElement('span');
-  s.textContent = l;
-  d.append(b, s);
+function stat(value, label) {
+  const d = Object.assign(document.createElement('div'), { className: 'stat' });
+  d.append(Object.assign(document.createElement('b'), { textContent: value }), Object.assign(document.createElement('span'), { textContent: label }));
   return d;
 }
 
@@ -499,20 +390,10 @@ function renderTable() {
   for (let k = top(); k >= 1; k--) {
     const tr = document.createElement('tr');
     const cells = [
-      k,
-      kName(k),
-      fmtC(T.cents[k]),
-      T.freq[k].toFixed(2).replace('.', ','),
-      T.B[k].toExponential(2).replace('.', ',') + (state.tuning.inharmonicity[k] ? ' *' : ''),
-      partialOf(k),
-      fmtC(beforeDev(k)),
-      fmtC(statusDev(k)),
+      k, kName(k), fmtC(T.cents[k]), T.freq[k].toFixed(2).replace('.', ','),
+      fmtB(T.B[k]) + (state.tuning.inharmonicity[k] ? ' *' : ''), partialOf(k), fmtC(beforeDev(k)), fmtC(statusDev(k)),
     ];
-    for (const c of cells) {
-      const td = document.createElement('td');
-      td.textContent = c;
-      tr.append(td);
-    }
+    for (const c of cells) tr.append(Object.assign(document.createElement('td'), { textContent: c }));
     tr.lastChild.dataset.s = statusClass(statusDev(k));
     if (k === state.key) tr.className = 'current';
     body.append(tr);
@@ -520,18 +401,64 @@ function renderTable() {
   $('ktable').replaceChildren(head, body);
 }
 
+function renderChart() {
+  if (!state.T) return;
+  const T = state.T;
+  const points = [];
+  const ticks = [];
+  for (let k = 1; k <= top(); k++) {
+    const d = curDev(k);
+    if (Number.isFinite(d)) points.push({ k, c: T.cents[k] + d, status: statusClass(statusDev(k)) });
+    if (pitchClass(k) === 0) ticks.push({ k, label: kName(k) });
+  }
+  state.chartGeo = drawChart($('chart'), { top: top(), target: T.cents, points, ticks, current: state.key }, state.colors);
+}
+
+// Uppdatera tangentstatus högst en gång per bildruta, även om mätningar sparas oftare.
+let statusRaf = 0;
+function renderKeyStatus() {
+  statusRaf ||= requestAnimationFrame(() => {
+    statusRaf = 0;
+    renderKeyboard();
+    renderPass();
+    renderChart();
+  });
+}
+
+function chartKeyAt(e) {
+  const k = state.chartGeo?.keyAt(e.clientX - $('chart').getBoundingClientRect().left);
+  return k >= 1 && k <= top() ? k : 0;
+}
+
+function chartHover(e) {
+  const k = chartKeyAt(e);
+  const tip = $('tooltip');
+  tip.hidden = !k;
+  if (!k) return;
+  const T = state.T;
+  const rows = [
+    [kName(k), `tangent ${k}`],
+    ['Mål', `${fmtC(T.cents[k])} cent · ${fmtHz(T.freq[k])}`],
+    ['B', `${fmtB(T.B[k])} ${state.tuning.inharmonicity[k] ? 'uppmätt' : 'modell'}`],
+  ];
+  if (Number.isFinite(curDev(k))) rows.push(['Avvikelse', `${fmtC(statusDev(k))} cent`]);
+  tip.replaceChildren(
+    ...rows.map(([a, b]) => {
+      const row = document.createElement('div');
+      row.append(Object.assign(document.createElement('b'), { textContent: a }), Object.assign(document.createElement('span'), { textContent: b }));
+      return row;
+    }),
+  );
+  const w = $('chart').clientWidth;
+  tip.style.left = Math.min(Math.max(state.chartGeo.xOf(k) + 12, 4), w - tip.offsetWidth - 4) + 'px';
+  tip.style.top = Math.max(4, state.chartGeo.yOf(T.cents[k]) - tip.offsetHeight - 10) + 'px';
+}
+
 // ---------------------------------------------------------------------------
-// Tangentval
+// Tangent och läge
 
 function resetReadings() {
-  state.readings = [];
-  state.spec = [];
-  state.beatHz = NaN;
-  state.display = NaN;
-  state.stable = false;
-  state.partialDevs = [];
-  state.bReadings = [];
-  state.autoFrames = 0;
+  Object.assign(state, { readings: [], spec: [], beatHz: NaN, display: NaN, stable: false, partialDevs: [], bReadings: [], autoFrames: 0 });
 }
 
 function selectKey(k, manual = true) {
@@ -540,76 +467,60 @@ function selectKey(k, manual = true) {
   if (k === state.key) return;
   state.key = k;
   resetReadings();
-  if (state.map) state.map = mapKeyState();
+  if (state.map) state.map = mapping.newKeyState();
   renderMapPanel();
   renderKeyInfo();
   renderKeyboard();
-  drawChart();
+  renderChart();
   if ($('table-details').open) renderTable();
 }
 
 function setMode(m) {
   state.mode = m;
-  $('mode-auto').setAttribute('aria-pressed', m === 'auto');
-  $('mode-lock').setAttribute('aria-pressed', m === 'lock');
-  $('mode-map').setAttribute('aria-pressed', m === 'map');
-  state.map = m === 'map' ? mapKeyState() : null;
+  for (const id of ['auto', 'lock', 'map']) $('mode-' + id).setAttribute('aria-pressed', m === id);
+  state.map = m === 'map' ? mapping.newKeyState() : null;
   state.bReadings = [];
   $('map-panel').hidden = m !== 'map';
-  // Börja på A0, eller fortsätt där en avbruten kartläggning slutade.
-  if (m === 'map') selectKey(firstUnmapped(), false);
+  if (m === 'map') selectKey(firstUnmapped(), false); // börja från början, eller där förra slutade
   renderKeyboard();
   renderMapPanel();
 }
 
 // ---------------------------------------------------------------------------
-// Ljud
+// Mätning
 
 async function startMic() {
-  if (!navigator.mediaDevices?.getUserMedia) {
-    message('Mikrofonen kräver en säker anslutning (https). Öppna appen via https.', 'error', 0);
+  try {
+    await mic.start();
+  } catch (e) {
+    const text = {
+      insecure: 'Mikrofonen kräver https. Öppna appen via https.',
+      NotAllowedError: 'Mikrofonen nekades. Tillåt den för sidan via ikonen i adressfältet och försök igen.',
+    }[e.name];
+    message(text || `Kunde inte starta mikrofonen: ${e.message}`, 'error', 0);
     return;
   }
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 },
-    });
-    const ctx = new AudioContext();
-    const src = ctx.createMediaStreamSource(stream);
-    const an = ctx.createAnalyser();
-    an.fftSize = 32768;
-    an.smoothingTimeConstant = 0;
-    src.connect(an);
-    state.audio = { ctx, stream, an };
-    state.buf = new Float32Array(an.fftSize);
-    state.analyzer = new Analyzer(ctx.sampleRate);
-    state.noise = -70;
-    state.timer = setInterval(processFrame, FRAME_MS);
-    $('btn-mic').textContent = 'Stoppa mikrofon';
-    $('btn-mic').classList.remove('primary');
-    try { state.wakeLock = await navigator.wakeLock?.request('screen'); } catch { /* valfritt */ }
-  } catch (e) {
-    message(
-      e.name === 'NotAllowedError'
-        ? 'Mikrofonen nekades. Tillåt mikrofonen för sidan via ikonen i adressfältet och försök igen.'
-        : `Kunde inte starta mikrofonen: ${e.message}`,
-      'error',
-      0,
-    );
-  }
+  state.analyzer = new Analyzer(mic.sampleRate);
+  state.noise = -70;
+  state.timer = setInterval(processFrame, FRAME_MS);
+  $('btn-mic').textContent = 'Stoppa mikrofon';
+  $('btn-mic').classList.remove('primary');
+  requestWakeLock();
 }
 
 function stopMic() {
   clearInterval(state.timer);
-  state.audio?.stream.getTracks().forEach((t) => t.stop());
-  state.audio?.ctx.close();
-  state.audio = null;
+  mic.stop();
   state.signal = false;
   state.wakeLock?.release?.().catch(() => {});
   state.wakeLock = null;
   $('btn-mic').textContent = 'Starta mikrofon';
   $('btn-mic').classList.add('primary');
   updateReadout();
+}
+
+async function requestWakeLock() {
+  try { state.wakeLock = await navigator.wakeLock?.request('screen'); } catch { /* valfritt */ }
 }
 
 function processFrame() {
@@ -620,37 +531,33 @@ function processFrame() {
 }
 
 function analyseFrame() {
-  const { an } = state.audio;
-  an.getFloatTimeDomainData(state.buf);
-  const lvl = rmsDb(state.buf);
+  const buf = mic.read();
+  const lvl = rmsDb(buf);
   state.prevLevel = state.level;
   state.level = lvl;
-  // Brusgolv: följer snabbt nedåt och långsamt uppåt.
+  // Brusgolv: följer snabbt nedåt, långsamt uppåt.
   state.noise = lvl < state.noise ? lvl : state.noise + Math.min(0.15, (lvl - state.noise) * 0.01);
-  const onset = lvl - state.prevLevel > 6;
+  // Kartläggning väntar på ett anslag så att förra tangentens efterklang inte mäts.
   if (state.map?.waitAttack) {
-    if (!onset) return idle();
+    if (lvl - state.prevLevel <= 6) return idle();
     state.map.waitAttack = false;
   }
   if (lvl < Math.max(state.noise + 10, -72)) return idle();
 
   const A = state.analyzer;
-  A.load(state.buf);
-
-  if (state.mode === 'auto') {
-    const d = A.detectKey(state.T, state.key, top());
-    const clear = d.score > 8 && d.margin >= 6;
-    state.autoFrames = clear && d.key === state.key ? state.autoFrames + 1 : 0;
-    if (d.score > 8) {
-      if (d.key === state.cand) state.candCount++;
-      else {
-        state.cand = d.key;
-        state.candCount = 1;
-      }
-      if (state.candCount >= 2 && d.key !== state.key) selectKey(d.key, false);
-    }
-  }
+  A.load(buf);
+  if (state.mode === 'auto') followDetectedKey(A.detectKey(state.T, state.key, top()));
   measureCurrent(A);
+}
+
+// Byt tangent när samma kandidat vunnit två bildrutor i rad. Räkna hur länge
+// aktuell tangent varit klar vinnare; först då sparas något i auto-läget.
+function followDetectedKey(d) {
+  state.autoFrames = d.score > 8 && d.margin >= 6 && d.key === state.key ? state.autoFrames + 1 : 0;
+  if (d.score <= 8) return;
+  state.candCount = d.key === state.cand ? state.candCount + 1 : 1;
+  state.cand = d.key;
+  if (state.candCount >= 2 && d.key !== state.key) selectKey(d.key, false);
 }
 
 function idle() {
@@ -671,198 +578,54 @@ function measureCurrent(A) {
 
   const raw = centsBetween(m.freq, target);
   const ref = refPlaying();
-  if (!ref && state.refTainted) state.readings = [];
+  if (!ref && state.refTainted) state.readings = []; // släng avläsningar av referenstonen
   state.refTainted = ref;
   state.readings.push({ c: raw, hz: m.freq });
   if (state.readings.length > 7) state.readings.shift();
-  const last = state.readings.slice(-5).map((r) => r.c);
-  const med = median(last);
-  const spread = Math.max(...last) - Math.min(...last);
-  state.signal = true;
-  // I auto-läget sparas bara när tangenten varit tydligt igenkänd en stund, så att
-  // en överton som tolkas som tangenten en oktav upp inte sparas där.
+  const last = state.readings.slice(-5);
+  const cs = last.map((r) => r.c);
   const sure = state.mode !== 'auto' || state.autoFrames >= 6;
-  state.stable = !ref && sure && last.length >= 4 && spread < (k > 70 ? 1.5 : 0.8);
+  state.stable = !ref && sure && last.length >= 4 && Math.max(...cs) - Math.min(...cs) < (k > 70 ? 1.5 : 0.8);
+  state.signal = true;
+
   const g = goal(k);
-  state.display = med - g;
-  // Svävningsvyn centreras på målet (inklusive ev. överdrag).
-  const center = target * 2 ** (g / 1200);
+  state.display = median(cs) - g;
+  const center = target * 2 ** (g / 1200); // svävningsvyn centreras på målet inkl. överdrag
   state.beatHz = center * (2 ** (state.display / 1200) - 1);
   state.frameCol = { col: A.zoom(center, SPEC_CENTS, SPEC_BINS), c: state.display };
+  state.partialDevs = Array.from({ length: 8 }, (_, i) => {
+    const fi = partialFreq(T.freq[k], T.B[k], i + 1);
+    if (fi > A.sr * 0.45 || fi < 40) return null;
+    const mi = i + 1 === n ? m : A.measure(fi, 50, 8);
+    return mi ? centsBetween(mi.freq, fi) : null;
+  });
 
-  state.partialDevs = [];
-  for (let i = 1; i <= 8; i++) {
-    const fi = partialFreq(T.freq[k], T.B[k], i);
-    if (fi > A.sr * 0.45 || fi < 40) {
-      state.partialDevs.push(null);
-      continue;
-    }
-    const mi = i === n ? m : A.measure(fi, 50, 8);
-    state.partialDevs.push(mi ? centsBetween(mi.freq, fi) : null);
-  }
+  // Spara samma värde som visas. Under kartläggning sparar mapStep i stället.
+  if (state.stable && !state.map) recordKey(k, n, median(last.map((r) => r.hz)));
 
-  // Spara samma värde som visas: medianen av de senaste avläsningarna.
-  // Under kartläggning sparar mapStep i stället.
-  if (state.stable && !state.map) recordKey(k, n, median(state.readings.slice(-5).map((r) => r.hz)));
-
-  // Inharmonicitet (kartläggning eller manuell mätning).
   const f1 = T.freq[k] * 2 ** (raw / 1200);
-  if (!ref && state.measureB && state.measureB.k === k) {
+  if (!ref && state.measureB?.k === k) {
     const r = A.inharmonicity(f1, T.B[k]);
     if (r) state.bReadings.push(r.B);
   }
-  if (state.map && !ref) {
-    const mp = state.map;
-    mp.pitch.push(m.freq);
-    mp.ms += FRAME_MS;
-    mp.lost = false;
-    if (needsB(k) && mp.bs.length < MAP_B) {
-      const r = A.inharmonicity(f1, T.B[k]);
-      if (r) mp.bs.push(r.B);
-    }
-    mapStep(k);
-  }
+  if (state.map && !ref) collectMapping(A, k, m.freq, f1);
   if (state.measureB && performance.now() > state.measureB.until) finishMeasureB();
-
   updateReadout();
 }
 
 function recordKey(k, n, hz) {
   const rec = state.tuning.keys[k] || {};
-  if (!rec.bhz) {
-    rec.bhz = hz;
-    rec.bn = n;
-  }
-  rec.hz = hz;
-  rec.n = n;
-  rec.at = Date.now();
+  if (!rec.bhz) Object.assign(rec, { bhz: hz, bn: n }); // första mätningen i omgången
+  Object.assign(rec, { hz, n, at: Date.now() });
   state.tuning.keys[k] = rec;
   markDirty();
-  renderKeyStatus(k);
-}
-
-let statusRaf = 0;
-function renderKeyStatus() {
-  if (statusRaf) return;
-  statusRaf = requestAnimationFrame(() => {
-    statusRaf = 0;
-    renderKeyboard();
-    renderPass();
-    drawChart();
-  });
+  renderKeyStatus();
 }
 
 function storeB(k, B) {
   state.tuning.inharmonicity[k] = Number(B.toPrecision(4));
   markDirty();
   recompute();
-}
-
-// ---------------------------------------------------------------------------
-// Kartläggning: mät pianot tangent för tangent innan stämningen. För varje
-// tangent sparas hur den ligger nu (före-värdet) och, om det inte redan finns,
-// strängens inharmonicitet B. Tonhöjden tas som median över flera avläsningar,
-// så osordnade unisoner (svävningar) gör inget.
-
-function mapKeyState() {
-  return { waitAttack: true, pitch: [], bs: [], ms: 0, lost: false };
-}
-
-const isMapped = (k) => !!keyRec(k)?.mapped;
-const isQuick = () => state.mapPlan === 'quick';
-// Snabbmätningen finns till för B och mäter därför alltid om det.
-const needsB = (k) => isQuick() || !state.tuning.inharmonicity[k];
-const planKeys = () =>
-  isQuick() ? QUICK_KEYS.filter((k) => k <= top()) : Array.from({ length: top() }, (_, i) => i + 1);
-const nextInPlan = (k) => planKeys().find((x) => x > k) ?? null;
-
-function firstUnmapped() {
-  const ks = planKeys();
-  return ks.find((k) => !isMapped(k)) ?? ks[0];
-}
-
-function setMapPlan(p) {
-  state.mapPlan = p;
-  try { localStorage.setItem(MAP_PLAN, p); } catch { /* valfritt */ }
-  document.querySelectorAll('[data-plan]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.plan === p));
-  if (!state.map) return;
-  state.map = mapKeyState();
-  selectKey(firstUnmapped(), false);
-  renderKeyboard();
-  renderMapPanel();
-}
-
-function mapStep(k) {
-  const mp = state.map;
-  const pitchDone = mp.pitch.length >= MAP_PITCH;
-  const bDone = !needsB(k) || mp.bs.length >= MAP_B || mp.ms >= (isQuick() ? QUICK_B_MS : MAP_B_MS);
-  if (!pitchDone || !bDone) {
-    renderMapPanel();
-    return;
-  }
-  const hz = median(mp.pitch);
-  const n = partialOf(k);
-  state.tuning.keys[k] = { ...(keyRec(k) || {}), bhz: hz, bn: n, hz, n, at: Date.now(), mapped: true };
-  if (mp.bs.length >= 3) storeB(k, median(mp.bs));
-  else {
-    markDirty();
-    recompute();
-  }
-  flashKey(k);
-  const next = nextInPlan(k);
-  if (next) selectKey(next, false);
-  else finishMapping();
-}
-
-function finishMapping() {
-  let mapped = 0;
-  let withB = 0;
-  for (let k = 1; k <= top(); k++) {
-    if (isMapped(k)) mapped++;
-    if (state.tuning.inharmonicity[k]) withB++;
-  }
-  const quickB = planKeys().filter((k) => state.tuning.inharmonicity[k]).length;
-  setMode('lock');
-  message(
-    isQuick()
-      ? `Snabbmätningen är klar: inharmonicitet för ${quickB} av ${planKeys().length} toner. ` +
-          'Målkurvan bygger nu på dem, och tangenterna däremellan interpoleras.'
-      : `Kartläggningen är klar: ${mapped} tangenter mätta, inharmonicitet för ${withB}. ` +
-          'Målkurvan bygger nu på pianots egna värden. Se rutan Referens A4 för hur pianot ligger.',
-    'ok',
-    0,
-  );
-}
-
-function renderMapPanel() {
-  if (!state.map) return;
-  const mp = state.map;
-  const k = state.key;
-  const name = kName(k);
-  const ks = planKeys();
-  const mapped = ks.filter(isMapped).length;
-  $('map-progress').textContent = `${mapped} av ${ks.length} ${isQuick() ? 'toner' : 'tangenter'}`;
-  $('map-bar').style.width = `${(mapped / ks.length) * 100}%`;
-  $('map-step').textContent = mp.waitAttack
-    ? `Slå an ${name} kraftigt och låt den klinga.`
-    : mp.lost
-      ? `${name} klingade ut innan mätningen var klar. Slå an den igen.`
-      : `Lyssnar på ${name} … låt tonen klinga.`;
-  const p = Math.min(mp.pitch.length, MAP_PITCH);
-  const pc = $('map-chk-pitch');
-  pc.textContent = `Tonhöjd ${p}/${MAP_PITCH}`;
-  pc.dataset.done = p >= MAP_PITCH ? '1' : '0';
-  const bc = $('map-chk-b');
-  if (!needsB(k)) {
-    bc.textContent = 'Inharmonicitet redan uppmätt';
-    bc.dataset.done = '1';
-  } else if (mp.bs.length < MAP_B && mp.ms >= (isQuick() ? QUICK_B_MS : MAP_B_MS)) {
-    bc.textContent = 'Inharmonicitet: för svaga övertoner, hoppas över';
-    bc.dataset.done = '1';
-  } else {
-    bc.textContent = `Inharmonicitet ${Math.min(mp.bs.length, MAP_B)}/${MAP_B}`;
-    bc.dataset.done = mp.bs.length >= MAP_B ? '1' : '0';
-  }
 }
 
 function finishMeasureB() {
@@ -872,7 +635,7 @@ function finishMeasureB() {
   if (state.bReadings.length >= 3) {
     const B = median(state.bReadings);
     storeB(k, B);
-    message(`Inharmonicitet för ${kName(k)}: B = ${B.toExponential(2).replace('.', ',')}`, 'ok');
+    message(`Inharmonicitet för ${kName(k)}: B = ${fmtB(B)}`, 'ok');
   } else {
     message('Kunde inte mäta inharmonicitet. Slå an tangenten kraftigt och låt den klinga i ett par sekunder.', 'warn');
   }
@@ -882,127 +645,154 @@ function finishMeasureB() {
 function flashKey(k) {
   const el = $('keyboard').children[k - 1];
   el.classList.remove('flash');
-  void el.offsetWidth;
+  void el.offsetWidth; // starta om animationen
   el.classList.add('flash');
 }
 
-// Uppspelning sker i en egen AudioContext så att den överlever att mikrofonen stängs.
-function toneCtx() {
-  state.toneCtx ||= new AudioContext();
-  state.toneCtx.resume?.();
-  return state.toneCtx;
+// ---------------------------------------------------------------------------
+// Kartläggning
+
+const isMapped = (k) => !!keyRec(k)?.mapped;
+const isQuick = () => state.mapPlan === 'quick';
+const needsB = (k) => isQuick() || !state.tuning.inharmonicity[k]; // snabbläget mäter alltid om B
+const planKeys = () => mapping.planKeys(state.mapPlan, top());
+const firstUnmapped = () => planKeys().find((k) => !isMapped(k)) ?? planKeys()[0];
+
+function setMapPlan(p) {
+  state.mapPlan = p;
+  try { localStorage.setItem(LS.plan, p); } catch { /* valfritt */ }
+  document.querySelectorAll('[data-plan]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.plan === p));
+  if (!state.map) return;
+  state.map = mapping.newKeyState();
+  selectKey(firstUnmapped(), false);
+  renderKeyboard();
+  renderMapPanel();
 }
 
-function playTone() {
-  const k = state.key;
-  const T = state.T;
-  const ctx = toneCtx();
-  const now = ctx.currentTime;
-  const out = ctx.createGain();
-  out.gain.value = 0.22;
-  out.connect(ctx.destination);
-  const f1 = T.freq[k] * 2 ** (goal(k) / 1200);
-  state.refUntil = Math.max(state.refUntil, performance.now() + 4000);
-  for (let n = 1; n <= 10; n++) {
-    const f = partialFreq(f1, T.B[k], n);
-    if (f > ctx.sampleRate * 0.45) break;
-    const osc = ctx.createOscillator();
-    osc.frequency.value = f;
-    const g = ctx.createGain();
-    const amp = 1 / n ** 1.1;
-    const decay = Math.max(0.4, 3.2 - n * 0.25);
-    g.gain.setValueAtTime(0.0001, now);
-    g.gain.exponentialRampToValueAtTime(amp, now + 0.008);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + decay);
-    osc.connect(g).connect(out);
-    osc.start(now);
-    osc.stop(now + decay + 0.05);
+function collectMapping(A, k, partialHz, f1) {
+  const mp = state.map;
+  mp.pitch.push(partialHz);
+  mp.ms += FRAME_MS;
+  mp.lost = false;
+  if (needsB(k) && mp.bs.length < mapping.B_READINGS) {
+    const r = A.inharmonicity(f1, state.T.B[k]);
+    if (r) mp.bs.push(r.B);
   }
+  if (!mapping.keyDone(mp, needsB(k), state.mapPlan)) return renderMapPanel();
+
+  const hz = median(mp.pitch);
+  const n = partialOf(k);
+  state.tuning.keys[k] = { ...keyRec(k), bhz: hz, bn: n, hz, n, at: Date.now(), mapped: true };
+  if (mp.bs.length >= 3) storeB(k, median(mp.bs));
+  else {
+    markDirty();
+    recompute();
+  }
+  flashKey(k);
+  advanceMapping(k);
 }
 
-// Ren sinuston på måldeltonens frekvens (inklusive ev. överdrag). Ihållande, så
-// att man kan lyssna efter svävningar mot strängen; följer med vid tangentbyte.
-function sineFreq() {
-  const k = state.key;
-  const T = state.T;
-  return partialFreq(T.freq[k] * 2 ** (goal(k) / 1200), T.B[k], partialOf(k));
+function advanceMapping(k) {
+  const next = mapping.nextInPlan(state.mapPlan, top(), k);
+  if (next) selectKey(next, false);
+  else finishMapping();
+}
+
+function finishMapping() {
+  const withB = (ks) => ks.filter((k) => state.tuning.inharmonicity[k]).length;
+  const all = Array.from({ length: top() }, (_, i) => i + 1);
+  const text = isQuick()
+    ? `Snabbmätningen är klar: inharmonicitet för ${withB(planKeys())} av ${planKeys().length} toner. Tangenterna däremellan interpoleras.`
+    : `Kartläggningen är klar: ${all.filter(isMapped).length} tangenter mätta, inharmonicitet för ${withB(all)}. Se rutan Referens A4 för hur pianot ligger.`;
+  setMode('lock');
+  message(text, 'ok', 0);
+}
+
+function renderMapPanel() {
+  if (!state.map) return;
+  const mp = state.map;
+  const name = kName(state.key);
+  const ks = planKeys();
+  const done = ks.filter(isMapped).length;
+  $('map-progress').textContent = `${done} av ${ks.length} ${isQuick() ? 'toner' : 'tangenter'}`;
+  $('map-bar').style.width = `${(done / ks.length) * 100}%`;
+  $('map-step').textContent = mp.waitAttack
+    ? `Slå an ${name} kraftigt och låt den klinga.`
+    : mp.lost
+      ? `${name} klingade ut innan mätningen var klar. Slå an den igen.`
+      : `Lyssnar på ${name} … låt tonen klinga.`;
+  const p = Math.min(mp.pitch.length, mapping.PITCH_READINGS);
+  setCheck('map-chk-pitch', `Tonhöjd ${p}/${mapping.PITCH_READINGS}`, p >= mapping.PITCH_READINGS);
+  if (!needsB(state.key)) setCheck('map-chk-b', 'Inharmonicitet redan uppmätt', true);
+  else if (mapping.bGivenUp(mp, state.mapPlan)) setCheck('map-chk-b', 'Inharmonicitet: för svaga övertoner, hoppas över', true);
+  else setCheck('map-chk-b', `Inharmonicitet ${Math.min(mp.bs.length, mapping.B_READINGS)}/${mapping.B_READINGS}`, mp.bs.length >= mapping.B_READINGS);
+}
+
+function setCheck(id, text, done) {
+  $(id).textContent = text;
+  $(id).dataset.done = done ? '1' : '0';
+}
+
+// ---------------------------------------------------------------------------
+// Referenstoner
+
+const goalF1 = (k) => state.T.freq[k] * 2 ** (goal(k) / 1200);
+const sineFreq = () => partialFreq(goalF1(state.key), state.T.B[state.key], partialOf(state.key));
+
+function playPiano() {
+  const ms = tones.pluck(goalF1(state.key), state.T.B[state.key]);
+  state.refUntil = Math.max(state.refUntil, performance.now() + ms + 800); // + analysbufferten
 }
 
 function startSine() {
-  if (state.sine) return updateSine();
-  const ctx = toneCtx();
-  const t = ctx.currentTime;
-  const osc = ctx.createOscillator();
-  osc.type = 'sine';
-  osc.frequency.value = sineFreq();
-  const g = ctx.createGain();
-  g.gain.setValueAtTime(0, t);
-  g.gain.linearRampToValueAtTime(0.18, t + 0.04);
-  osc.connect(g).connect(ctx.destination);
-  osc.start(t);
-  state.sine = { ctx, osc, g };
-  if (state.audio) message('Mätningar sparas inte medan sinustonen spelas.', 'info', 4000);
+  if (!tones.sineOn && mic.running) message('Mätningar sparas inte medan sinustonen spelas.', 'info', 4000);
+  tones.startSine(sineFreq());
   renderToneButton();
 }
 
 function stopSine() {
-  const s = state.sine;
-  if (!s) return;
-  state.sine = null;
-  const t = s.ctx.currentTime;
-  s.g.gain.cancelScheduledValues(t);
-  s.g.gain.setValueAtTime(s.g.gain.value, t);
-  s.g.gain.linearRampToValueAtTime(0, t + 0.06);
-  s.osc.stop(t + 0.08);
+  if (!tones.sineOn) return;
+  tones.stopSine();
   state.refUntil = performance.now() + 800;
   renderToneButton();
 }
 
-function updateSine() {
-  if (state.sine) state.sine.osc.frequency.setTargetAtTime(sineFreq(), state.sine.ctx.currentTime, 0.01);
-}
-
 function playCurrent() {
-  if (state.toneMode === 'sine') state.sine ? stopSine() : startSine();
-  else playTone();
+  if (state.toneMode !== 'sine') playPiano();
+  else if (tones.sineOn) stopSine();
+  else startSine();
 }
 
 function setToneMode(m) {
   state.toneMode = m;
   if (m !== 'sine') stopSine();
   document.querySelectorAll('[data-tone]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.tone === m));
-  try { localStorage.setItem(TONE_MODE, m); } catch { /* valfritt */ }
+  try { localStorage.setItem(LS.tone, m); } catch { /* valfritt */ }
   renderToneButton();
 }
 
 function renderToneButton() {
   const b = $('btn-tone');
-  b.textContent = state.sine ? 'Stoppa sinuston' : state.toneMode === 'sine' ? 'Spela sinuston' : 'Spela målton';
-  b.setAttribute('aria-pressed', state.sine ? 'true' : 'false');
+  b.textContent = tones.sineOn ? 'Stoppa sinuston' : state.toneMode === 'sine' ? 'Spela sinuston' : 'Spela målton';
+  b.setAttribute('aria-pressed', tones.sineOn);
 }
 
 // ---------------------------------------------------------------------------
-// Visning
+// Avläsning och animation
 
 function updateReadout() {
-  const el = $('cents-num');
   const pill = $('status-pill');
-  if (!state.audio) {
-    el.textContent = '–';
-    pill.dataset.s = 'idle';
-    pill.textContent = 'Starta mikrofonen';
-  } else if (!state.signal) {
-    el.textContent = Number.isFinite(state.display) ? fmtC(state.display) : '–';
-    pill.dataset.s = 'idle';
-    pill.textContent = state.map?.waitAttack ? `Slå an ${kName(state.key)}` : 'Lyssnar …';
-  } else {
-    el.textContent = fmtC(state.display);
-    const s = statusClass(state.display);
-    pill.dataset.s = s;
-    pill.textContent = refPlaying()
-      ? 'Referenston, sparas ej'
-      : s === 'good' ? 'I stäm' : state.display > 0 ? 'För högt, släpp efter' : 'För lågt, dra upp';
+  let text;
+  let s = 'idle';
+  if (!mic.running) text = 'Starta mikrofonen';
+  else if (!state.signal) text = state.map?.waitAttack ? `Slå an ${kName(state.key)}` : 'Lyssnar …';
+  else {
+    s = statusClass(state.display);
+    text = refPlaying() ? 'Referenston, sparas ej' : s === 'good' ? 'I stäm' : state.display > 0 ? 'För högt, släpp efter' : 'För lågt, dra upp';
   }
+  pill.dataset.s = s;
+  pill.textContent = text;
+  $('cents-num').textContent = mic.running ? fmtC(state.display) : '–';
   $('cents').dataset.live = state.signal ? '1' : '0';
   $('level-bar').style.width = `${Math.max(0, Math.min(100, (state.level + 80) * 1.4))}%`;
   renderPartials();
@@ -1013,422 +803,42 @@ function renderPartials() {
   if (box.children.length !== 8) {
     box.replaceChildren(
       ...Array.from({ length: 8 }, (_, i) => {
-        const d = document.createElement('div');
-        d.className = 'pcell';
-        const n = document.createElement('span');
-        n.className = 'pn';
-        n.textContent = i + 1;
-        const v = document.createElement('span');
-        v.className = 'pv';
-        d.append(n, v);
+        const d = Object.assign(document.createElement('div'), { className: 'pcell' });
+        d.append(Object.assign(document.createElement('span'), { className: 'pn', textContent: i + 1 }), Object.assign(document.createElement('span'), { className: 'pv' }));
         return d;
       }),
     );
   }
   const n = partialOf(state.key);
   [...box.children].forEach((cell, i) => {
-    const d = state.partialDevs[i];
+    const d = state.signal ? state.partialDevs[i] : null;
     cell.classList.toggle('sel', i + 1 === n);
-    cell.lastChild.textContent = d == null || !state.signal ? '–' : fmtC(d);
-    cell.dataset.s = d == null || !state.signal ? 'none' : statusClass(d);
+    cell.lastChild.textContent = d == null ? '–' : fmtC(d);
+    cell.dataset.s = d == null ? 'none' : statusClass(d);
   });
-}
-
-function readColors() {
-  const cs = getComputedStyle(document.documentElement);
-  for (const t of ['ink', 'muted', 'faint', 'line', 'surface', 'accent', 'good', 'warn', 'bad', 'stripe', 'stripe2', 'scale-yellow', 'scale-orange']) {
-    state.colors[t] = cs.getPropertyValue('--' + t).trim();
-  }
-  state.colors.goodRgb = hexRgb(state.colors.good);
-  state.colors.yellowRgb = hexRgb(state.colors['scale-yellow']);
-  state.colors.orangeRgb = hexRgb(state.colors['scale-orange']);
-  state.colors.badRgb = hexRgb(state.colors.bad);
-}
-
-function fitCanvas(c) {
-  const dpr = window.devicePixelRatio || 1;
-  const w = c.clientWidth;
-  // Logisk höjd läses en gång: c.height skrivs om med dpr nedan och får inte
-  // läsas tillbaka, annars växer canvasen för varje bildruta på HiDPI-skärmar.
-  if (!c.dataset.h) c.dataset.h = c.getAttribute('height');
-  const h = Number(c.dataset.h);
-  if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
-    c.width = Math.round(w * dpr);
-    c.height = Math.round(h * dpr);
-    c.style.height = h + 'px';
-  }
-  const ctx = c.getContext('2d');
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { ctx, w, h };
-}
-
-// Mätare: komprimerad skala så att mitten (±5 cent) får mest plats.
-const meterX = (c, w) => w / 2 + Math.sign(c) * Math.sqrt(Math.min(Math.abs(c), 50) / 50) * (w / 2 - 14);
-
-function drawMeter() {
-  const { ctx, w, h } = fitCanvas($('meter'));
-  const C = state.colors;
-  ctx.clearRect(0, 0, w, h);
-  const tol = Number(S().tolerance) || 1;
-  const y = 30;
-  ctx.fillStyle = C.good;
-  ctx.globalAlpha = 0.18;
-  ctx.fillRect(meterX(-tol, w), 8, meterX(tol, w) - meterX(-tol, w), 34);
-  ctx.globalAlpha = 1;
-  ctx.font = '11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
-  ctx.textAlign = 'center';
-  for (const t of [-50, -20, -10, -5, -2, -1, 0, 1, 2, 5, 10, 20, 50]) {
-    const x = meterX(t, w);
-    ctx.strokeStyle = t === 0 ? C.ink : C.muted;
-    ctx.lineWidth = t === 0 ? 2 : 1;
-    ctx.beginPath();
-    ctx.moveTo(x, t === 0 ? 6 : 16);
-    ctx.lineTo(x, 42);
-    ctx.stroke();
-    if (Math.abs(t) !== 1 || w > 500) {
-      ctx.fillStyle = C.muted;
-      ctx.fillText(t === 0 ? '0' : (t > 0 ? '+' : '−') + Math.abs(t), x, 58);
-    }
-  }
-  if (Number.isFinite(state.display)) {
-    const x = meterX(state.display, w);
-    ctx.globalAlpha = state.signal ? 1 : 0.35;
-    ctx.fillStyle = scaleColor(state.display);
-    ctx.beginPath();
-    ctx.moveTo(x, y + 12);
-    ctx.lineTo(x - 7, y - 18);
-    ctx.lineTo(x + 7, y - 18);
-    ctx.closePath();
-    ctx.fill();
-    ctx.globalAlpha = 1;
-  }
-}
-
-// Stroboskop: tre band som rör sig med 1, 2 och 4 gånger hastigheten.
-// Står de stilla är tonen i stäm; åt höger = för högt.
-function drawStrobe(dt) {
-  const { ctx, w, h } = fitCanvas($('strobe'));
-  const C = state.colors;
-  ctx.clearRect(0, 0, w, h);
-  const live = state.signal && Number.isFinite(state.display);
-  const c = live ? Math.max(-30, Math.min(30, state.display)) : 0;
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const bandH = (h - 8) / 3;
-  const period = 28;
-  for (let i = 0; i < 3; i++) {
-    const speed = reduced ? 0 : c * 9 * 2 ** i;
-    state.strobePhase[i] = (state.strobePhase[i] + speed * dt) % (period * 2);
-    const y = 2 + i * (bandH + 2);
-    ctx.fillStyle = C.stripe2;
-    ctx.fillRect(0, y, w, bandH);
-    ctx.fillStyle = live ? scaleColor(state.display) : C.faint;
-    const p = state.strobePhase[i] / 2 ** i;
-    const per = period / 2 ** (i * 0.5);
-    for (let x = -per * 2 + (((p % per) + per) % per); x < w; x += per) {
-      ctx.fillRect(x, y, per / 2, bandH);
-    }
-  }
-}
-
-// Färgskala för avvikelse: grönt inom tolerans, sedan gult, orange och rött.
-function hexRgb(hex) {
-  const h = hex.replace('#', '');
-  const v = parseInt(h.length === 3 ? h.replace(/./g, '$&$&') : h, 16);
-  return [(v >> 16) & 255, (v >> 8) & 255, v & 255];
-}
-
-function scaleRgb(c) {
-  const C = state.colors;
-  const tol = Number(S().tolerance) || 1;
-  const a = Math.abs(c);
-  const stops = [
-    [tol, C.goodRgb],
-    [Math.max(3, tol * 2.5), C.yellowRgb],
-    [Math.max(6, tol * 5), C.orangeRgb],
-    [Math.max(12, tol * 10), C.badRgb],
-  ];
-  if (a <= stops[0][0]) return stops[0][1];
-  for (let i = 1; i < stops.length; i++) {
-    if (a <= stops[i][0]) {
-      const [x0, c0] = stops[i - 1];
-      const [x1, c1] = stops[i];
-      const t = (a - x0) / (x1 - x0);
-      return c0.map((v, j) => Math.round(v + (c1[j] - v) * t));
-    }
-  }
-  return stops[stops.length - 1][1];
-}
-const scaleColor = (c) => `rgb(${scaleRgb(c).join(' ')})`;
-
-// Zoomat spektrogram runt måldeltonen. Ljusstyrkan är signalstyrkan (relativt
-// kolumnens topp), färgen är hur långt från målet tonen låg i just det ögonblicket.
-const specImg = { canvas: null, ctx: null, data: null };
-
-function drawSpectro() {
-  const { ctx, w, h } = fitCanvas($('spectro'));
-  const C = state.colors;
-  ctx.clearRect(0, 0, w, h);
-  const padL = 30;
-  const pw = w - padL;
-  if (!specImg.canvas) {
-    specImg.canvas = document.createElement('canvas');
-    specImg.canvas.width = SPEC_COLS;
-    specImg.canvas.height = SPEC_BINS;
-    specImg.ctx = specImg.canvas.getContext('2d');
-    specImg.data = specImg.ctx.createImageData(SPEC_COLS, SPEC_BINS);
-  }
-  const px = specImg.data.data;
-  px.fill(0);
-  const offset = SPEC_COLS - state.spec.length;
-  state.spec.forEach((s, i) => {
-    if (!s) return;
-    const x = offset + i;
-    const peak = Math.max(...s.col);
-    const [r, g, b] = scaleRgb(s.c);
-    for (let y = 0; y < SPEC_BINS; y++) {
-      const v = Math.max(0, Math.min(1, (s.col[y] - peak + 30) / 30)) ** 1.8;
-      const o = (y * SPEC_COLS + x) * 4;
-      px[o] = r;
-      px[o + 1] = g;
-      px[o + 2] = b;
-      px[o + 3] = Math.round(v * 255);
-    }
-  });
-  specImg.ctx.putImageData(specImg.data, 0, 0);
-  ctx.imageSmoothingEnabled = true;
-  ctx.drawImage(specImg.canvas, padL, 0, pw, h);
-
-  const ym = (c) => h / 2 - (c / SPEC_CENTS) * (h / 2);
-  const tol = Number(S().tolerance) || 1;
-  ctx.strokeStyle = C.muted;
-  ctx.lineWidth = 1;
-  ctx.setLineDash([2, 4]);
-  for (const c of [-tol, tol]) {
-    ctx.beginPath();
-    ctx.moveTo(padL, ym(c));
-    ctx.lineTo(w, ym(c));
-    ctx.stroke();
-  }
-  ctx.setLineDash([]);
-  ctx.strokeStyle = C.ink;
-  ctx.globalAlpha = 0.5;
-  ctx.beginPath();
-  ctx.moveTo(padL, h / 2);
-  ctx.lineTo(w, h / 2);
-  ctx.stroke();
-  ctx.globalAlpha = 1;
-
-  // Exakt uppmätt avvikelse som tunn linje ovanpå.
-  const colW = pw / SPEC_COLS;
-  ctx.strokeStyle = C.ink;
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  let drawing = false;
-  state.spec.forEach((s, i) => {
-    if (!s) {
-      drawing = false;
-      return;
-    }
-    const x = padL + (offset + i + 0.5) * colW;
-    const y = ym(Math.max(-SPEC_CENTS, Math.min(SPEC_CENTS, s.c)));
-    if (drawing) ctx.lineTo(x, y);
-    else ctx.moveTo(x, y);
-    drawing = true;
-  });
-  ctx.stroke();
-
-  ctx.fillStyle = C.muted;
-  ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
-  ctx.textAlign = 'right';
-  ctx.fillText('+' + SPEC_CENTS, padL - 4, 11);
-  ctx.fillText('0', padL - 4, h / 2 + 3);
-  ctx.fillText('−' + SPEC_CENTS, padL - 4, h - 3);
-}
-
-// Svävningsremsa: hur det låter mot måltonen. Två toner som skiljer Δf Hz
-// pulserar Δf gånger per sekund; remsan visar de senaste 3 sekunderna.
-function drawBeat(dt) {
-  const { ctx, w, h } = fitCanvas($('beat'));
-  const C = state.colors;
-  ctx.clearRect(0, 0, w, h);
-  const live = state.signal && Number.isFinite(state.beatHz);
-  const rateEl = $('beat-rate');
-  if (!live) {
-    rateEl.textContent = '–';
-    ctx.strokeStyle = C.faint;
-    ctx.beginPath();
-    ctx.moveTo(0, h / 2);
-    ctx.lineTo(w, h / 2);
-    ctx.stroke();
-    return;
-  }
-  const df = Math.abs(state.beatHz);
-  rateEl.textContent = df < 0.1 ? 'Svävningsfritt' : `${num(df, df < 10 ? 1 : 0)} svävningar/s`;
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!reduced) state.beatPhase = (state.beatPhase + Math.min(df, 40) * dt) % 1000;
-  const span = 3;
-  ctx.fillStyle = scaleColor(state.display);
-  ctx.globalAlpha = 0.85;
-  ctx.beginPath();
-  const top = [];
-  for (let x = 0; x <= w; x += 2) {
-    const phi = state.beatPhase - (Math.min(df, 40) * (w - x) * span) / w;
-    const env = df < 0.1 ? 1 : Math.abs(Math.cos(Math.PI * phi));
-    top.push([x, h / 2 - env * (h / 2 - 3)]);
-  }
-  top.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
-  for (let i = top.length - 1; i >= 0; i--) ctx.lineTo(top[i][0], h - top[i][1]);
-  ctx.closePath();
-  ctx.fill();
-  ctx.globalAlpha = 1;
-}
-
-// Stämkurva: mål i cent mot liksvävande, plus uppmätta lägen.
-const chart = { pad: { l: 44, r: 12, t: 12, b: 28 }, yMin: -30, yMax: 30 };
-
-function drawChart() {
-  if (!state.T) return;
-  const { ctx, w, h } = fitCanvas($('chart'));
-  const C = state.colors;
-  const T = state.T;
-  const { pad } = chart;
-  ctx.clearRect(0, 0, w, h);
-
-  const vals = [];
-  for (let k = 1; k <= top(); k++) {
-    vals.push(T.cents[k]);
-    const d = curDev(k);
-    if (Number.isFinite(d)) vals.push(T.cents[k] + d);
-  }
-  const lo = Math.min(-10, ...vals);
-  const hi = Math.max(10, ...vals);
-  const step = hi - lo > 80 ? 20 : 10;
-  chart.yMin = Math.floor(lo / step) * step;
-  chart.yMax = Math.ceil(hi / step) * step;
-  const xm = (k) => pad.l + ((k - 1) / (top() - 1)) * (w - pad.l - pad.r);
-  const ym = (c) => pad.t + ((chart.yMax - c) / (chart.yMax - chart.yMin)) * (h - pad.t - pad.b);
-  chart.xm = xm;
-  chart.ym = ym;
-
-  ctx.font = '11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
-  ctx.lineWidth = 1;
-  ctx.textAlign = 'right';
-  for (let c = chart.yMin; c <= chart.yMax; c += step) {
-    ctx.strokeStyle = c === 0 ? C.muted : C.line;
-    ctx.beginPath();
-    ctx.moveTo(pad.l, ym(c));
-    ctx.lineTo(w - pad.r, ym(c));
-    ctx.stroke();
-    ctx.fillStyle = C.muted;
-    ctx.fillText(c === 0 ? '0' : (c > 0 ? '+' : '−') + Math.abs(c), pad.l - 6, ym(c) + 4);
-  }
-  ctx.textAlign = 'center';
-  for (let k = 1; k <= top(); k++) {
-    if (pitchClass(k) !== 0) continue;
-    const x = xm(k);
-    ctx.strokeStyle = C.line;
-    ctx.beginPath();
-    ctx.moveTo(x, h - pad.b);
-    ctx.lineTo(x, h - pad.b + 4);
-    ctx.stroke();
-    if (w > 420 || octave(k) % 2 === 0) {
-      ctx.fillStyle = C.muted;
-      ctx.fillText(kName(k), x, h - 8);
-    }
-  }
-
-  // Aktuell tangent.
-  ctx.strokeStyle = C.accent;
-  ctx.globalAlpha = 0.35;
-  ctx.setLineDash([3, 3]);
-  ctx.beginPath();
-  ctx.moveTo(xm(state.key), pad.t);
-  ctx.lineTo(xm(state.key), h - pad.b);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.globalAlpha = 1;
-
-  // Mål: en linje per tangent följer temperaturens taggighet.
-  ctx.strokeStyle = C.accent;
-  ctx.lineWidth = 2;
-  ctx.lineJoin = 'round';
-  ctx.beginPath();
-  for (let k = 1; k <= top(); k++) {
-    const x = xm(k);
-    const y = ym(T.cents[k]);
-    if (k === 1) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.stroke();
-
-  // Uppmätt: punkt i statusfärg med ring i ytfärg.
-  for (let k = 1; k <= top(); k++) {
-    const d = curDev(k);
-    if (!Number.isFinite(d)) continue;
-    const x = xm(k);
-    const y = ym(T.cents[k] + d);
-    ctx.fillStyle = C.surface;
-    ctx.beginPath();
-    ctx.arc(x, y, 5.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = C[statusClass(statusDev(k))];
-    ctx.beginPath();
-    ctx.arc(x, y, 4, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
-function chartHover(e) {
-  if (!chart.xm) return;
-  const c = $('chart');
-  const r = c.getBoundingClientRect();
-  const x = e.clientX - r.left;
-  const { pad } = chart;
-  const w = r.width;
-  const k = Math.round(((x - pad.l) / (w - pad.l - pad.r)) * (top() - 1)) + 1;
-  const tip = $('tooltip');
-  if (k < 1 || k > top()) {
-    tip.hidden = true;
-    return;
-  }
-  const T = state.T;
-  const d = curDev(k);
-  tip.replaceChildren();
-  const rows = [
-    [kName(k), `tangent ${k}`],
-    ['Mål', `${fmtC(T.cents[k])} cent · ${fmtHz(T.freq[k])}`],
-    ['B', T.B[k].toExponential(2).replace('.', ',') + (state.tuning.inharmonicity[k] ? ' uppmätt' : ' modell')],
-  ];
-  if (Number.isFinite(d)) rows.push(['Avvikelse', `${fmtC(statusDev(k))} cent`]);
-  for (const [a, b] of rows) {
-    const row = document.createElement('div');
-    const s1 = document.createElement('b');
-    s1.textContent = a;
-    const s2 = document.createElement('span');
-    s2.textContent = b;
-    row.append(s1, s2);
-    tip.append(row);
-  }
-  tip.hidden = false;
-  const tx = Math.min(Math.max(chart.xm(k) + 12, 4), w - tip.offsetWidth - 4);
-  tip.style.left = tx + 'px';
-  tip.style.top = Math.max(4, chart.ym(T.cents[k]) - tip.offsetHeight - 10) + 'px';
 }
 
 function animate(t) {
   const dt = state.lastAnim ? Math.min(0.1, (t - state.lastAnim) / 1000) : 0;
   state.lastAnim = t;
   if (state.tuning) {
-    drawMeter();
-    drawStrobe(dt);
-    drawSpectro();
-    drawBeat(dt);
+    const C = state.colors;
+    const tol = tolerance();
+    const live = state.signal && Number.isFinite(state.display);
+    drawMeter($('meter'), { display: state.display, signal: state.signal, tol }, C);
+    drawStrobe($('strobe'), { display: state.display, live, tol }, C, dt, state.strobePhase);
+    drawSpectro($('spectro'), state.spec, { capacity: SPEC_COLS, bins: SPEC_BINS, cents: SPEC_CENTS, tol }, C);
+    const beatLive = live && Number.isFinite(state.beatHz);
+    state.beatPhase = drawBeat($('beat'), { beatHz: state.beatHz, display: state.display, live: beatLive, tol }, C, dt, state.beatPhase);
+    const df = Math.abs(state.beatHz);
+    const rate = !beatLive ? '–' : df < 0.1 ? 'Svävningsfritt' : `${num(df, df < 10 ? 1 : 0)} svävningar/s`;
+    if ($('beat-rate').textContent !== rate) $('beat-rate').textContent = rate;
   }
   requestAnimationFrame(animate);
 }
 
 // ---------------------------------------------------------------------------
-// Händelser
+// Åtgärder
 
 function setSetting(key, value) {
   S()[key] = value;
@@ -1438,57 +848,35 @@ function setSetting(key, value) {
 }
 
 function setRef(hz) {
-  hz = Math.round(Math.max(380, Math.min(480, hz)) * 10) / 10;
   if (!Number.isFinite(hz)) return;
-  setSetting('refA4', hz);
+  setSetting('refA4', Math.round(Math.max(380, Math.min(480, hz)) * 10) / 10);
 }
 
+// Sätt referensen så att pianots mitt ligger på målet: median av före-värdena
+// i mitten, annars den tangent som klingar nu.
 function fitRefToPiano() {
-  const mid = [];
-  for (let k = 28; k <= 64; k++) {
-    const d = beforeDev(k);
-    if (Number.isFinite(d)) mid.push(d);
-  }
+  const mid = midBefore();
   let shift;
   if (mid.length >= 3) shift = median(mid);
   else if (state.signal && Number.isFinite(state.display)) shift = state.display + goal(state.key);
-  else {
-    message('Spela A4 (eller kartlägg några tangenter i mitten) så kan appen mäta pianots tonhöjd.', 'warn');
-    return;
-  }
-  const hz = Number(S().refA4) * 2 ** (shift / 1200);
-  setRef(hz);
+  else return message('Spela A4 (eller kartlägg några tangenter i mitten) så kan appen mäta pianots tonhöjd.', 'warn');
+  setRef(Number(S().refA4) * 2 ** (shift / 1200));
   message(`Referensen satt till ${fmtHz(Number(S().refA4), 1)} efter pianots nuvarande tonhöjd.`, 'ok');
 }
 
+// Avsluta omgången: spara sammanfattning i historiken och töm mätningarna.
+// Inharmonicitet och inställningar behålls.
 function newPass() {
   const t = state.tuning;
-  let n = 0;
-  let sb = 0;
-  let sa = 0;
-  let nb = 0;
-  for (let k = 1; k <= top(); k++) {
-    const a = statusDev(k);
-    const b = beforeDev(k);
-    if (Number.isFinite(a)) {
-      n++;
-      sa += Math.abs(a);
-    }
-    if (Number.isFinite(b)) {
-      nb++;
-      sb += Math.abs(b);
-    }
-  }
-  if (n) {
-    t.history.push({
-      startedAt: t.passStartedAt,
-      endedAt: new Date().toISOString(),
-      refA4: Number(S().refA4),
-      measured: n,
-      meanAbsBefore: nb ? sb / nb : 0,
-      meanAbsAfter: sa / n,
-    });
-    t.history = t.history.slice(-30);
+  const ks = Array.from({ length: top() }, (_, i) => i + 1);
+  const after = ks.map(statusDev).filter(Number.isFinite);
+  const before = ks.map(beforeDev).filter(Number.isFinite);
+  const meanAbs = (a) => (a.length ? a.reduce((s, x) => s + Math.abs(x), 0) / a.length : 0);
+  if (after.length) {
+    t.history = [
+      ...t.history,
+      { startedAt: t.passStartedAt, endedAt: new Date().toISOString(), refA4: Number(S().refA4), measured: after.length, meanAbsBefore: meanAbs(before), meanAbsAfter: meanAbs(after) },
+    ].slice(-30);
   }
   t.keys = {};
   t.passStartedAt = new Date().toISOString();
@@ -1499,9 +887,8 @@ function newPass() {
 }
 
 function exportTuning() {
-  const blob = new Blob([JSON.stringify(state.tuning, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(state.tuning, null, 2)], { type: 'application/json' }));
   a.download = (state.tuning.name || 'stamning').replace(/[^\wåäöÅÄÖ-]+/g, '_') + '.json';
   document.body.append(a);
   a.click();
@@ -1512,10 +899,9 @@ function exportTuning() {
 async function importTuning(file) {
   try {
     const data = JSON.parse(await file.text());
-    if (!data || typeof data !== 'object' || !data.settings) throw new Error('saknar inställningar');
-    const t = duplicateTuning(data, (data.name || 'Importerad') + (state.list.some((x) => x.id === data.id) ? ' (import)' : ''));
-    t.keys = data.keys || {};
-    t.history = data.history || [];
+    if (!data?.settings) throw new Error('saknar inställningar');
+    const exists = state.list.some((x) => x.id === data.id);
+    const t = duplicateTuning(data, (data.name || 'Importerad') + (exists ? ' (import)' : ''));
     await createAndOpen(t);
     message(`Importerade "${t.name}".`, 'ok');
   } catch (e) {
@@ -1523,73 +909,90 @@ async function importTuning(file) {
   }
 }
 
-// Färgläge: auto följer webbläsaren, ljust/mörkt sätter data-theme på <html>.
-// theme.js i <head> tillämpar sparat val innan sidan ritas.
-const THEMES = { auto: ['◐ Auto', 'följer webbläsaren'], light: ['☀ Ljust', 'ljust'], dark: ['☾ Mörkt', 'mörkt'] };
-
-function currentTheme() {
-  return document.documentElement.dataset.theme || 'auto';
+async function deleteCurrent() {
+  try {
+    await saver.discard(); // en pågående sparning får inte återskapa filen
+    await deleteTuning(state.tuning.id);
+    await refreshList();
+    if (state.list[0]) await openTuning(await getTuning(state.list[0].id));
+    else await createAndOpen(newTuning('Mitt piano'));
+    message('Stämningen raderades.', 'ok');
+  } catch {
+    message('Kunde inte radera stämningen.', 'error');
+  }
 }
+
+// Färgläge: auto följer webbläsaren. theme.js i <head> tillämpar sparat val
+// innan sidan ritas.
+const THEMES = { auto: ['◐ Auto', 'följer webbläsaren'], light: ['☀ Ljust', 'ljust'], dark: ['☾ Mörkt', 'mörkt'] };
+const currentTheme = () => document.documentElement.dataset.theme || 'auto';
 
 function setTheme(t) {
   if (t === 'auto') delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme = t;
   try {
-    if (t === 'auto') localStorage.removeItem(THEME);
-    else localStorage.setItem(THEME, t);
+    if (t === 'auto') localStorage.removeItem(LS.theme);
+    else localStorage.setItem(LS.theme, t);
   } catch { /* valfritt */ }
   renderThemeButton();
-  readColors();
-  drawChart();
+  refreshColors();
 }
 
 function renderThemeButton() {
   const [label, desc] = THEMES[currentTheme()];
-  const b = $('btn-theme');
-  b.textContent = label;
-  b.title = `Färgläge: ${desc}. Klicka för att byta.`;
-  b.setAttribute('aria-label', `Färgläge: ${desc}`);
+  Object.assign($('btn-theme'), { textContent: label, title: `Färgläge: ${desc}. Klicka för att byta.` });
+  $('btn-theme').setAttribute('aria-label', `Färgläge: ${desc}`);
 }
 
+function refreshColors() {
+  state.colors = readColors();
+  renderChart();
+}
+
+// ---------------------------------------------------------------------------
+// Händelser
+
 function bindEvents() {
-  renderThemeButton();
-  $('btn-theme').addEventListener('click', () => {
+  const on = (id, ev, fn) => $(id).addEventListener(ev, fn);
+  const onAll = (sel, fn) => document.querySelectorAll(sel).forEach((el) => el.addEventListener('click', () => fn(el)));
+  const show = (id, v) => () => ($(id).hidden = !v);
+
+  // Topp
+  on('btn-theme', 'click', () => {
     const order = ['auto', 'light', 'dark'];
     setTheme(order[(order.indexOf(currentTheme()) + 1) % order.length]);
   });
-  $('message-close').addEventListener('click', () => ($('message').hidden = true));
-  $('btn-mic').addEventListener('click', () => (state.audio ? stopMic() : startMic()));
-  $('btn-prev').addEventListener('click', () => selectKey(state.key - 1));
-  $('btn-next').addEventListener('click', () => selectKey(state.key + 1));
-  $('mode-auto').addEventListener('click', () => setMode('auto'));
-  $('mode-lock').addEventListener('click', () => setMode('lock'));
-  $('mode-map').addEventListener('click', () => {
+  on('message-close', 'click', show('message', false));
+  on('btn-mic', 'click', () => (mic.running ? stopMic() : startMic()));
+
+  // Stämapparat
+  on('btn-prev', 'click', () => selectKey(state.key - 1));
+  on('btn-next', 'click', () => selectKey(state.key + 1));
+  on('mode-auto', 'click', () => setMode('auto'));
+  on('mode-lock', 'click', () => setMode('lock'));
+  on('mode-map', 'click', () => {
     if (state.mode === 'map') return;
     setMode('map');
-    if (!state.audio) startMic();
+    if (!mic.running) startMic();
   });
-  $('map-skip').addEventListener('click', () => {
-    const next = nextInPlan(state.key);
-    if (next) selectKey(next, false);
-    else finishMapping();
-  });
-  document.querySelectorAll('[data-plan]').forEach((b) => b.addEventListener('click', () => setMapPlan(b.dataset.plan)));
-  try { setMapPlan(localStorage.getItem(MAP_PLAN) === 'full' ? 'full' : 'quick'); } catch { setMapPlan('quick'); }
-  $('map-redo').addEventListener('click', () => {
-    state.map = mapKeyState();
+  on('map-skip', 'click', () => advanceMapping(state.key));
+  on('map-redo', 'click', () => {
+    state.map = mapping.newKeyState();
     renderMapPanel();
   });
-  $('map-stop').addEventListener('click', () => setMode('lock'));
-  $('keyboard').addEventListener('click', (e) => {
+  on('map-stop', 'click', () => setMode('lock'));
+  onAll('[data-plan]', (b) => setMapPlan(b.dataset.plan));
+
+  on('keyboard', 'click', (e) => {
     const k = Number(e.target.closest('.key')?.dataset.k);
     if (!k) return;
     const prev = state.key;
     selectKey(k);
-    if (state.toneMode === 'piano') playTone();
-    else if (state.toneMode === 'sine') state.sine && k === prev ? stopSine() : startSine();
+    if (state.toneMode === 'piano') playPiano();
+    else if (state.toneMode === 'sine') (tones.sineOn && k === prev ? stopSine : startSine)();
   });
-  document.querySelectorAll('[data-tone]').forEach((b) => b.addEventListener('click', () => setToneMode(b.dataset.tone)));
-  try { setToneMode(localStorage.getItem(TONE_MODE) || 'off'); } catch { setToneMode('off'); }
+  onAll('[data-tone]', (b) => setToneMode(b.dataset.tone));
+  on('btn-tone', 'click', playCurrent);
 
   const setPartial = (d) => {
     const k = state.key;
@@ -1600,75 +1003,64 @@ function bindEvents() {
     renderKeyInfo();
     markDirty();
   };
-  $('partial-dec').addEventListener('click', () => setPartial(-1));
-  $('partial-inc').addEventListener('click', () => setPartial(1));
-  $('btn-tone').addEventListener('click', playCurrent);
-  $('btn-measure-b').addEventListener('click', () => {
-    if (!state.audio) {
-      message('Starta mikrofonen först.', 'warn');
-      return;
-    }
+  on('partial-dec', 'click', () => setPartial(-1));
+  on('partial-inc', 'click', () => setPartial(1));
+  on('btn-measure-b', 'click', () => {
+    if (!mic.running) return message('Starta mikrofonen först.', 'warn');
     state.bReadings = [];
     state.measureB = { k: state.key, until: performance.now() + 4000 };
     $('btn-measure-b').disabled = true;
     message(`Slå an ${kName(state.key)} kraftigt och låt den klinga …`, 'info', 4000);
-    setTimeout(() => state.measureB && finishMeasureB(), 6000);
+    setTimeout(() => state.measureB && finishMeasureB(), 6000); // om tonen tystnar innan
   });
 
   // Referens
-  $('set-ref').addEventListener('change', (e) => setRef(parseFloat(e.target.value.replace(',', '.'))));
-  document.querySelectorAll('[data-ref]').forEach((b) =>
-    b.addEventListener('click', () => setRef(Number(S().refA4) + Number(b.dataset.ref))),
-  );
-  $('ref-presets').addEventListener('click', (e) => {
-    const hz = Number(e.target.dataset.hz);
-    if (hz) setRef(hz);
-  });
-  $('btn-fit-ref').addEventListener('click', fitRefToPiano);
+  on('set-ref', 'change', (e) => setRef(parseFloat(e.target.value.replace(',', '.'))));
+  onAll('[data-ref]', (b) => setRef(Number(S().refA4) + Number(b.dataset.ref)));
+  onAll('[data-hz]', (b) => setRef(Number(b.dataset.hz)));
+  on('btn-fit-ref', 'click', fitRefToPiano);
 
   // Inställningar
-  const bindSel = (id, key, conv = (v) => v) => $(id).addEventListener('input', (e) => setSetting(key, conv(e.target.value)));
-  $('set-kind').addEventListener('input', (e) => {
-    // Byt till typens normalstorlek; en pianinohöjd är ingen rimlig flygellängd.
-    S().sizeCm = PIANO_KINDS[e.target.value].def;
+  const bindSetting = (id, key, conv = (v) => v) => on(id, 'input', (e) => setSetting(key, conv(e.target.value)));
+  on('set-kind', 'input', (e) => {
+    S().sizeCm = PIANO_KINDS[e.target.value].def; // en pianinohöjd är ingen rimlig flygellängd
     $('set-size').value = S().sizeCm;
     setSetting('pianoKind', e.target.value);
   });
-  $('set-size').addEventListener('change', (e) => {
+  on('set-size', 'change', (e) => {
     const k = PIANO_KINDS[S().pianoKind];
     const cm = Math.round(Math.max(k.min, Math.min(k.max, Number(e.target.value) || k.def)));
     e.target.value = cm;
     setSetting('sizeCm', cm);
   });
-  $('set-keys').addEventListener('input', (e) => {
+  on('set-keys', 'input', (e) => {
     setSetting('keyCount', Number(e.target.value));
     applyKeyCount();
   });
-  bindSel('set-temperament', 'temperament');
-  bindSel('set-root', 'root', Number);
-  bindSel('set-stretch', 'stretch');
-  bindSel('set-bass', 'bassOctave');
-  bindSel('set-mid', 'midOctave');
-  bindSel('set-treble', 'trebleOctave');
-  bindSel('set-extra-treble', 'extraTreble', Number);
-  bindSel('set-extra-bass', 'extraBass', Number);
-  bindSel('set-overpull', 'overpull', Number);
-  bindSel('set-tolerance', 'tolerance', Number);
-
-  $('set-name').addEventListener('input', (e) => {
+  bindSetting('set-temperament', 'temperament');
+  bindSetting('set-root', 'root', Number);
+  bindSetting('set-stretch', 'stretch');
+  bindSetting('set-bass', 'bassOctave');
+  bindSetting('set-mid', 'midOctave');
+  bindSetting('set-treble', 'trebleOctave');
+  bindSetting('set-extra-treble', 'extraTreble', Number);
+  bindSetting('set-extra-bass', 'extraBass', Number);
+  bindSetting('set-overpull', 'overpull', Number);
+  bindSetting('set-tolerance', 'tolerance', Number);
+  on('set-name', 'input', (e) => {
     state.tuning.name = e.target.value.trim() || 'Namnlös';
     const item = state.list.find((t) => t.id === state.tuning.id);
     if (item) item.name = state.tuning.name;
     renderTuningSelect();
     markDirty();
   });
-  $('set-notes').addEventListener('input', (e) => {
+  on('set-notes', 'input', (e) => {
     state.tuning.notes = e.target.value;
     markDirty();
   });
 
-  // Stämningar
-  $('tuning-select').addEventListener('change', async (e) => {
+  // Sparade stämningar
+  on('tuning-select', 'change', async (e) => {
     try {
       await openTuning(await getTuning(e.target.value));
     } catch {
@@ -1676,90 +1068,106 @@ function bindEvents() {
       renderTuningSelect();
     }
   });
-  $('btn-new').addEventListener('click', () => createAndOpen(newTuning(`Piano ${state.list.length + 1}`)).catch(() => message('Kunde inte skapa stämningen.', 'error')));
-  $('btn-dup').addEventListener('click', async () => {
-    await flushSave();
-    const t = duplicateTuning(state.tuning, state.tuning.name + ' (kopia)');
-    createAndOpen(t).catch(() => message('Kunde inte duplicera.', 'error'));
+  on('btn-new', 'click', () => createAndOpen(newTuning(`Piano ${state.list.length + 1}`)).catch(() => message('Kunde inte skapa stämningen.', 'error')));
+  on('btn-dup', 'click', async () => {
+    await saver.flush();
+    createAndOpen(duplicateTuning(state.tuning, state.tuning.name + ' (kopia)')).catch(() => message('Kunde inte duplicera.', 'error'));
   });
-  $('btn-del').addEventListener('click', () => {
+  on('btn-del', 'click', () => {
     $('confirm-del-text').textContent = `Radera "${state.tuning.name}" med alla mätningar? Det går inte att ångra.`;
     $('confirm-del').hidden = false;
   });
-  $('confirm-del-no').addEventListener('click', () => ($('confirm-del').hidden = true));
-  $('confirm-del-yes').addEventListener('click', async () => {
+  on('confirm-del-no', 'click', show('confirm-del', false));
+  on('confirm-del-yes', 'click', () => {
     $('confirm-del').hidden = true;
-    try {
-      clearTimeout(state.saveTimer);
-      state.saveTimer = 0;
-      state.dirty = false;
-      await saveChain; // låt en pågående sparning bli klar så att den inte återskapar filen
-      await deleteTuning(state.tuning.id);
-      await refreshList();
-      if (state.list[0]) await openTuning(await getTuning(state.list[0].id));
-      else await createAndOpen(newTuning('Mitt piano'));
-      message('Stämningen raderades.', 'ok');
-    } catch {
-      message('Kunde inte radera stämningen.', 'error');
-    }
+    deleteCurrent();
   });
 
   // Omgång
-  $('btn-new-pass').addEventListener('click', () => ($('confirm-pass').hidden = false));
-  $('confirm-pass-no').addEventListener('click', () => ($('confirm-pass').hidden = true));
-  $('confirm-pass-yes').addEventListener('click', () => {
+  on('btn-new-pass', 'click', show('confirm-pass', true));
+  on('confirm-pass-no', 'click', show('confirm-pass', false));
+  on('confirm-pass-yes', 'click', () => {
     $('confirm-pass').hidden = true;
     newPass();
   });
-  $('btn-export').addEventListener('click', exportTuning);
-  $('file-import').addEventListener('change', (e) => {
+  on('btn-export', 'click', exportTuning);
+  on('file-import', 'change', (e) => {
     const f = e.target.files[0];
     e.target.value = '';
     if (f) importTuning(f);
   });
 
   // Diagram
-  $('chart').addEventListener('pointermove', chartHover);
-  $('chart').addEventListener('pointerleave', () => ($('tooltip').hidden = true));
-  $('chart').addEventListener('click', (e) => {
-    const r = $('chart').getBoundingClientRect();
-    const { pad } = chart;
-    const k = Math.round(((e.clientX - r.left - pad.l) / (r.width - pad.l - pad.r)) * (top() - 1)) + 1;
-    if (k >= 1 && k <= top()) selectKey(k);
-  });
-  $('table-details').addEventListener('toggle', () => $('table-details').open && renderTable());
+  on('chart', 'pointermove', chartHover);
+  on('chart', 'pointerleave', show('tooltip', false));
+  on('chart', 'click', (e) => chartKeyAt(e) && selectKey(chartKeyAt(e)));
+  on('table-details', 'toggle', () => $('table-details').open && renderTable());
 
   // Tangentbord
   document.addEventListener('keydown', (e) => {
     if (e.target.closest('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
-    if (e.key === 'ArrowLeft') selectKey(state.key - 1);
-    else if (e.key === 'ArrowRight') selectKey(state.key + 1);
-    else if (e.key === 'l' || e.key === 'L') setMode('lock');
-    else if (e.key === 'a' || e.key === 'A') setMode('auto');
-    else if (e.key === 't' || e.key === 'T') playCurrent();
-    else return;
+    const action = {
+      ArrowLeft: () => selectKey(state.key - 1),
+      ArrowRight: () => selectKey(state.key + 1),
+      l: () => setMode('lock'),
+      a: () => setMode('auto'),
+      t: playCurrent,
+    }[e.key.length === 1 ? e.key.toLowerCase() : e.key];
+    if (!action) return;
+    action();
     e.preventDefault();
   });
 
-  window.addEventListener('resize', () => drawChart());
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    readColors();
-    drawChart();
+  // Fönster
+  window.addEventListener('resize', renderChart);
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', refreshColors);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saver.flush();
+    else if (mic.running && !state.wakeLock) requestWakeLock();
   });
-  document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'hidden') flushSave();
-    else if (state.audio && !state.wakeLock) {
-      try { state.wakeLock = await navigator.wakeLock?.request('screen'); } catch { /* valfritt */ }
-    }
-  });
+  // Sista chansen att spara när fliken stängs.
   window.addEventListener('pagehide', () => {
-    if (state.dirty && state.tuning) {
-      navigator.sendBeacon?.(
-        'api/tunings/' + encodeURIComponent(state.tuning.id) + '?beacon=1',
-        new Blob([JSON.stringify(state.tuning)], { type: 'application/json' }),
-      );
-    }
+    if (!saver.dirty || !state.tuning) return;
+    navigator.sendBeacon?.(
+      'api/tunings/' + encodeURIComponent(state.tuning.id),
+      new Blob([JSON.stringify(state.tuning)], { type: 'application/json' }),
+    );
   });
+}
+
+// ---------------------------------------------------------------------------
+// Start
+
+async function boot() {
+  buildStaticUi();
+  state.colors = readColors();
+  try {
+    await refreshList();
+    let id = null;
+    try { id = localStorage.getItem(LS.tuning); } catch { /* valfritt */ }
+    const pick = state.list.find((t) => t.id === id) || state.list[0];
+    if (pick) await openTuning(await getTuning(pick.id));
+    else await createAndOpen(newTuning('Mitt piano'));
+  } catch {
+    // Servern nås inte: kör ändå, utan sparande.
+    state.tuning = newTuning('Mitt piano');
+    recompute();
+    renderSettings();
+    setSaveState('error');
+    message('Kunde inte nå servern. Mätningar sparas inte förrän den svarar.', 'warn', 0, 'server');
+  }
+  bindEvents();
+  renderThemeButton();
+  let plan = 'quick';
+  let tone = 'off';
+  try {
+    plan = localStorage.getItem(LS.plan) === 'full' ? 'full' : 'quick';
+    tone = localStorage.getItem(LS.tone) || 'off';
+  } catch { /* valfritt */ }
+  setMapPlan(plan);
+  setToneMode(tone);
+  updateReadout();
+  requestAnimationFrame(animate);
 }
 
 boot();
