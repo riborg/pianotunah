@@ -389,9 +389,11 @@ function renderKeyboard() {
   marker.style.left = `calc(10px + (100% - 20px) * ${Number(curEl.dataset.cx) / 100})`;
   marker.dataset.s = statusClass(statusDev(cur));
   $('kb-marker-name').textContent = kName(cur);
-  // Håll aktuell tangent synlig när klaviaturen scrollar (smala skärmar).
+  // Håll aktuell tangent synlig när klaviaturen scrollar (smala skärmar), men
+  // bara när tangenten byts, så att man kan scrolla själv mellan mätningarna.
   const sc = $('kb-scroll');
-  if (sc.scrollWidth > sc.clientWidth) {
+  if (cur !== renderKeyboard.scrolledTo && sc.scrollWidth > sc.clientWidth) {
+    renderKeyboard.scrolledTo = cur;
     const x = (Number(curEl.dataset.cx) / 100) * sc.scrollWidth - sc.clientWidth / 2;
     sc.scrollTo({ left: x, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   }
