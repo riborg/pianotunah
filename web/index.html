@@ -128,7 +128,7 @@
         <button class="seg" type="button" data-plan="quick" aria-pressed="true">Snabb, 7 toner</button>
         <button class="seg" type="button" data-plan="full" aria-pressed="false">Hela pianot</button>
       </div>
-      <p class="map-intro">Mät pianot innan du stämmer. Appen mäter hur styva strängarna är (inharmonicitet) och räknar ut stämkurvan för just ditt piano. Du stämmer ingenting under tiden och behöver ingen filtremsa; appen går vidare själv när en ton är klar.<br><strong>Snabb</strong> mäter A0–A6 (markerade på klaviaturen) och tar under en minut. Tangenterna däremellan interpoleras. <strong>Hela pianot</strong> mäter dessutom hur varje tangent ligger nu, vilket behövs för överdrag och för att se hur mycket pianot drivit sedan sist.</p>
+      <p class="map-intro">Mäter strängarnas inharmonicitet och ger en stämkurva för just ditt piano. Du stämmer inget och behöver ingen filtremsa.<br><strong>Snabb:</strong> A0–A6 (markerade), under en minut. <strong>Hela pianot:</strong> alla tangenter; behövs för överdrag och för att se drift sedan sist.</p>
       <p class="map-step" id="map-step" aria-live="polite"></p>
       <div class="map-checks">
         <span class="chk" id="map-chk-pitch"></span>
@@ -276,25 +276,25 @@
       <div>
         <h3>Arbetsgång</h3>
         <ol>
-          <li><strong>Kartlägg</strong> före stämningen. Klicka Kartlägg och välj <em>Snabb</em> (A0–A6, under en minut) eller <em>Hela pianot</em> (3–5 minuter). Appen ber dig slå an en ton i taget och går vidare själv. Du stämmer inget under tiden. Resultatet är en målkurva anpassad efter just ditt piano och ett förslag på referens om pianot ligger lågt.</li>
-          <li><strong>Välj tonhöjd.</strong> Ligger pianot långt under 440 Hz, välj <em>Använd pianots nuvarande tonhöjd</em> eller dra upp det med överdrag (se nedan).</li>
-          <li><strong>Stäm temperaturoktaven</strong> A3–A4 först, sedan uppåt oktav för oktav, sist basen.</li>
-          <li><strong>Dämpa unisonerna.</strong> Stäm en sträng per ton med en filtremsa som tystar de andra, och stäm sedan in de övriga strängarna efter gehör mot den.</li>
-          <li><strong>Ny omgång</strong> nästa gång du stämmer. Historiken visar hur mycket pianot drivit sedan sist.</li>
+          <li><strong>Kartlägg.</strong> <em>Snabb</em> (A0–A6, under en minut) eller <em>Hela pianot</em> (3–5 minuter). Slå an tonen som visas; appen går vidare själv.</li>
+          <li><strong>Välj tonhöjd.</strong> Ligger pianot lågt: <em>Använd pianots nuvarande tonhöjd</em>, eller dra upp med överdrag.</li>
+          <li><strong>Stäm A3–A4 först</strong>, sedan uppåt oktav för oktav, sist basen.</li>
+          <li><strong>Dämpa unisonerna</strong> med filtremsa. Stäm en sträng per ton, de övriga efter gehör mot den.</li>
+          <li><strong>Ny omgång</strong> nästa gång. Historiken visar hur mycket pianot drivit.</li>
         </ol>
       </div>
       <div>
         <h3>Varför stretch?</h3>
-        <p>En pianosträng är styv, så dess övertoner ligger lite högre än exakta heltalsmultipler: delton <var>n</var> har frekvensen <var>n</var>·f₀·√(1 + B·<var>n</var>²). Konstanten B kallas inharmonicitet och är störst i diskanten och i korta bassträngar.</p>
-        <p>För att oktaverna ska låta rena måste den övre tonens grundton matcha den undre tonens andra (eller fjärde, sjätte) delton, som ligger för högt. Därför stäms diskanten högre och basen lägre än teorin. Den så kallade Railsback-kurvan är typiskt 20–30 cent i vardera änden.</p>
-        <p><strong>Oktavtyp</strong> p:q betyder att delton p i den undre tonen och delton q i den övre görs svävningsfria. 2:1 ger smalast oktav och 4:2, 6:3, 8:4 allt bredare. Basen stäms ofta 6:3 eftersom man där hör de högre deltonerna mest.</p>
+        <p>Strängar är styva, så övertonerna ligger något över heltalsmultipler: f<sub>n</sub> = n·f₀·√(1 + B·n²). B, inharmoniciteten, är störst i diskanten och i korta bassträngar.</p>
+        <p>Rena oktaver kräver att den övre tonens grundton matchar den undre tonens andra (fjärde, sjätte) delton. Därför stäms diskanten högre och basen lägre, typiskt 20–40 cent i ändarna.</p>
+        <p><strong>Oktavtyp p:q:</strong> delton p i den undre tonen och q i den övre görs svävningsfria. 2:1 ger smalast oktav, sedan 4:2, 6:3, 8:4.</p>
       </div>
       <div>
         <h3>Mätningen</h3>
-        <p>I basen är grundtonen svag och en laptopmikrofon hör dåligt under 100 Hz. Därför mäts delton 6, 4 eller 2 som standard där. Målet för deltonen räknas fram med inharmonicitet så att resultatet blir detsamma som för grundtonen.</p>
-        <p><strong>Överdrag</strong> används när pianot ligger långt under målet. När strängar dras upp ökar belastningen på ramen och de redan stämda sjunker. Med 25 % överdrag stäms en ton som låg 20 cent lågt till +5 cent.</p>
-        <p><strong>Sinuston</strong>: välj Sinus under <em>Ton vid klick</em> och klicka på en tangent. Tonen ligger exakt på måldeltonens frekvens, så du stämmer strängen tills svävningarna mot den försvinner.</p>
-        <p><strong>Temperatur</strong> styr hur kvinterna fördelas inom oktaven. Liksvävande är standard. Historiska temperaturer ger tonarterna olika karaktär och passar barock- och klassisk repertoar.</p>
+        <p>I basen mäts delton 6, 4 eller 2: grundtonen är svag och laptopmikrofoner hör dåligt under 100 Hz.</p>
+        <p><strong>Överdrag:</strong> vid uppdragning sjunker redan stämda strängar när belastningen ökar. Med 25 % stäms en ton som låg −20 cent till +5.</p>
+        <p><strong>Sinuston:</strong> välj Sinus under <em>Ton vid klick</em> och klicka på en tangent. Stäm tills svävningarna försvinner.</p>
+        <p><strong>Temperatur:</strong> hur kvinterna fördelas inom oktaven. Liksvävande är standard.</p>
       </div>
     </div>
     <p class="keys-hint">Tangentbord: ← → byter tangent, L låser, A auto, T spelar eller stoppar målton.</p>
