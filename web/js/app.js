@@ -19,6 +19,12 @@ const SPEC_CENTS = 30;
 const MAP_PITCH = 8;
 const MAP_B = 5;
 const MAP_B_MS = 3000;
+// Snabbmätning: B på sju A:n (A0–A6) räcker för att forma kurvan, eftersom B
+// interpoleras mellan uppmätta tangenter. A0 är med eftersom de lägsta
+// strängarna ofta avviker från modellen och ger störst stretch.
+const QUICK_KEYS = [1, 13, 25, 37, 49, 61, 73];
+const QUICK_B_MS = 6000;
+const MAP_PLAN = 'pianotunah.mapPlan';
 
 const state = {
   tuning: null,
@@ -48,6 +54,7 @@ const state = {
   bReadings: [],
   measureB: null, // { k, until }
   map: null, // kartläggning av aktuell tangent, se mapKeyState()
+  mapPlan: 'quick', // quick (A0–A6) | full (alla tangenter)
   dirty: false,
   saveTimer: 0,
   saveState: 'idle',
@@ -423,6 +430,7 @@ function renderKeyboard() {
     el.dataset.s = statusClass(statusDev(k));
     el.classList.toggle('current', k === cur);
     el.classList.toggle('has-b', !!state.tuning.inharmonicity[k]);
+    el.classList.toggle('plan', !!state.map && isQuick() && QUICK_KEYS.includes(k));
     const lbl = el.firstChild;
     if (lbl) lbl.textContent = pitchClass(k) === 0 || k === 1 ? kName(k) : '';
     el.setAttribute('aria-label', `${kName(k)}, ${Number.isFinite(curDev(k)) ? fmtC(statusDev(k)) + ' cent' : 'ej mätt'}`);
@@ -550,6 +558,7 @@ function setMode(m) {
   $('map-panel').hidden = m !== 'map';
   // Börja på A0, eller fortsätt där en avbruten kartläggning slutade.
   if (m === 'map') selectKey(firstUnmapped(), false);
+  renderKeyboard();
   renderMapPanel();
 }
 
@@ -760,17 +769,33 @@ function mapKeyState() {
 }
 
 const isMapped = (k) => !!keyRec(k)?.mapped;
-const needsB = (k) => !state.tuning.inharmonicity[k];
+const isQuick = () => state.mapPlan === 'quick';
+// Snabbmätningen finns till för B och mäter därför alltid om det.
+const needsB = (k) => isQuick() || !state.tuning.inharmonicity[k];
+const planKeys = () =>
+  isQuick() ? QUICK_KEYS.filter((k) => k <= top()) : Array.from({ length: top() }, (_, i) => i + 1);
+const nextInPlan = (k) => planKeys().find((x) => x > k) ?? null;
 
 function firstUnmapped() {
-  for (let k = 1; k <= top(); k++) if (!isMapped(k)) return k;
-  return 1;
+  const ks = planKeys();
+  return ks.find((k) => !isMapped(k)) ?? ks[0];
+}
+
+function setMapPlan(p) {
+  state.mapPlan = p;
+  try { localStorage.setItem(MAP_PLAN, p); } catch { /* valfritt */ }
+  document.querySelectorAll('[data-plan]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.plan === p));
+  if (!state.map) return;
+  state.map = mapKeyState();
+  selectKey(firstUnmapped(), false);
+  renderKeyboard();
+  renderMapPanel();
 }
 
 function mapStep(k) {
   const mp = state.map;
   const pitchDone = mp.pitch.length >= MAP_PITCH;
-  const bDone = !needsB(k) || mp.bs.length >= MAP_B || mp.ms >= MAP_B_MS;
+  const bDone = !needsB(k) || mp.bs.length >= MAP_B || mp.ms >= (isQuick() ? QUICK_B_MS : MAP_B_MS);
   if (!pitchDone || !bDone) {
     renderMapPanel();
     return;
@@ -784,8 +809,9 @@ function mapStep(k) {
     recompute();
   }
   flashKey(k);
-  if (k >= top()) finishMapping();
-  else selectKey(k + 1, false);
+  const next = nextInPlan(k);
+  if (next) selectKey(next, false);
+  else finishMapping();
 }
 
 function finishMapping() {
@@ -795,10 +821,14 @@ function finishMapping() {
     if (isMapped(k)) mapped++;
     if (state.tuning.inharmonicity[k]) withB++;
   }
+  const quickB = planKeys().filter((k) => state.tuning.inharmonicity[k]).length;
   setMode('lock');
   message(
-    `Kartläggningen är klar: ${mapped} tangenter mätta, inharmonicitet för ${withB}. ` +
-      'Målkurvan bygger nu på pianots egna värden. Se rutan Referens A4 för hur pianot ligger.',
+    isQuick()
+      ? `Snabbmätningen är klar: inharmonicitet för ${quickB} av ${planKeys().length} toner. ` +
+          'Målkurvan bygger nu på dem, och tangenterna däremellan interpoleras.'
+      : `Kartläggningen är klar: ${mapped} tangenter mätta, inharmonicitet för ${withB}. ` +
+          'Målkurvan bygger nu på pianots egna värden. Se rutan Referens A4 för hur pianot ligger.',
     'ok',
     0,
   );
@@ -809,10 +839,10 @@ function renderMapPanel() {
   const mp = state.map;
   const k = state.key;
   const name = kName(k);
-  let mapped = 0;
-  for (let i = 1; i <= top(); i++) if (isMapped(i)) mapped++;
-  $('map-progress').textContent = `${mapped} av ${top()} tangenter`;
-  $('map-bar').style.width = `${(mapped / top()) * 100}%`;
+  const ks = planKeys();
+  const mapped = ks.filter(isMapped).length;
+  $('map-progress').textContent = `${mapped} av ${ks.length} ${isQuick() ? 'toner' : 'tangenter'}`;
+  $('map-bar').style.width = `${(mapped / ks.length) * 100}%`;
   $('map-step').textContent = mp.waitAttack
     ? `Slå an ${name} kraftigt och låt den klinga.`
     : mp.lost
@@ -826,7 +856,7 @@ function renderMapPanel() {
   if (!needsB(k)) {
     bc.textContent = 'Inharmonicitet redan uppmätt';
     bc.dataset.done = '1';
-  } else if (mp.bs.length < MAP_B && mp.ms >= MAP_B_MS) {
+  } else if (mp.bs.length < MAP_B && mp.ms >= (isQuick() ? QUICK_B_MS : MAP_B_MS)) {
     bc.textContent = 'Inharmonicitet: för svaga övertoner, hoppas över';
     bc.dataset.done = '1';
   } else {
@@ -1539,9 +1569,12 @@ function bindEvents() {
     if (!state.audio) startMic();
   });
   $('map-skip').addEventListener('click', () => {
-    if (state.key >= top()) finishMapping();
-    else selectKey(state.key + 1, false);
+    const next = nextInPlan(state.key);
+    if (next) selectKey(next, false);
+    else finishMapping();
   });
+  document.querySelectorAll('[data-plan]').forEach((b) => b.addEventListener('click', () => setMapPlan(b.dataset.plan)));
+  try { setMapPlan(localStorage.getItem(MAP_PLAN) === 'full' ? 'full' : 'quick'); } catch { setMapPlan('quick'); }
   $('map-redo').addEventListener('click', () => {
     state.map = mapKeyState();
     renderMapPanel();

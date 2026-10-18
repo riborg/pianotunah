@@ -276,6 +276,8 @@ textarea { resize: vertical; width: 100%; }
 .map-bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
 .map-bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 200ms ease; }
 .map-intro { margin: 0; font-size: 13px; color: var(--muted); max-width: 75ch; }
+.plan-modes { margin-left: 0; align-self: flex-start; }
+.key.plan { outline: 2px dashed var(--accent); outline-offset: -5px; }
 .map-step { margin: 0; font-size: 17px; font-weight: 600; }
 .map-checks { display: flex; flex-wrap: wrap; gap: 6px; }
 .chk { font: 12px var(--f-mono); padding: 3px 9px; border-radius: 99px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); }

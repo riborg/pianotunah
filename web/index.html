@@ -124,7 +124,11 @@
         <span id="map-progress"></span>
       </div>
       <div class="map-bar" aria-hidden="true"><i id="map-bar"></i></div>
-      <p class="map-intro">Mät pianot innan du stämmer. Appen mäter hur varje ton ligger nu och hur styva strängarna är (inharmonicitet), och räknar sedan ut stämkurvan för just ditt piano. Du stämmer ingenting under tiden och behöver ingen filtremsa. Ta tangenterna nerifrån och upp; appen går vidare själv när en tangent är klar. Inharmonicitet sparas med pianot, så nästa gång går det fortare.</p>
+      <div class="modes plan-modes" role="group" aria-label="Omfattning">
+        <button class="seg" type="button" data-plan="quick" aria-pressed="true">Snabb, 7 toner</button>
+        <button class="seg" type="button" data-plan="full" aria-pressed="false">Hela pianot</button>
+      </div>
+      <p class="map-intro">Mät pianot innan du stämmer. Appen mäter hur styva strängarna är (inharmonicitet) och räknar ut stämkurvan för just ditt piano. Du stämmer ingenting under tiden och behöver ingen filtremsa; appen går vidare själv när en ton är klar.<br><strong>Snabb</strong> mäter A0–A6 (markerade på klaviaturen) och tar under en minut. Tangenterna däremellan interpoleras. <strong>Hela pianot</strong> mäter dessutom hur varje tangent ligger nu, vilket behövs för överdrag och för att se hur mycket pianot drivit sedan sist.</p>
       <p class="map-step" id="map-step" aria-live="polite"></p>
       <div class="map-checks">
         <span class="chk" id="map-chk-pitch"></span>
@@ -272,7 +276,7 @@
       <div>
         <h3>Arbetsgång</h3>
         <ol>
-          <li><strong>Kartlägg</strong> (före stämningen, 3–5 minuter). Klicka Kartlägg. Appen börjar på A0 och ber dig slå an en tangent i taget. För varje tangent mäts hur den ligger nu och strängarnas inharmonicitet, sedan går appen vidare själv. Du stämmer inget under tiden. Tangenter du hoppar över interpoleras från grannarna. Resultatet är en målkurva anpassad efter just ditt piano, och ett förslag på referens om pianot ligger lågt.</li>
+          <li><strong>Kartlägg</strong> före stämningen. Klicka Kartlägg och välj <em>Snabb</em> (A0–A6, under en minut) eller <em>Hela pianot</em> (3–5 minuter). Appen ber dig slå an en ton i taget och går vidare själv. Du stämmer inget under tiden. Resultatet är en målkurva anpassad efter just ditt piano och ett förslag på referens om pianot ligger lågt.</li>
           <li><strong>Välj tonhöjd.</strong> Ligger pianot långt under 440 Hz, välj <em>Använd pianots nuvarande tonhöjd</em> eller dra upp det med överdrag (se nedan).</li>
           <li><strong>Stäm temperaturoktaven</strong> A3–A4 först, sedan uppåt oktav för oktav, sist basen.</li>
           <li><strong>Dämpa unisonerna.</strong> Stäm en sträng per ton med en filtremsa som tystar de andra, och stäm sedan in de övriga strängarna efter gehör mot den.</li>
