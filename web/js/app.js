@@ -647,7 +647,8 @@ function measureCurrent(A) {
     state.partialDevs.push(mi ? centsBetween(mi.freq, fi) : null);
   }
 
-  if (state.stable) recordKey(k, n, state.readings[state.readings.length - 1].hz);
+  // Spara samma värde som visas: medianen av de senaste avläsningarna.
+  if (state.stable) recordKey(k, n, median(state.readings.slice(-5).map((r) => r.hz)));
 
   // Inharmonicitet (kartläggning eller manuell mätning).
   const wantB = !ref && (state.map || (state.measureB && state.measureB.k === k));
