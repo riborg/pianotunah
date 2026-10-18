@@ -40,7 +40,9 @@ Temperaturoktaven A3–A4 läggs först. Därefter byggs oktaverna uppåt och ne
 
 **Mätning.** En FFT (16 384 punkter) ger topparnas grova läge. Därefter förfinas frekvensen ur fasskillnaden $\Delta\varphi$ mellan två fönster förskjutna $H$ sampel:
 
-$$f = f_c + \frac{f_s}{2\pi H}\,\operatorname{wrap}\!\left(\Delta\varphi - \frac{2\pi f_c H}{f_s}\right)$$
+$$f = f_c + \frac{f_s}{2\pi H}\,\mathrm{wrap}\left(\Delta\varphi - \frac{2\pi f_c H}{f_s}\right)$$
+
+där $\mathrm{wrap}$ lägger vinkeln i $(-\pi, \pi]$.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/settings-dark.png">
