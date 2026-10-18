@@ -53,10 +53,11 @@ där $\mathrm{wrap}$ lägger vinkeln i $(-\pi, \pi]$.
 ## Drift
 
 ```sh
-docker compose up -d --build
+docker compose pull && docker compose up -d   # release-imagen från ghcr.io
+docker compose up -d --build                  # eller bygg lokalt
 ```
 
-Imagen byggs `FROM scratch` (~7 MB): en statisk Go-binär med webbappen inbäddad. Containern kör read-only som uid 1000 utan capabilities, och data ligger i `./data`.
+Imagen byggs `FROM scratch` (~7 MB) för amd64 och arm64: en statisk Go-binär med webbappen inbäddad. Containern kör read-only som uid 1000 utan capabilities, och data ligger i `./data`.
 
 Mikrofonen kräver https. Routen `pianotunah.example.com` går via Traefik med `ip-allowlist` och nås bara från LAN.
 
@@ -65,7 +66,27 @@ Mikrofonen kräver https. Routen `pianotunah.example.com` går via Traefik med `
 | `ADDR`     | `:8080`  | lyssningsadress |
 | `DATA_DIR` | `/data`  | sparade stämningar (JSON) |
 
-API: `GET /api/tunings`, `GET|PUT|DELETE /api/tunings/{id}`, `GET /healthz`. `PUT` kräver dokumentets `rev` och svarar 409 om någon annan har sparat sedan dess.
+API: `GET /api/tunings`, `GET|PUT|DELETE /api/tunings/{id}`, `GET /api/version`, `GET /healthz`. `PUT` kräver dokumentets `rev` och svarar 409 om någon annan har sparat sedan dess.
+
+## Release
+
+```sh
+git tag -a v1.2.0 -m v1.2.0
+git push origin v1.2.0
+```
+
+GitHub Actions kör testerna och publicerar `ghcr.io/riborg/pianotunah` med taggarna `1.2.0`, `1.2`, `1` och `latest`. Därefter skapas en GitHub Release med commits sedan förra taggen. Förhandsversioner (`v1.2.0-rc.1`) får inte `latest`.
+
+Servern följer `latest` via Watchtower, som kollar en gång per dygn som standard. Paketet är privat, så Watchtower behöver inloggning mot ghcr.io. Skapa en token med `read:packages`, och kör sedan:
+
+```sh
+echo "$TOKEN" | docker login ghcr.io -u riborg --password-stdin
+# ersätt Watchtower med en som har inloggningen monterad:
+docker rm -f watchtower
+docker run -d --name watchtower --restart unless-stopped \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v "$HOME/.docker/config.json:/config.json:ro" nickfedor/watchtower
+```
 
 ## Utveckling
 
@@ -81,6 +102,7 @@ docker run --rm --network caddy -v "$PWD":/usr/src/app/pt zenika/alpine-chrome:w
 
 | Fil | |
 |-----|-|
+| `.github/workflows/` | CI och release |
 | `main.go` | server: statiska filer och `/api/tunings` |
 | `web/js/theory.js` | temperaturer, inharmonicitet, stretch, målfrekvenser |
 | `web/js/dsp.js` | FFT, tangentigenkänning, deltonsmätning, skattning av $B$ |
