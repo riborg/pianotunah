@@ -111,6 +111,27 @@ func (s *store) put(w http.ResponseWriter, r *http.Request) {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	// Optimistisk låsning: klienten skickar revisionen den utgick från. Har
+	// någon annan sparat under tiden svarar vi 409 i stället för att skriva över.
+	base, _ := doc["rev"].(float64)
+	cur, err := s.rev(id)
+	if err != nil {
+		httpError(w, err, http.StatusInternalServerError)
+		return
+	}
+	if int64(base) != cur {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(map[string]int64{"rev": cur})
+		return
+	}
+	doc["rev"] = cur + 1
+	if body, err = json.Marshal(doc); err != nil {
+		httpError(w, err, http.StatusInternalServerError)
+		return
+	}
+
 	tmp, err := os.CreateTemp(s.dir, ".tmp-*")
 	if err != nil {
 		httpError(w, err, http.StatusInternalServerError)
@@ -130,7 +151,24 @@ func (s *store) put(w http.ResponseWriter, r *http.Request) {
 		httpError(w, err, http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusNoContent)
+	writeJSON(w, map[string]int64{"rev": cur + 1})
+}
+
+// Sparad revision för id, 0 om stämningen inte finns.
+func (s *store) rev(id string) (int64, error) {
+	b, err := os.ReadFile(s.path(id))
+	if errors.Is(err, fs.ErrNotExist) {
+		return 0, nil
+	} else if err != nil {
+		return 0, err
+	}
+	var d struct {
+		Rev int64 `json:"rev"`
+	}
+	if err := json.Unmarshal(b, &d); err != nil {
+		return 0, err
+	}
+	return d.Rev, nil
 }
 
 func (s *store) del(w http.ResponseWriter, r *http.Request) {

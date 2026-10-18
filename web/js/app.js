@@ -143,7 +143,8 @@ async function saveNow() {
   t.updatedAt = new Date().toISOString();
   setSaveState('saving');
   try {
-    await saveTuning(t);
+    const r = await saveTuning(t);
+    if (r?.rev) t.rev = r.rev;
     if (t !== state.tuning) return;
     setSaveState(state.dirty ? 'dirty' : 'idle');
     const item = state.list.find((x) => x.id === t.id);
@@ -151,11 +152,30 @@ async function saveNow() {
       item.name = t.name;
       renderTuningSelect();
     }
-  } catch {
+  } catch (e) {
     if (t !== state.tuning) return;
+    if (e.status === 409) return reloadAfterConflict(t);
     state.dirty = true;
     setSaveState('error');
     state.saveTimer = setTimeout(flushSave, 10000);
+  }
+}
+
+// Någon annan (en annan flik eller enhet) har sparat stämningen sedan den
+// laddades här. Ladda den senaste i stället för att skriva över den.
+async function reloadAfterConflict(t) {
+  try {
+    const latest = await getTuning(t.id);
+    state.dirty = false;
+    await openTuning(latest);
+    message(
+      'Stämningen har sparats från en annan flik eller enhet. Den senaste versionen är laddad, och ändringarna du gjorde här sparades inte.',
+      'warn',
+      0,
+    );
+  } catch {
+    setSaveState('error');
+    message('Stämningen har ändrats någon annanstans men kunde inte laddas om. Ladda om sidan.', 'error', 0);
   }
 }
 
@@ -192,7 +212,7 @@ async function openTuning(t) {
 }
 
 async function createAndOpen(t) {
-  await saveTuning(t);
+  t.rev = (await saveTuning(t)).rev;
   await refreshList();
   await openTuning(t);
 }

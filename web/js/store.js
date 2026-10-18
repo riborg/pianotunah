@@ -10,7 +10,11 @@ async function call(method, path = '', body) {
     headers: body ? { 'Content-Type': 'application/json' } : {},
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) throw new Error(`${method} ${API}${path}: ${res.status}`);
+  if (!res.ok) {
+    const err = new Error(`${method} ${API}${path}: ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
   return res.status === 204 ? null : res.json();
 }
 
@@ -37,6 +41,7 @@ export function newTuning(name = 'Mitt piano') {
     partials: {}, // tangent -> vald delton (om annan än standard)
     keys: {}, // tangent -> { cents, before, at }
     passStartedAt: now,
+    rev: 0, // serverns revision; sätts vid varje sparning
     history: [], // avslutade omgångar
   };
 }
@@ -58,5 +63,5 @@ export function normalize(t) {
 export function duplicateTuning(t, name) {
   const copy = normalize(JSON.parse(JSON.stringify(t)));
   const now = new Date().toISOString();
-  return { ...copy, id: newId(), name, createdAt: now, updatedAt: now };
+  return { ...copy, id: newId(), name, createdAt: now, updatedAt: now, rev: 0 };
 }
