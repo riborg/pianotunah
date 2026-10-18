@@ -257,7 +257,11 @@ textarea { resize: vertical; width: 100%; }
 .pcell[data-s="bad"] .pv { color: var(--bad); }
 
 .tuner-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.partial-pick { display: flex; align-items: center; gap: 6px; }
+.partial-pick, .tone-pick { display: flex; align-items: center; gap: 6px; }
+.tone-pick .mini-label { margin: 0; }
+.tone-modes { margin-left: 0; }
+.tone-modes .seg { padding: 4px 10px; }
+#btn-tone[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .partial-pick .mini-label { margin: 0; }
 .partial-pick output { font: 600 15px var(--f-mono); min-width: 1.5ch; text-align: center; }
 .bval { font: 12px var(--f-mono); color: var(--muted); }

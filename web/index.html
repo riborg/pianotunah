@@ -100,6 +100,14 @@
         <output id="partial-val">1</output>
         <button id="partial-inc" class="btn icon sm" type="button" aria-label="Högre delton">+</button>
       </div>
+      <div class="tone-pick">
+        <span class="mini-label" id="tone-lbl">Ton vid klick</span>
+        <div class="modes tone-modes" role="group" aria-labelledby="tone-lbl">
+          <button class="seg" type="button" data-tone="off" aria-pressed="true">Tyst</button>
+          <button class="seg" type="button" data-tone="piano" aria-pressed="false" title="Kort pianolik ton med stränginharmonicitet">Piano</button>
+          <button class="seg" type="button" data-tone="sine" aria-pressed="false" title="Ren, ihållande sinuston på måldeltonens frekvens">Sinus</button>
+        </div>
+      </div>
       <button id="btn-tone" class="btn ghost" type="button" title="Spela målton (T)">Spela målton</button>
       <button id="btn-measure-b" class="btn ghost" type="button">Mät inharmonicitet</button>
       <div class="bval" id="bval"></div>
@@ -246,10 +254,11 @@
         <h3>Mätningen</h3>
         <p>I basen är grundtonen svag och en laptopmikrofon hör dåligt under 100 Hz. Därför mäts delton 6, 4 eller 2 som standard där. Målet för deltonen räknas fram med inharmonicitet så att resultatet blir detsamma som för grundtonen.</p>
         <p><strong>Överdrag</strong> används när pianot ligger långt under målet. När strängar dras upp ökar belastningen på ramen och de redan stämda sjunker. Med 25 % överdrag stäms en ton som låg 20 cent lågt till +5 cent.</p>
+        <p><strong>Sinuston</strong>: välj Sinus under <em>Ton vid klick</em> och klicka på en tangent. Tonen ligger exakt på måldeltonens frekvens, så du stämmer strängen tills svävningarna mot den försvinner.</p>
         <p><strong>Temperatur</strong> styr hur kvinterna fördelas inom oktaven. Liksvävande är standard. Historiska temperaturer ger tonarterna olika karaktär och passar barock- och klassisk repertoar.</p>
       </div>
     </div>
-    <p class="keys-hint">Tangentbord: ← → byter tangent, L låser, A auto, T spelar målton.</p>
+    <p class="keys-hint">Tangentbord: ← → byter tangent, L låser, A auto, T spelar eller stoppar målton.</p>
   </section>
 </main>
 </body>

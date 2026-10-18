@@ -8,6 +8,7 @@ import { listTunings, getTuning, saveTuning, deleteTuning, newTuning, normalize,
 
 const $ = (id) => document.getElementById(id);
 const LAST_ID = 'pianotunah.lastTuning';
+const TONE_MODE = 'pianotunah.toneMode';
 const FRAME_MS = 90;
 const SPEC_COLS = 100; // ≈ 9 s historik i svävningsvyn
 const SPEC_BINS = 48;
@@ -45,6 +46,8 @@ const state = {
   saveState: 'idle',
   wakeLock: null,
   toneCtx: null,
+  toneMode: 'off', // off | piano | sine
+  sine: null,
   strobePhase: [0, 0, 0],
   lastAnim: 0,
   colors: {},
@@ -328,6 +331,7 @@ function renderKeyInfo() {
   $('partial-val').textContent = n;
   const measured = state.tuning.inharmonicity[k];
   $('bval').textContent = `B = ${T.B[k].toExponential(2).replace('.', ',')}` + (measured ? ' (uppmätt)' : ' (modell)');
+  updateSine();
 }
 
 function renderKeyboard() {
@@ -682,11 +686,17 @@ function flashKey(k) {
   el.classList.add('flash');
 }
 
+// Uppspelning sker i en egen AudioContext så att den överlever att mikrofonen stängs.
+function toneCtx() {
+  state.toneCtx ||= new AudioContext();
+  state.toneCtx.resume?.();
+  return state.toneCtx;
+}
+
 function playTone() {
   const k = state.key;
   const T = state.T;
-  const ctx = state.audio?.ctx || (state.toneCtx ||= new AudioContext());
-  ctx.resume?.();
+  const ctx = toneCtx();
   const now = ctx.currentTime;
   const out = ctx.createGain();
   out.gain.value = 0.22;
@@ -707,6 +717,65 @@ function playTone() {
     osc.start(now);
     osc.stop(now + decay + 0.05);
   }
+}
+
+// Ren sinuston på måldeltonens frekvens (inklusive ev. överdrag). Ihållande, så
+// att man kan lyssna efter svävningar mot strängen; följer med vid tangentbyte.
+function sineFreq() {
+  const k = state.key;
+  const T = state.T;
+  return partialFreq(T.freq[k] * 2 ** (goal(k) / 1200), T.B[k], partialOf(k));
+}
+
+function startSine() {
+  if (state.sine) return updateSine();
+  const ctx = toneCtx();
+  const t = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.value = sineFreq();
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(0.18, t + 0.04);
+  osc.connect(g).connect(ctx.destination);
+  osc.start(t);
+  state.sine = { ctx, osc, g };
+  renderToneButton();
+}
+
+function stopSine() {
+  const s = state.sine;
+  if (!s) return;
+  state.sine = null;
+  const t = s.ctx.currentTime;
+  s.g.gain.cancelScheduledValues(t);
+  s.g.gain.setValueAtTime(s.g.gain.value, t);
+  s.g.gain.linearRampToValueAtTime(0, t + 0.06);
+  s.osc.stop(t + 0.08);
+  renderToneButton();
+}
+
+function updateSine() {
+  if (state.sine) state.sine.osc.frequency.setTargetAtTime(sineFreq(), state.sine.ctx.currentTime, 0.01);
+}
+
+function playCurrent() {
+  if (state.toneMode === 'sine') state.sine ? stopSine() : startSine();
+  else playTone();
+}
+
+function setToneMode(m) {
+  state.toneMode = m;
+  if (m !== 'sine') stopSine();
+  document.querySelectorAll('[data-tone]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.tone === m));
+  try { localStorage.setItem(TONE_MODE, m); } catch { /* valfritt */ }
+  renderToneButton();
+}
+
+function renderToneButton() {
+  const b = $('btn-tone');
+  b.textContent = state.sine ? 'Stoppa sinuston' : state.toneMode === 'sine' ? 'Spela sinuston' : 'Spela målton';
+  b.setAttribute('aria-pressed', state.sine ? 'true' : 'false');
 }
 
 // ---------------------------------------------------------------------------
@@ -1261,8 +1330,14 @@ function bindEvents() {
   });
   $('keyboard').addEventListener('click', (e) => {
     const k = Number(e.target.closest('.key')?.dataset.k);
-    if (k) selectKey(k);
+    if (!k) return;
+    const prev = state.key;
+    selectKey(k);
+    if (state.toneMode === 'piano') playTone();
+    else if (state.toneMode === 'sine') state.sine && k === prev ? stopSine() : startSine();
   });
+  document.querySelectorAll('[data-tone]').forEach((b) => b.addEventListener('click', () => setToneMode(b.dataset.tone)));
+  try { setToneMode(localStorage.getItem(TONE_MODE) || 'off'); } catch { setToneMode('off'); }
 
   const setPartial = (d) => {
     const k = state.key;
@@ -1275,7 +1350,7 @@ function bindEvents() {
   };
   $('partial-dec').addEventListener('click', () => setPartial(-1));
   $('partial-inc').addEventListener('click', () => setPartial(1));
-  $('btn-tone').addEventListener('click', playTone);
+  $('btn-tone').addEventListener('click', playCurrent);
   $('btn-measure-b').addEventListener('click', () => {
     if (!state.audio) {
       message('Starta mikrofonen först.', 'warn');
@@ -1392,7 +1467,7 @@ function bindEvents() {
     else if (e.key === 'ArrowRight') selectKey(state.key + 1);
     else if (e.key === 'l' || e.key === 'L') setMode('lock');
     else if (e.key === 'a' || e.key === 'A') setMode('auto');
-    else if (e.key === 't' || e.key === 'T') playTone();
+    else if (e.key === 't' || e.key === 'T') playCurrent();
     else return;
     e.preventDefault();
   });
