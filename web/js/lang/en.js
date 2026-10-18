@@ -259,6 +259,8 @@ export default {
 
   'app.lang': 'Language',
   'app.theme': 'Color mode',
+  'app.about': 'About',
+  'app.desc': 'Piano tuner in the browser. Listens through the computer\'s microphone, computes stretch from the strings\' inharmonicity and saves tunings per piano.',
 
   help: `<h3>Workflow</h3>
 <ol>

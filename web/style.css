@@ -516,3 +516,8 @@ summary { cursor: pointer; color: var(--accent); font-size: 14px; }
   .key.flash, .drawer { animation: none; }
   .key, .kb-marker, .level-bar, .map-bar i { transition: none; }
 }
+
+/* App */
+.about { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.about p { margin: 0; }
+.about a { color: var(--accent); }

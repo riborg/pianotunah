@@ -259,6 +259,8 @@ export default {
 
   'app.lang': 'Språk',
   'app.theme': 'Färgläge',
+  'app.about': 'Om',
+  'app.desc': 'Stämapparat för piano i webbläsaren. Lyssnar med datorns mikrofon, räknar fram stretch ur strängarnas inharmonicitet och sparar stämningar per piano.',
 
   help: `<h3>Arbetsgång</h3>
 <ol>

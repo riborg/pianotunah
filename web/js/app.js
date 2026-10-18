@@ -1244,6 +1244,13 @@ async function boot() {
   } catch { /* valfritt */ }
   setMapPlan(plan);
   setToneMode(tone);
+  fetch('api/version')
+    .then((r) => r.json())
+    .then(({ version }) => {
+      $('app-version').textContent = version;
+      if (/^v\d/.test(version)) $('app-version').href += '/tag/' + version;
+    })
+    .catch(() => {});
   updateReadout();
   requestAnimationFrame(animate);
 }
