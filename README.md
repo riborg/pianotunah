@@ -15,6 +15,7 @@ Stämapparat för piano i webbläsaren. Lyssnar med datorns mikrofon, räknar fr
 - Temperaturer: liksvävande, Werckmeister III, Kirnberger III, Vallotti, Young II, medelton ¼ och ⅙ komma.
 - Referens A4 380–480 Hz, eller satt efter pianots nuvarande tonhöjd. Överdrag vid uppdragning.
 - Stroboskop, svävningsspektrogram och referenston (piano eller sinus).
+- Avvikelse per tangent som staplar under klaviaturen; hela stämkurvan under Inställningar.
 - Pianino eller flygel, storlek i cm, 85 eller 88 tangenter.
 - Stämningar sparas på servern med historik per omgång. Export och import som JSON.
 
