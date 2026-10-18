@@ -20,7 +20,7 @@ const FRAME_MS = 90; // analysintervall
 const SPEC_COLS = 100; // spektrogrammets historik, ≈ 9 s
 const SPEC_BINS = 48;
 const SPEC_CENTS = 30;
-const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan' };
+const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab' };
 
 const mic = new Mic();
 const tones = new TonePlayer();
@@ -284,6 +284,7 @@ function renderSettingDescs() {
 function renderRef() {
   const ref = Number(S().refA4);
   if (document.activeElement !== $('set-ref')) $('set-ref').value = ref.toFixed(1);
+  $('btn-ref-chip').textContent = `A4 = ${fmtHz(ref, 1)}`;
   const c = centsBetween(ref, 440);
   $('ref-cents').textContent = Math.abs(c) < 0.05 ? 'Standardstämton' : `${fmtC(c)} cent mot 440 Hz`;
   for (const b of $('ref-presets').children) b.classList.toggle('on', Number(b.dataset.hz) === ref);
@@ -402,7 +403,7 @@ function renderTable() {
 }
 
 function renderChart() {
-  if (!state.T) return;
+  if (!state.T || !$('chart').clientWidth) return; // dold flik: ritas när den visas
   const T = state.T;
   const points = [];
   const ticks = [];
@@ -950,6 +951,34 @@ function refreshColors() {
 }
 
 // ---------------------------------------------------------------------------
+// Inställningspanel
+
+function openDrawer(tab) {
+  $('drawer').hidden = $('drawer-backdrop').hidden = false;
+  document.body.classList.add('drawer-open');
+  $('btn-settings').setAttribute('aria-expanded', 'true');
+  let last = 'piano';
+  try { last = localStorage.getItem(LS.tab) || last; } catch { /* valfritt */ }
+  showTab(tab || last);
+  $('drawer-close').focus();
+}
+
+function closeDrawer() {
+  $('drawer').hidden = $('drawer-backdrop').hidden = true;
+  document.body.classList.remove('drawer-open');
+  $('btn-settings').setAttribute('aria-expanded', 'false');
+  $('btn-settings').focus();
+}
+
+function showTab(tab) {
+  if (!document.querySelector(`[data-panel="${tab}"]`)) tab = 'piano';
+  document.querySelectorAll('[data-tab]').forEach((b) => b.setAttribute('aria-selected', b.dataset.tab === tab));
+  document.querySelectorAll('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== tab));
+  try { localStorage.setItem(LS.tab, tab); } catch { /* valfritt */ }
+  if (tab === 'curve') renderChart();
+}
+
+// ---------------------------------------------------------------------------
 // Händelser
 
 function bindEvents() {
@@ -963,6 +992,11 @@ function bindEvents() {
     setTheme(order[(order.indexOf(currentTheme()) + 1) % order.length]);
   });
   on('message-close', 'click', show('message', false));
+  on('btn-settings', 'click', () => ($('drawer').hidden ? openDrawer() : closeDrawer()));
+  on('drawer-close', 'click', closeDrawer);
+  on('drawer-backdrop', 'click', closeDrawer);
+  on('btn-ref-chip', 'click', () => openDrawer('tuning'));
+  onAll('[data-tab]', (b) => showTab(b.dataset.tab));
   on('btn-mic', 'click', () => (mic.running ? stopMic() : startMic()));
 
   // Stämapparat
@@ -1105,6 +1139,7 @@ function bindEvents() {
 
   // Tangentbord
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !$('drawer').hidden) return closeDrawer();
     if (e.target.closest('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
     const action = {
       ArrowLeft: () => selectKey(state.key - 1),
@@ -1112,6 +1147,7 @@ function bindEvents() {
       l: () => setMode('lock'),
       a: () => setMode('auto'),
       t: playCurrent,
+      s: () => ($('drawer').hidden ? openDrawer() : closeDrawer()),
     }[e.key.length === 1 ? e.key.toLowerCase() : e.key];
     if (!action) return;
     action();
