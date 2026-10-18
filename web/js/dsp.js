@@ -170,33 +170,57 @@ export class Analyzer {
   }
 
   // Gissa vilken tangent som spelas genom att poängsätta varje tangent efter
-  // hur tydligt dess förväntade deltoner syns i spektrumet.
+  // hur tydligt dess förväntade deltoner syns i spektrumet. Därefter en
+  // undertonskontroll: tonen en oktav (eller oktav + kvint, två oktaver) under
+  // vinnaren har alla vinnarens deltoner, så den väljs om även dess egna
+  // deltoner hörs. margin = vinnarens försprång mot halvtonsgrannarna (dB).
   detectKey(targets, prevKey = 0) {
-    const nyq = this.sr / 2;
+    const scores = new Float64Array(KEY_COUNT + 1).fill(-Infinity);
     let best = 0;
     let bestScore = -Infinity;
     for (let k = 1; k <= KEY_COUNT; k++) {
-      const f1 = targets.freq[k];
-      const B = targets.B[k];
       let sum = 0;
       let count = 0;
       for (let n = 1; n <= 8; n++) {
-        const fn = partialFreq(f1, B, n);
-        if (fn > Math.min(9000, nyq * 0.9)) break;
-        if (fn < 50) continue;
-        const pk = this.peakNear(fn, 45);
-        sum += pk ? Math.max(0, pk.prom) : 0;
+        const p = this.partialProm(targets, k, n);
+        if (p === null) {
+          if (partialFreq(targets.freq[k], targets.B[k], n) > 9000) break;
+          continue;
+        }
+        sum += p;
         count++;
       }
       if (!count) continue;
-      let score = sum / Math.max(count, 2);
-      if (k === prevKey) score += 2;
-      if (score > bestScore) {
-        bestScore = score;
+      scores[k] = sum / Math.max(count, 2);
+      const s = scores[k] + (k === prevKey ? 2 : 0);
+      if (s > bestScore) {
+        bestScore = s;
         best = k;
       }
     }
-    return { key: best, score: bestScore };
+    if (!best) return { key: 0, score: -Infinity, margin: 0 };
+    for (const [shift, own] of [[24, [2, 3, 5]], [19, [2, 4, 5]], [12, [3, 5, 7]]]) {
+      const c = best - shift;
+      if (c < 1) continue;
+      const proms = own.map((n) => this.partialProm(targets, c, n)).filter((p) => p !== null);
+      if (proms.length >= 2 && Math.min(...proms) >= 8 && proms.reduce((a, p) => a + p, 0) / proms.length >= 12) {
+        best = c;
+        break;
+      }
+    }
+    const neigh = [best - 2, best - 1, best + 1, best + 2]
+      .filter((k) => k >= 1 && k <= KEY_COUNT)
+      .map((k) => scores[k]);
+    return { key: best, score: scores[best], margin: scores[best] - Math.max(...neigh) };
+  }
+
+  // Deltonens höjd över brusgolvet (dB, minst 0), eller null om den ligger
+  // utanför det som mäts (under 50 Hz eller över 9 kHz).
+  partialProm(targets, k, n) {
+    const fn = partialFreq(targets.freq[k], targets.B[k], n);
+    if (fn < 50 || fn > Math.min(9000, this.sr * 0.45)) return null;
+    const pk = this.peakNear(fn, 45);
+    return pk ? Math.max(0, pk.prom) : 0;
   }
 
   // Skatta B ur upp till 16 deltoner. Söker uppåt och förfinar modellen efter

@@ -38,6 +38,7 @@ const state = {
   partialDevs: [],
   cand: 0,
   candCount: 0,
+  autoFrames: 0, // bildrutor i rad som aktuell tangent varit klar vinnare i auto-läget
   bReadings: [],
   measureB: null, // { k, until }
   map: null, // { start, waitAttack }
@@ -444,6 +445,7 @@ function resetReadings() {
   state.stable = false;
   state.partialDevs = [];
   state.bReadings = [];
+  state.autoFrames = 0;
 }
 
 function selectKey(k, manual = true) {
@@ -552,6 +554,8 @@ function analyseFrame() {
 
   if (state.mode === 'auto') {
     const d = A.detectKey(state.T, state.key);
+    const clear = d.score > 8 && d.margin >= 6;
+    state.autoFrames = clear && d.key === state.key ? state.autoFrames + 1 : 0;
     if (d.score > 8) {
       if (d.key === state.cand) state.candCount++;
       else {
@@ -587,7 +591,10 @@ function measureCurrent(A) {
   const med = median(last);
   const spread = Math.max(...last) - Math.min(...last);
   state.signal = true;
-  state.stable = !ref && last.length >= 4 && spread < (k > 70 ? 1.5 : 0.8);
+  // I auto-läget sparas bara när tangenten varit tydligt igenkänd en stund, så att
+  // en överton som tolkas som tangenten en oktav upp inte sparas där.
+  const sure = state.mode !== 'auto' || state.autoFrames >= 6;
+  state.stable = !ref && sure && last.length >= 4 && spread < (k > 70 ? 1.5 : 0.8);
   const g = goal(k);
   state.display = med - g;
   // Svävningsvyn centreras på målet (inklusive ev. överdrag).
