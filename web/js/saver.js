@@ -1,8 +1,8 @@
-// Autosparning av aktuell stämning.
-// - Ändringar samlas i 2,5 s innan de sparas.
-// - Sparningar körs i tur och ordning, så en långsam kan inte skriva över en senare.
-// - 409 (sparad från annan flik/enhet sedan den laddades) går till onConflict.
-// - Nätverksfel försöker igen efter 10 s.
+// Autosave of the current tuning.
+// - Changes are collected for 2.5 s before saving.
+// - Saves run in order, so a slow one cannot overwrite a later one.
+// - 409 (saved from another tab/device since it was loaded) goes to onConflict.
+// - Network errors retry after 10 s.
 
 import { saveTuning } from './store.js';
 
@@ -14,7 +14,7 @@ export class Saver {
   #timer = 0;
   #chain = Promise.resolve();
 
-  // current(): stämningen som visas nu. onState('idle'|'dirty'|'saving'|'error').
+  // current(): the tuning shown now. onState('idle'|'dirty'|'saving'|'error').
   constructor({ current, onState, onSaved, onConflict }) {
     Object.assign(this, { current, onState, onSaved, onConflict });
   }
@@ -25,7 +25,7 @@ export class Saver {
     if (!this.#timer) this.#timer = setTimeout(() => this.flush(), DELAY_MS);
   }
 
-  // Spara direkt; löses när kön är tom.
+  // Save now; resolves when the queue is empty.
   flush() {
     clearTimeout(this.#timer);
     this.#timer = 0;
@@ -34,7 +34,7 @@ export class Saver {
     return this.#chain;
   }
 
-  // Släng osparade ändringar (t.ex. före radering) och vänta in pågående sparning.
+  // Drop unsaved changes (e.g. before deleting) and wait for a save in progress.
   discard() {
     clearTimeout(this.#timer);
     this.#timer = 0;

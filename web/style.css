@@ -1,7 +1,5 @@
-/* Layout: verktygsyta — stämapparaten stor till vänster, referens och
-   inställningar i en smal kolumn, klaviatur och kurva i full bredd under.
-   Färgvärld: stålsträngar och stämskruvar (kall stålblå accent), ebenholts
-   och elfenben i klaviaturen. Status (grön/gul/röd) hålls skild från accenten. */
+/* Colors: steel strings and tuning pins (cool steel-blue accent), ebony and
+   ivory keys. Status (green/yellow/red) is kept apart from the accent. */
 :root {
   --bg: #eceeed;
   --surface: #fbfcfb;
@@ -130,7 +128,7 @@ h3 { font: 600 15px/1.3 var(--f-body); margin: 0 0 8px; }
 button, input, select, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* Topp */
+/* Top */
 .top {
   position: sticky;
   top: env(safe-area-inset-top, 0px);
@@ -153,7 +151,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .ico { width: 18px; height: 18px; vertical-align: -4px; margin-right: 4px; }
 @media (max-width: 620px) { .tuning-bar { order: 5; width: 100%; } .tuning-bar select { min-width: 0; flex: 1 1 auto; max-width: none; } }
 
-/* Kontroller */
+/* Controls */
 select, input[type="text"], input[type="number"], textarea {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -161,7 +159,7 @@ select, input[type="text"], input[type="number"], textarea {
   padding: 6px 8px;
 }
 textarea { resize: vertical; width: 100%; }
-/* Egen pil i rullgardinsmenyer: webbläsarens placeras olika per plattform och tema. */
+/* Own arrow in dropdowns: the browser's is placed differently per platform and theme. */
 select {
   -webkit-appearance: none;
   appearance: none;
@@ -214,7 +212,7 @@ select:disabled { opacity: 0.55; }
   border: 1px solid var(--bad);
 }
 
-/* Meddelanden visas som toast ovanför allt, även inställningspanelen. */
+/* Messages show as a toast above everything, including the settings drawer. */
 .message {
   position: fixed;
   z-index: 60;
@@ -238,13 +236,13 @@ select:disabled { opacity: 0.55; }
 .message[data-kind="warn"] { border-left-color: var(--warn); }
 .message[data-kind="error"] { border-left-color: var(--bad); }
 
-/* Layout: klaviatur och stämapparat i en kolumn, allt annat i inställningspanelen. */
+/* Layout: keyboard and tuner in one column, everything else in the settings drawer. */
 .layout { display: flex; flex-direction: column; gap: var(--gap); max-width: 1100px; margin: var(--gap) auto 0; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; min-width: 0; }
 .keys-card { display: flex; flex-direction: column; gap: 10px; }
 .keys-card .legend { justify-content: center; }
 
-/* Stämapparat */
+/* Tuner */
 .tuner { display: flex; flex-direction: column; gap: 14px; }
 .tuner-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .tuner-head .modes { margin-left: auto; }
@@ -279,7 +277,7 @@ select:disabled { opacity: 0.55; }
 .level { margin-left: auto; width: 90px; height: 6px; border-radius: 3px; background: var(--sunk); overflow: hidden; }
 .level-bar { height: 100%; width: 0; background: var(--accent); transition: width 80ms linear; }
 
-/* Kartläggning */
+/* Survey */
 .map-panel { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 8px; background: var(--sunk); border: 1px solid var(--accent); }
 .map-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .map-head span { margin-left: auto; font: 13px var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -294,7 +292,7 @@ select:disabled { opacity: 0.55; }
 .map-intro { margin: 0; font-size: 13px; color: var(--muted); max-width: 80ch; }
 .key.plan { outline: 2px dashed var(--accent); outline-offset: -5px; }
 
-/* Inställningspanel */
+/* Settings drawer */
 body.drawer-open { overflow: hidden; }
 .backdrop { position: fixed; inset: 0; z-index: 40; background: rgb(0 0 0 / 0.35); }
 .drawer {
@@ -323,7 +321,7 @@ body.drawer-open { overflow: hidden; }
 .panel h3 { margin: 14px 0 0; font: 600 12px/1.2 var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .panel h3:first-child { margin-top: 0; }
 
-/* Formulär */
+/* Forms */
 .form { display: grid; grid-template-columns: 1fr; gap: 4px; }
 .form label { font-size: 13px; color: var(--muted); margin-top: 8px; display: flex; justify-content: space-between; gap: 8px; }
 .form label:first-child { margin-top: 0; }
@@ -336,7 +334,7 @@ body.drawer-open { overflow: hidden; }
 .custom-oct { display: grid; grid-template-columns: auto 1fr; gap: 4px 8px; align-items: center; padding: 8px; border-radius: 8px; background: var(--sunk); margin-top: 6px; }
 .custom-oct label { margin: 0; }
 
-/* Referens */
+/* Reference */
 .ref-row { display: flex; align-items: center; justify-content: center; gap: 4px; }
 .ref-input { display: flex; align-items: baseline; gap: 4px; }
 .ref-input input { width: 92px; font: 600 22px var(--f-mono); text-align: right; padding: 4px 6px; }
@@ -346,7 +344,7 @@ body.drawer-open { overflow: hidden; }
 .chip-btn.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .note-text { font-size: 13px; color: var(--muted); margin: 0; }
 
-/* Mätning */
+/* Measure */
 .partials { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
 .pcell { display: flex; flex-direction: column; align-items: center; padding: 4px 2px; border-radius: 6px; background: var(--sunk); border: 2px solid transparent; }
 .pcell.sel { border-color: var(--accent); }
@@ -359,7 +357,7 @@ body.drawer-open { overflow: hidden; }
 .partial-pick output { font: 600 15px var(--f-mono); min-width: 1.5ch; text-align: center; color: var(--ink); }
 .bval { font: 13px var(--f-mono); color: var(--muted); }
 
-/* Omgång */
+/* Pass */
 .pass-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .stat { display: flex; flex-direction: column; }
 .stat b { font: 600 18px var(--f-mono); font-variant-numeric: tabular-nums; }
@@ -367,7 +365,7 @@ body.drawer-open { overflow: hidden; }
 .history { margin: 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
 .history li + li { margin-top: 4px; }
 
-/* Klaviatur */
+/* Keyboard */
 .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
 .lg { display: inline-flex; align-items: center; gap: 5px; }
 .sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
@@ -388,10 +386,10 @@ body.drawer-open { overflow: hidden; }
   background: linear-gradient(var(--case-top), var(--case));
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -2px 6px rgb(0 0 0 / 0.35);
 }
-/* Filtlisten som ligger över tangenterna på ett riktigt piano. */
+/* The felt strip above the keys on a real piano. */
 .kb-felt { height: 7px; margin: 0 -2px; border-radius: 2px; background: linear-gradient(var(--felt-hi), var(--felt)); box-shadow: 0 1px 2px rgb(0 0 0 / 0.5); position: relative; z-index: 3; }
 .keyboard { position: relative; display: flex; height: 172px; user-select: none; }
-/* Avvikelseremsa i lådan under tangenterna, samma x-axel som klaviaturen. */
+/* Deviation strip in the case below the keys, same x axis as the keyboard. */
 .devstrip { display: block; width: 100%; margin-top: 8px; }
 .bar-sw { width: 4px; height: 12px; border-radius: 1px; background: linear-gradient(var(--bad), var(--good) 50%, var(--warn)); display: inline-block; }
 .key { cursor: pointer; padding: 0; border: 0; font: inherit; }
@@ -423,7 +421,7 @@ body.drawer-open { overflow: hidden; }
 }
 .klabel { font: 10px var(--f-mono); color: var(--key-label); margin-bottom: 10px; position: relative; z-index: 1; }
 
-/* Status: en smal list i tangentens nederkant (vita) eller på framkanten (svarta). */
+/* Status: a thin bar at the key's bottom edge (white) or front (black). */
 .key::before { content: ""; position: absolute; left: 22%; right: 22%; height: 4px; border-radius: 2px; background: transparent; }
 .key.white::before { bottom: 30px; }
 .key.black::before { bottom: 10px; left: 18%; right: 18%; height: 3px; }
@@ -431,11 +429,11 @@ body.drawer-open { overflow: hidden; }
 .key[data-s="warn"]::before { background: var(--warn); }
 .key[data-s="bad"]::before { background: var(--bad); }
 
-/* Uppmätt inharmonicitet: liten prick upptill. */
+/* Measured inharmonicity: small dot at the top. */
 .key.has-b::after { content: ""; position: absolute; top: 8px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--accent); opacity: 0.8; }
 .key.black.has-b::after { background: var(--ivory); opacity: 0.6; }
 
-/* Aktuell tangent: nedtryckt och upplyst. */
+/* Current key: pressed and lit. */
 .key.white.current {
   background: linear-gradient(180deg, var(--ivory-shade) 0%, var(--key-current) 16%, var(--key-current) 100%);
   box-shadow: inset 0 -2px 0 var(--ivory-edge), inset 0 0 0 2px var(--accent), 0 1px 1px rgb(0 0 0 / 0.3);
@@ -450,7 +448,7 @@ body.drawer-open { overflow: hidden; }
 .key.flash { animation: flash 700ms ease-out; }
 @keyframes flash { from { filter: brightness(1.5) saturate(1.4); } to { filter: none; } }
 
-/* Flagga ovanför aktuell tangent. */
+/* Flag above the current key. */
 .kb-marker {
   position: absolute;
   top: 4px;
@@ -473,7 +471,7 @@ body.drawer-open { overflow: hidden; }
 .kb-marker[data-s="good"] span { background: var(--good); color: var(--surface); }
 .kb-marker[data-s="good"]::after { border-top-color: var(--good); }
 
-/* Kurva */
+/* Curve */
 .chart-wrap { position: relative; }
 .chart { cursor: crosshair; }
 .tooltip {
@@ -500,7 +498,7 @@ summary { cursor: pointer; color: var(--accent); font-size: 14px; }
 .ktable td[data-s="warn"] { color: var(--warn); }
 .ktable td[data-s="bad"] { color: var(--bad); }
 
-/* Hjälp */
+/* Help */
 .help p, .help li { font-size: 14px; margin: 0; }
 .help ol { padding-left: 18px; margin: 0; }
 .help li + li { margin-top: 6px; }

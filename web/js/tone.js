@@ -1,5 +1,5 @@
-// Referenstoner. Egen AudioContext så att uppspelning fungerar oberoende av
-// mikrofonen.
+// Reference tones. Own AudioContext so playback works independently of the
+// microphone.
 
 import { partialFreq } from './theory.js';
 
@@ -17,8 +17,8 @@ export class TonePlayer {
     return this.ctx;
   }
 
-  // Kort pianolik ton: tio inharmoniska deltoner som klingar av, de höga
-  // snabbare. Returnerar hur länge den hörs (ms).
+  // Short piano-like tone: ten inharmonic partials that decay, the high ones
+  // faster. Returns how long it is audible (ms).
   pluck(f1, B) {
     const ctx = this.#context();
     const now = ctx.currentTime;
@@ -44,7 +44,7 @@ export class TonePlayer {
     return longest * 1000;
   }
 
-  // Ren, ihållande sinuston. Anropas igen för att byta frekvens.
+  // Pure, sustained sine tone. Call again to change the frequency.
   startSine(f) {
     if (this.sine) return this.setSine(f);
     const ctx = this.#context();

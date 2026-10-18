@@ -1,4 +1,4 @@
-// Sparade stämningar på servern (/api/tunings).
+// Saved tunings on the server (/api/tunings).
 
 import { DEFAULT_SETTINGS, migrateSettings } from './theory.js';
 
@@ -37,16 +37,16 @@ export function newTuning(name = '') {
     createdAt: now,
     updatedAt: now,
     settings: { ...DEFAULT_SETTINGS },
-    inharmonicity: {}, // tangent -> uppmätt B
-    partials: {}, // tangent -> vald delton (om annan än standard)
-    keys: {}, // tangent -> { cents, before, at }
+    inharmonicity: {}, // key -> measured B
+    partials: {}, // key -> chosen partial (if not the default)
+    keys: {}, // key -> { hz, n, bhz, bn, at, mapped }
     passStartedAt: now,
-    rev: 0, // serverns revision; sätts vid varje sparning
-    history: [], // avslutade omgångar
+    rev: 0, // server revision; set on every save
+    history: [], // finished passes
   };
 }
 
-// Fyll i fält som saknas i äldre sparade stämningar.
+// Fill in fields missing from older saved tunings.
 export function normalize(t) {
   const base = newTuning(t.name);
   return {

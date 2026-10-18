@@ -1,14 +1,14 @@
-// Kartläggning: mät pianot ton för ton innan stämningen.
-// Per tangent samlas tonhöjdsavläsningar (median, så att svävande unisoner inte
-// stör) och skattningar av B. B ges upp efter en viss klingtid och interpoleras
-// då från grannarna.
+// Survey: measure the piano note by note before tuning.
+// Per key, pitch readings (median, so beating unisons do not interfere) and
+// estimates of B are collected. B is given up after a certain ringing time and
+// then interpolated from the neighbours.
 
 export const PITCH_READINGS = 8;
 export const B_READINGS = 5;
 
-// Snabb: B på A0–A6 räcker för kurvans form; tangenterna däremellan
-// interpoleras. A0 är med eftersom de lägsta strängarna ofta avviker från
-// modellen och ger störst stretch.
+// Quick: B at A0–A6 is enough for the shape of the curve; the keys in between
+// are interpolated. A0 is included because the lowest strings often deviate
+// from the model and give the most stretch.
 export const QUICK_KEYS = [1, 13, 25, 37, 49, 61, 73];
 
 export const planKeys = (plan, top) =>
@@ -16,7 +16,7 @@ export const planKeys = (plan, top) =>
 
 export const nextInPlan = (plan, top, k) => planKeys(plan, top).find((x) => x > k) ?? null;
 
-// Snabbläget finns till för B och väntar därför längre på tydliga övertoner.
+// The quick survey exists for B, so it waits longer for clear overtones.
 export const bTimeoutMs = (plan) => (plan === 'quick' ? 6000 : 3000);
 
 export const newKeyState = () => ({ waitAttack: true, pitch: [], bs: [], ms: 0, lost: false });

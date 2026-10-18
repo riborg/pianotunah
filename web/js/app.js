@@ -1,5 +1,5 @@
-// Piano Tunah: tillstånd, DOM och händelser. Beräkningar finns i theory.js och
-// dsp.js, ritning i draw.js, ljud i mic.js/tone.js, sparning i saver.js.
+// Piano Tunah: state, DOM and events. Calculations live in theory.js and
+// dsp.js, drawing in draw.js, audio in mic.js/tone.js, saving in saver.js.
 
 import {
   KEY_COUNT, A4, TEMPERAMENTS, PIANO_KINDS, STRETCH_PRESETS, OCTAVE_TYPES, sizeClass,
@@ -17,8 +17,8 @@ import * as mapping from './mapping.js';
 
 const $ = (id) => document.getElementById(id);
 
-const FRAME_MS = 90; // analysintervall
-const SPEC_COLS = 100; // spektrogrammets historik, ≈ 9 s
+const FRAME_MS = 90; // analysis interval
+const SPEC_COLS = 100; // spectrogram history, ≈ 9 s
 const SPEC_BINS = 48;
 const SPEC_CENTS = 30;
 const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab' };
@@ -28,7 +28,7 @@ const tones = new TonePlayer();
 
 const state = {
   tuning: null,
-  T: null, // mål från computeTargets
+  T: null, // targets from computeTargets
   list: [],
   key: A4,
   mode: 'auto', // auto | lock | map
@@ -38,23 +38,23 @@ const state = {
   prevLevel: -100,
   noise: -70,
   signal: false,
-  readings: [], // senaste avläsningarna för aktuell tangent: { c, hz }
-  display: NaN, // avvikelse mot (ev. överdragsjusterat) mål
+  readings: [], // latest readings for the current key: { c, hz }
+  display: NaN, // deviation from the (possibly overpulled) target
   stable: false,
-  spec: [], // spektrogramkolumner, se drawSpectro
+  spec: [], // spectrogram columns, see drawSpectro
   frameCol: null,
   beatHz: NaN,
   beatPhase: 0,
   partialDevs: [],
-  cand: 0, // kandidattangent i auto-läget och antal bildrutor i rad
+  cand: 0, // candidate key in auto mode and frames in a row
   candCount: 0,
-  autoFrames: 0, // bildrutor i rad som aktuell tangent varit klar vinnare
+  autoFrames: 0, // frames in a row the current key has been a clear winner
   bReadings: [],
-  measureB: null, // { k, until } vid manuell B-mätning
-  map: null, // kartläggning av aktuell tangent, se mapping.newKeyState
+  measureB: null, // { k, until } during manual B measurement
+  map: null, // survey of the current key, see mapping.newKeyState
   mapPlan: 'quick',
   toneMode: 'off', // off | piano | sine
-  refUntil: 0, // referenston hörs i mikrofonen till denna tidpunkt
+  refUntil: 0, // reference tone audible in the microphone until this time
   refTainted: false,
   wakeLock: null,
   strobePhase: [0, 0, 0],
@@ -64,24 +64,24 @@ const state = {
 };
 
 // ---------------------------------------------------------------------------
-// Härledda värden
+// Derived values
 
 const S = () => state.tuning.settings;
 const kName = (k) => noteName(k);
 const tolerance = () => Number(S().tolerance) || 1;
-const top = () => (Number(S().keyCount) === 85 ? 85 : KEY_COUNT); // A7 på äldre pianon, annars C8
+const top = () => (Number(S().keyCount) === 85 ? 85 : KEY_COUNT); // A7 on older pianos, otherwise C8
 const partialOf = (k) => state.tuning.partials[k] || defaultPartial(k);
 const bSource = (k) => tr(state.tuning.inharmonicity[k] ? 'b.measured' : 'b.model');
 const fmtDate = (d) => d.toLocaleDateString(locale(), { dateStyle: 'medium' });
 
-// Mätningar sparas som frekvensen för den delton som mättes, så att de förblir
-// rätt när referens, temperatur, stretch eller B ändras.
+// Measurements are stored as the frequency of the measured partial, so they
+// stay valid when reference, temperament, stretch or B change.
 const keyRec = (k) => state.tuning.keys[k];
 const devOf = (k, hz, n) => (hz && n ? centsBetween(hz, partialFreq(state.T.freq[k], state.T.B[k], n)) : NaN);
 const curDev = (k) => devOf(k, keyRec(k)?.hz, keyRec(k)?.n);
 const beforeDev = (k) => devOf(k, keyRec(k)?.bhz, keyRec(k)?.bn);
 
-// Överdrag: stäm förbi målet med en andel av hur långt tangenten låg från början.
+// Overpull: tune past the target by a share of how far off the key started.
 function goal(k) {
   const b = beforeDev(k);
   const p = Number(S().overpull) || 0;
@@ -96,8 +96,8 @@ function statusClass(d) {
   return a <= Math.max(5, tolerance() * 2) ? 'warn' : 'bad';
 }
 
-// Mikrofonen hör högtalaren (ingen ekoreducering). Medan en referenston klingar
-// sparas inga mätningar.
+// The microphone hears the speaker (no echo cancellation). Nothing is saved
+// while a reference tone sounds.
 const refPlaying = () => tones.sineOn || performance.now() < state.refUntil;
 
 function midBefore() {
@@ -107,8 +107,8 @@ function midBefore() {
 }
 
 // ---------------------------------------------------------------------------
-// Meddelanden. ms = 0: ligger kvar tills det stängs. tag: kan tas bort när
-// orsaken försvinner.
+// Messages. ms = 0: stays until closed. tag: lets it be removed when the
+// cause goes away.
 
 let msgTimer = 0;
 function message(text, kind = 'info', ms = 6000, tag = '') {
@@ -125,7 +125,7 @@ function clearMessage(tag) {
 }
 
 // ---------------------------------------------------------------------------
-// Sparande
+// Saving
 
 const saver = new Saver({
   current: () => state.tuning,
@@ -162,7 +162,7 @@ async function reloadAfterConflict(t) {
 }
 
 // ---------------------------------------------------------------------------
-// Sparade stämningar
+// Saved tunings
 
 async function refreshList() {
   state.list = await listTunings();
@@ -178,7 +178,7 @@ function renderTuningSelect() {
 async function openTuning(t) {
   await saver.flush();
   state.tuning = normalize(t);
-  try { localStorage.setItem(LS.tuning, t.id); } catch { /* valfritt */ }
+  try { localStorage.setItem(LS.tuning, t.id); } catch { /* optional */ }
   resetReadings();
   recompute();
   renderSettings();
@@ -220,8 +220,8 @@ function buildStaticUi() {
   document.querySelectorAll('[data-ref]').forEach((b) => (b.textContent = (b.dataset.ref < 0 ? '−' : '+') + short(Math.abs(b.dataset.ref))));
 }
 
-// Vita tangenter i flex, svarta absolut positionerade mellan dem. Byggs om
-// bara när antalet tangenter ändras.
+// White keys in a flex row, black keys absolutely positioned between them.
+// Rebuilt only when the number of keys changes.
 function buildKeyboard(n) {
   const kb = $('keyboard');
   if (kb.children.length === n) return;
@@ -362,8 +362,8 @@ function renderKeyboard() {
   marker.style.left = `calc(10px + (100% - 20px) * ${Number(curEl.dataset.cx) / 100})`;
   marker.dataset.s = statusClass(statusDev(cur));
   $('kb-marker-name').textContent = kName(cur);
-  // Scrolla fram aktuell tangent på smal skärm, men bara vid byte så att man
-  // kan scrolla själv mellan mätningarna.
+  // Scroll the current key into view on narrow screens, but only when it
+  // changes, so the user can scroll freely between measurements.
   const sc = $('kb-scroll');
   if (cur !== renderKeyboard.scrolledTo && sc.scrollWidth > sc.clientWidth) {
     renderKeyboard.scrolledTo = cur;
@@ -372,7 +372,7 @@ function renderKeyboard() {
   }
 }
 
-// Remsan under klaviaturen: uppmätt avvikelse mot målet per tangent.
+// The strip under the keyboard: measured deviation from target per key.
 function renderDeviations(curEl) {
   const keys = [...$('keyboard').children];
   const whites = keys.filter((el) => el.classList.contains('white')).length;
@@ -441,7 +441,7 @@ function renderTable() {
 }
 
 function renderChart() {
-  if (!state.T || !$('chart').clientWidth) return; // dold flik: ritas när den visas
+  if (!state.T || !$('chart').clientWidth) return; // hidden tab: drawn when shown
   const T = state.T;
   const points = [];
   const ticks = [];
@@ -453,7 +453,7 @@ function renderChart() {
   state.chartGeo = drawChart($('chart'), { top: top(), target: T.cents, points, ticks, current: state.key }, state.colors);
 }
 
-// Uppdatera tangentstatus högst en gång per bildruta, även om mätningar sparas oftare.
+// Update key status at most once per frame, even if readings are saved more often.
 let statusRaf = 0;
 function renderKeyStatus() {
   statusRaf ||= requestAnimationFrame(() => {
@@ -494,7 +494,7 @@ function chartHover(e) {
 }
 
 // ---------------------------------------------------------------------------
-// Tangent och läge
+// Key and mode
 
 function resetReadings() {
   Object.assign(state, { readings: [], spec: [], beatHz: NaN, display: NaN, stable: false, partialDevs: [], bReadings: [], autoFrames: 0 });
@@ -520,13 +520,13 @@ function setMode(m) {
   state.map = m === 'map' ? mapping.newKeyState() : null;
   state.bReadings = [];
   $('map-panel').hidden = m !== 'map';
-  if (m === 'map') selectKey(firstUnmapped(), false); // börja från början, eller där förra slutade
+  if (m === 'map') selectKey(firstUnmapped(), false); // start from the beginning, or where the last survey stopped
   renderKeyboard();
   renderMapPanel();
 }
 
 // ---------------------------------------------------------------------------
-// Mätning
+// Measuring
 
 async function startMic() {
   try {
@@ -559,7 +559,7 @@ function renderMicButton() {
 }
 
 async function requestWakeLock() {
-  try { state.wakeLock = await navigator.wakeLock?.request('screen'); } catch { /* valfritt */ }
+  try { state.wakeLock = await navigator.wakeLock?.request('screen'); } catch { /* optional */ }
 }
 
 function processFrame() {
@@ -574,9 +574,9 @@ function analyseFrame() {
   const lvl = rmsDb(buf);
   state.prevLevel = state.level;
   state.level = lvl;
-  // Brusgolv: följer snabbt nedåt, långsamt uppåt.
+  // Noise floor: follows quickly down, slowly up.
   state.noise = lvl < state.noise ? lvl : state.noise + Math.min(0.15, (lvl - state.noise) * 0.01);
-  // Kartläggning väntar på ett anslag så att förra tangentens efterklang inte mäts.
+  // The survey waits for an attack so the previous key's decay is not measured.
   if (state.map?.waitAttack) {
     if (lvl - state.prevLevel <= 6) return idle();
     state.map.waitAttack = false;
@@ -589,8 +589,8 @@ function analyseFrame() {
   measureCurrent(A);
 }
 
-// Byt tangent när samma kandidat vunnit två bildrutor i rad. Räkna hur länge
-// aktuell tangent varit klar vinnare; först då sparas något i auto-läget.
+// Switch key when the same candidate wins two frames in a row. Count how long
+// the current key has been a clear winner; only then does auto mode save.
 function followDetectedKey(d) {
   state.autoFrames = d.score > 8 && d.margin >= 6 && d.key === state.key ? state.autoFrames + 1 : 0;
   if (d.score <= 8) return;
@@ -611,13 +611,13 @@ function measureCurrent(A) {
   const T = state.T;
   const n = partialOf(k);
   const target = partialFreq(T.freq[k], T.B[k], n);
-  // Låst tangent: brett fönster så att även ett kraftigt nedstämt piano hittas.
+  // Locked key: wide window so that even a badly flat piano is found.
   const m = A.measure(target, state.mode === 'auto' ? 50 : 150, 8);
   if (!m) return idle();
 
   const raw = centsBetween(m.freq, target);
   const ref = refPlaying();
-  if (!ref && state.refTainted) state.readings = []; // släng avläsningar av referenstonen
+  if (!ref && state.refTainted) state.readings = []; // drop readings of the reference tone
   state.refTainted = ref;
   state.readings.push({ c: raw, hz: m.freq });
   if (state.readings.length > 7) state.readings.shift();
@@ -629,7 +629,7 @@ function measureCurrent(A) {
 
   const g = goal(k);
   state.display = median(cs) - g;
-  const center = target * 2 ** (g / 1200); // svävningsvyn centreras på målet inkl. överdrag
+  const center = target * 2 ** (g / 1200); // the beat view is centred on the target including overpull
   state.beatHz = center * (2 ** (state.display / 1200) - 1);
   state.frameCol = { col: A.zoom(center, SPEC_CENTS, SPEC_BINS), c: state.display };
   state.partialDevs = Array.from({ length: 8 }, (_, i) => {
@@ -639,7 +639,7 @@ function measureCurrent(A) {
     return mi ? centsBetween(mi.freq, fi) : null;
   });
 
-  // Spara samma värde som visas. Under kartläggning sparar mapStep i stället.
+  // Save the value that is shown. During a survey, collectMapping saves instead.
   if (state.stable && !state.map) recordKey(k, n, median(last.map((r) => r.hz)));
 
   const f1 = T.freq[k] * 2 ** (raw / 1200);
@@ -654,7 +654,7 @@ function measureCurrent(A) {
 
 function recordKey(k, n, hz) {
   const rec = state.tuning.keys[k] || {};
-  if (!rec.bhz) Object.assign(rec, { bhz: hz, bn: n }); // första mätningen i omgången
+  if (!rec.bhz) Object.assign(rec, { bhz: hz, bn: n }); // first measurement in the pass
   Object.assign(rec, { hz, n, at: Date.now() });
   state.tuning.keys[k] = rec;
   markDirty();
@@ -684,22 +684,22 @@ function finishMeasureB() {
 function flashKey(k) {
   const el = $('keyboard').children[k - 1];
   el.classList.remove('flash');
-  void el.offsetWidth; // starta om animationen
+  void el.offsetWidth; // restart the animation
   el.classList.add('flash');
 }
 
 // ---------------------------------------------------------------------------
-// Kartläggning
+// Survey
 
 const isMapped = (k) => !!keyRec(k)?.mapped;
 const isQuick = () => state.mapPlan === 'quick';
-const needsB = (k) => isQuick() || !state.tuning.inharmonicity[k]; // snabbläget mäter alltid om B
+const needsB = (k) => isQuick() || !state.tuning.inharmonicity[k]; // the quick survey always remeasures B
 const planKeys = () => mapping.planKeys(state.mapPlan, top());
 const firstUnmapped = () => planKeys().find((k) => !isMapped(k)) ?? planKeys()[0];
 
 function setMapPlan(p) {
   state.mapPlan = p;
-  try { localStorage.setItem(LS.plan, p); } catch { /* valfritt */ }
+  try { localStorage.setItem(LS.plan, p); } catch { /* optional */ }
   document.querySelectorAll('[data-plan]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.plan === p));
   if (!state.map) return;
   state.map = mapping.newKeyState();
@@ -769,14 +769,14 @@ function setCheck(id, text, done) {
 }
 
 // ---------------------------------------------------------------------------
-// Referenstoner
+// Reference tones
 
 const goalF1 = (k) => state.T.freq[k] * 2 ** (goal(k) / 1200);
 const sineFreq = () => partialFreq(goalF1(state.key), state.T.B[state.key], partialOf(state.key));
 
 function playPiano() {
   const ms = tones.pluck(goalF1(state.key), state.T.B[state.key]);
-  state.refUntil = Math.max(state.refUntil, performance.now() + ms + 800); // + analysbufferten
+  state.refUntil = Math.max(state.refUntil, performance.now() + ms + 800); // + the analysis buffer
 }
 
 function startSine() {
@@ -802,7 +802,7 @@ function setToneMode(m) {
   state.toneMode = m;
   if (m !== 'sine') stopSine();
   document.querySelectorAll('[data-tone]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.tone === m));
-  try { localStorage.setItem(LS.tone, m); } catch { /* valfritt */ }
+  try { localStorage.setItem(LS.tone, m); } catch { /* optional */ }
   renderToneButton();
 }
 
@@ -813,7 +813,7 @@ function renderToneButton() {
 }
 
 // ---------------------------------------------------------------------------
-// Avläsning och animation
+// Readout and animation
 
 function updateReadout() {
   const pill = $('status-pill');
@@ -873,7 +873,7 @@ function animate(t) {
 }
 
 // ---------------------------------------------------------------------------
-// Åtgärder
+// Actions
 
 function setSetting(key, value) {
   S()[key] = value;
@@ -887,8 +887,8 @@ function setRef(hz) {
   setSetting('refA4', Math.round(Math.max(380, Math.min(480, hz)) * 10) / 10);
 }
 
-// Sätt referensen så att pianots mitt ligger på målet: median av före-värdena
-// i mitten, annars den tangent som klingar nu.
+// Set the reference so the middle of the piano is on target: median of the
+// before values in the middle, otherwise the key sounding now.
 function fitRefToPiano() {
   const mid = midBefore();
   let shift;
@@ -899,8 +899,8 @@ function fitRefToPiano() {
   message(tr('msg.fitDone', { hz: fmtHz(Number(S().refA4), 1) }), 'ok');
 }
 
-// Avsluta omgången: spara sammanfattning i historiken och töm mätningarna.
-// Inharmonicitet och inställningar behålls.
+// End the pass: save a summary to the history and clear the measurements.
+// Inharmonicity and settings are kept.
 function newPass() {
   const t = state.tuning;
   const ks = Array.from({ length: top() }, (_, i) => i + 1);
@@ -947,7 +947,7 @@ async function importTuning(file) {
 
 async function deleteCurrent() {
   try {
-    await saver.discard(); // en pågående sparning får inte återskapa filen
+    await saver.discard(); // a save in progress must not recreate the file
     await deleteTuning(state.tuning.id);
     await refreshList();
     if (state.list[0]) await openTuning(await getTuning(state.list[0].id));
@@ -958,8 +958,8 @@ async function deleteCurrent() {
   }
 }
 
-// Färgläge: auto följer webbläsaren. theme.js i <head> tillämpar sparat val
-// innan sidan ritas.
+// Color mode: auto follows the browser. theme.js in <head> applies the saved
+// choice before the page is drawn.
 const currentTheme = () => document.documentElement.dataset.theme || 'auto';
 
 function setTheme(t) {
@@ -968,7 +968,7 @@ function setTheme(t) {
   try {
     if (t === 'auto') localStorage.removeItem(LS.theme);
     else localStorage.setItem(LS.theme, t);
-  } catch { /* valfritt */ }
+  } catch { /* optional */ }
   renderThemeButton();
   refreshColors();
 }
@@ -1002,14 +1002,14 @@ function refreshColors() {
 }
 
 // ---------------------------------------------------------------------------
-// Inställningspanel
+// Settings drawer
 
 function openDrawer(tab) {
   $('drawer').hidden = $('drawer-backdrop').hidden = false;
   document.body.classList.add('drawer-open');
   $('btn-settings').setAttribute('aria-expanded', 'true');
   let last = 'piano';
-  try { last = localStorage.getItem(LS.tab) || last; } catch { /* valfritt */ }
+  try { last = localStorage.getItem(LS.tab) || last; } catch { /* optional */ }
   showTab(tab || last);
   $('drawer-close').focus();
 }
@@ -1025,12 +1025,12 @@ function showTab(tab) {
   if (!document.querySelector(`[data-panel="${tab}"]`)) tab = 'piano';
   document.querySelectorAll('[data-tab]').forEach((b) => b.setAttribute('aria-selected', b.dataset.tab === tab));
   document.querySelectorAll('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== tab));
-  try { localStorage.setItem(LS.tab, tab); } catch { /* valfritt */ }
+  try { localStorage.setItem(LS.tab, tab); } catch { /* optional */ }
   if (tab === 'curve') renderChart();
 }
 
 // ---------------------------------------------------------------------------
-// Händelser
+// Events
 
 function bindEvents() {
   const on = (id, ev, fn) => $(id).addEventListener(ev, fn);
@@ -1051,7 +1051,7 @@ function bindEvents() {
   onAll('[data-tab]', (b) => showTab(b.dataset.tab));
   on('btn-mic', 'click', () => (mic.running ? stopMic() : startMic()));
 
-  // Stämapparat
+  // Tuner
   on('btn-prev', 'click', () => selectKey(state.key - 1));
   on('btn-next', 'click', () => selectKey(state.key + 1));
   on('mode-auto', 'click', () => setMode('auto'));
@@ -1097,20 +1097,20 @@ function bindEvents() {
     state.measureB = { k: state.key, until: performance.now() + 4000 };
     $('btn-measure-b').disabled = true;
     message(tr('msg.strikeB', { name: kName(state.key) }), 'info', 4000);
-    setTimeout(() => state.measureB && finishMeasureB(), 6000); // om tonen tystnar innan
+    setTimeout(() => state.measureB && finishMeasureB(), 6000); // in case the note dies away first
   });
 
-  // Referens
+  // Reference
   on('set-ref', 'change', (e) => setRef(parseFloat(e.target.value.replace(',', '.'))));
   onAll('[data-ref]', (b) => setRef(Number(S().refA4) + Number(b.dataset.ref)));
   onAll('[data-hz]', (b) => setRef(Number(b.dataset.hz)));
   on('btn-fit-ref', 'click', fitRefToPiano);
   on('btn-overpull', 'click', () => setSetting('overpull', Number($('btn-overpull').dataset.p)));
 
-  // Inställningar
+  // Settings
   const bindSetting = (id, key, conv = (v) => v) => on(id, 'input', (e) => setSetting(key, conv(e.target.value)));
   on('set-kind', 'input', (e) => {
-    S().sizeCm = PIANO_KINDS[e.target.value].def; // en pianinohöjd är ingen rimlig flygellängd
+    S().sizeCm = PIANO_KINDS[e.target.value].def; // an upright's height is no sensible grand length
     $('set-size').value = S().sizeCm;
     setSetting('pianoKind', e.target.value);
   });
@@ -1146,7 +1146,7 @@ function bindEvents() {
     markDirty();
   });
 
-  // Sparade stämningar
+  // Saved tunings
   on('tuning-select', 'change', async (e) => {
     try {
       await openTuning(await getTuning(e.target.value));
@@ -1170,7 +1170,7 @@ function bindEvents() {
     deleteCurrent();
   });
 
-  // Omgång
+  // Pass
   on('btn-new-pass', 'click', show('confirm-pass', true));
   on('confirm-pass-no', 'click', show('confirm-pass', false));
   on('confirm-pass-yes', 'click', () => {
@@ -1184,13 +1184,13 @@ function bindEvents() {
     if (f) importTuning(f);
   });
 
-  // Diagram
+  // Chart
   on('chart', 'pointermove', chartHover);
   on('chart', 'pointerleave', show('tooltip', false));
   on('chart', 'click', (e) => chartKeyAt(e) && selectKey(chartKeyAt(e)));
   on('table-details', 'toggle', () => $('table-details').open && renderTable());
 
-  // Tangentbord
+  // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !$('drawer').hidden) return closeDrawer();
     if (e.target.closest('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -1207,7 +1207,7 @@ function bindEvents() {
     e.preventDefault();
   });
 
-  // Fönster
+  // Window
   window.addEventListener('resize', () => {
     renderKeyboard();
     renderChart();
@@ -1217,7 +1217,7 @@ function bindEvents() {
     if (document.visibilityState === 'hidden') saver.flush();
     else if (mic.running && !state.wakeLock) requestWakeLock();
   });
-  // Sista chansen att spara när fliken stängs.
+  // Last chance to save when the tab closes.
   window.addEventListener('pagehide', () => {
     if (!saver.dirty || !state.tuning) return;
     navigator.sendBeacon?.(
@@ -1236,12 +1236,12 @@ async function boot() {
   try {
     await refreshList();
     let id = null;
-    try { id = localStorage.getItem(LS.tuning); } catch { /* valfritt */ }
+    try { id = localStorage.getItem(LS.tuning); } catch { /* optional */ }
     const pick = state.list.find((t) => t.id === id) || state.list[0];
     if (pick) await openTuning(await getTuning(pick.id));
     else await createAndOpen(newTuning(tr('name.default')));
   } catch {
-    // Servern nås inte: kör ändå, utan sparande.
+    // Server unreachable: run anyway, without saving.
     state.tuning = newTuning(tr('name.default'));
     recompute();
     renderSettings();
@@ -1256,7 +1256,7 @@ async function boot() {
   try {
     plan = localStorage.getItem(LS.plan) === 'full' ? 'full' : 'quick';
     tone = localStorage.getItem(LS.tone) || 'off';
-  } catch { /* valfritt */ }
+  } catch { /* optional */ }
   setMapPlan(plan);
   setToneMode(tone);
   fetch('api/version')

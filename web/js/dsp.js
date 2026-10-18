@@ -1,9 +1,10 @@
-// Signalbehandling: FFT-spektrum, tangentigenkänning, exakt deltonsmätning och
-// skattning av inharmonicitet.
+// Signal processing: FFT spectrum, key detection, exact partial measurement
+// and inharmonicity estimation.
 //
-// Exakt frekvens tas fram i två steg: grovt läge från FFT-toppen (paraboliskt
-// interpolerad), sedan fasskillnaden i en DFT vid samma frekvens över två
-// förskjutna fönster. Det ger bråkdelar av en cent även i basen.
+// The exact frequency is found in two steps: a rough position from the FFT peak
+// (parabolic interpolation), then the phase difference of a DFT at that
+// frequency over two offset windows. That gives fractions of a cent even in the
+// bass.
 
 import { KEY_COUNT, partialFreq } from './theory.js';
 
@@ -79,7 +80,7 @@ export class Analyzer {
     this.buf = null;
   }
 
-  // Räkna spektrum (dB) och ett glidande brusgolv för de senaste n samplen.
+  // Spectrum (dB) and a moving noise floor for the latest n samples.
   load(buf) {
     this.buf = buf;
     const { n, re, im, db, floor, prefix } = this;
@@ -103,7 +104,7 @@ export class Analyzer {
     }
   }
 
-  // Starkaste toppen inom ±cents runt f. prom = höjd över brusgolvet (dB).
+  // Strongest peak within ±cents of f. prom = height above the noise floor (dB).
   peakNear(f, cents) {
     const { df, db, floor } = this;
     const half = this.n / 2;
@@ -117,7 +118,7 @@ export class Analyzer {
     let best = lo;
     for (let i = lo + 1; i <= hi; i++) if (db[i] > db[best]) best = i;
     if (best === lo || best === hi) {
-      // Toppen ligger på kanten: kontrollera att det verkligen är ett lokalt max.
+      // Peak at the edge: check that it really is a local maximum.
       if (db[best - 1] > db[best] || db[best + 1] > db[best]) return null;
     }
     const a = db[best - 1];
@@ -128,7 +129,7 @@ export class Analyzer {
     return { freq: (best + p) * df, db: b, prom: b - floor[best] };
   }
 
-  // Fasbaserad förfining av en frekvens nära fc.
+  // Phase-based refinement of a frequency near fc.
   refine(fc) {
     const buf = this.buf;
     const M = fc < 150 ? 16384 : fc < 600 ? 8192 : 4096;
@@ -146,19 +147,19 @@ export class Analyzer {
     return Math.abs(f - fc) < 0.6 * this.df ? f : fc;
   }
 
-  // Exakt frekvens för en delton nära target, eller null om den inte hörs.
+  // Exact frequency of a partial near target, or null if it is not heard.
   measure(target, cents = 60, minProm = 10) {
     const pk = this.peakNear(target, cents);
     if (!pk || pk.prom < minProm) return null;
     return { freq: this.refine(pk.freq), prom: pk.prom };
   }
 
-  // Zoomat spektrum: magnitud (dB) i `bins` punkter från +cents till −cents
-  // runt fc. Används för svävningsvyn.
+  // Zoomed spectrum: magnitude (dB) at `bins` points from +cents to −cents
+  // around fc. Used for the beat view.
   zoom(fc, cents, bins) {
     const buf = this.buf;
-    // Hela bufferten under 600 Hz: huvudloben blir då ±10 cent vid C4 i stället
-    // för ±38, så att spåret syns inom ±30 cent.
+    // Whole buffer below 600 Hz: the main lobe is then ±10 cents at C4 instead
+    // of ±38, so the trace is visible within ±30 cents.
     const M = Math.min(buf.length, fc < 600 ? 32768 : 16384);
     const w = hann(M);
     const start = buf.length - M;
@@ -171,11 +172,11 @@ export class Analyzer {
     return out;
   }
 
-  // Gissa vilken tangent som spelas genom att poängsätta varje tangent efter
-  // hur tydligt dess förväntade deltoner syns i spektrumet. Därefter en
-  // undertonskontroll: tonen en oktav (eller duodecima) under vinnaren har
-  // alla vinnarens deltoner, så den väljs om även dess egna deltoner hörs.
-  // margin = vinnarens försprång mot halvtonsgrannarna (dB).
+  // Guess which key is played by scoring each key on how clearly its expected
+  // partials show in the spectrum. Then a subharmonic check: the note an octave
+  // (or twelfth) below the winner has all the winner's partials, so it is
+  // chosen if its own partials are heard too.
+  // margin = the winner's lead over its semitone neighbours (dB).
   detectKey(targets, prevKey = 0, top = KEY_COUNT) {
     const scores = new Float64Array(KEY_COUNT + 1).fill(-Infinity);
     let best = 0;
@@ -201,9 +202,9 @@ export class Analyzer {
       }
     }
     if (!best) return { key: 0, score: -Infinity, margin: 0 };
-    // Ett steg i taget (oktav, duodecima) och upprepa, så att två oktaver ner
-    // blir två oktavsteg. Egna deltoner = de som inte delas med vinnaren.
-    // Kraven ligger över brustoppar (~10 dB).
+    // One step at a time (octave, twelfth), repeated, so two octaves down
+    // becomes two octave steps. Own partials = those not shared with the
+    // winner. The thresholds are above noise peaks (~10 dB).
     const sounds = (c, own) => {
       const p = own.map((n) => this.partialProm(targets, c, n)).filter((x) => x !== null);
       return p.length >= 1 && Math.min(...p) >= 15 && p.reduce((a, x) => a + x, 0) / p.length >= 20;
@@ -224,8 +225,8 @@ export class Analyzer {
     return { key: best, score: scores[best], margin: scores[best] - Math.max(...neigh) };
   }
 
-  // Deltonens höjd över brusgolvet (dB, minst 0), eller null om den ligger
-  // utanför det som mäts (under 50 Hz eller över 9 kHz).
+  // The partial's height above the noise floor (dB, at least 0), or null if it
+  // is outside the measured range (below 50 Hz or above 9 kHz).
   partialProm(targets, k, n) {
     const fn = partialFreq(targets.freq[k], targets.B[k], n);
     if (fn < 50 || fn > Math.min(9000, this.sr * 0.45)) return null;
@@ -233,9 +234,9 @@ export class Analyzer {
     return pk ? Math.max(0, pk.prom) : 0;
   }
 
-  // Skatta B ur upp till 16 deltoner. Söker uppåt och förfinar modellen efter
-  // varje funnen delton så att sökfönstret följer strängens verkliga
-  // inharmonicitet. Linjär anpassning: (f_n/n)² = f0² + f0²·B·n².
+  // Estimate B from up to 16 partials. Searches upwards and refines the model
+  // after each partial found, so the search window follows the string's real
+  // inharmonicity. Linear fit: (f_n/n)² = f0² + f0²·B·n².
   inharmonicity(f1, Bguess) {
     let B = Bguess;
     let f0 = f1 / Math.sqrt(1 + B);

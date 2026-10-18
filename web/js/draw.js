@@ -1,16 +1,16 @@
-// Canvasritning. Rena funktioner: allt de behöver skickas in, inget
-// apptillstånd läses här.
+// Canvas drawing. Pure functions: everything they need is passed in, no app
+// state is read here.
 
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 const signed = (v) => (v === 0 ? '0' : (v > 0 ? '+' : '−') + Math.abs(v));
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// Anpassa canvasen till sin CSS-bredd och skärmens pixeltäthet.
+// Fit the canvas to its CSS width and the screen's pixel density.
 export function fitCanvas(c) {
   const dpr = window.devicePixelRatio || 1;
   const w = c.clientWidth;
-  // Logisk höjd läses en gång: c.height skrivs om med dpr nedan och får inte
-  // läsas tillbaka, annars växer canvasen för varje bildruta på HiDPI-skärmar.
+  // Logical height is read once: c.height is rewritten with dpr below and must
+  // not be read back, or the canvas grows every frame on HiDPI screens.
   c.dataset.h ||= c.getAttribute('height');
   const h = Number(c.dataset.h);
   if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
@@ -24,7 +24,7 @@ export function fitCanvas(c) {
   return { ctx, w, h };
 }
 
-// Temats färger från CSS-variablerna. Läses om när temat byts.
+// Theme colors from the CSS variables. Reread when the theme changes.
 export function readColors() {
   const cs = getComputedStyle(document.documentElement);
   const C = {};
@@ -41,7 +41,7 @@ function hexRgb(hex) {
   return [(v >> 16) & 255, (v >> 8) & 255, v & 255];
 }
 
-// Färg för en avvikelse: grönt inom tolerans, sedan gult, orange och rött.
+// Color for a deviation: green within tolerance, then yellow, orange and red.
 export function scaleRgb(c, tol, C) {
   const stops = [tol, Math.max(3, tol * 2.5), Math.max(6, tol * 5), Math.max(12, tol * 10)];
   const a = Math.abs(c);
@@ -57,7 +57,7 @@ export function scaleRgb(c, tol, C) {
 
 export const scaleColor = (c, tol, C) => `rgb(${scaleRgb(c, tol, C).join(' ')})`;
 
-// Visare ±50 cent med komprimerad skala så att mitten får mest plats.
+// Needle ±50 cents on a compressed scale so the centre gets the most room.
 export function drawMeter(canvas, { display, signal, tol }, C) {
   const { ctx, w } = fitCanvas(canvas);
   const xOf = (c) => w / 2 + Math.sign(c) * Math.sqrt(Math.min(Math.abs(c), 50) / 50) * (w / 2 - 14);
@@ -93,8 +93,8 @@ export function drawMeter(canvas, { display, signal, tol }, C) {
   ctx.globalAlpha = 1;
 }
 
-// Stroboskop: tre band med 1, 2 och 4 gångers hastighet. Stilla = i stäm,
-// rörelse åt höger = för högt. phases (tre tal) uppdateras.
+// Strobe: three bands at 1, 2 and 4 times the speed. Still = in tune,
+// moving right = too high. phases (three numbers) is updated.
 export function drawStrobe(canvas, { display, live, tol }, C, dt, phases) {
   const { ctx, w, h } = fitCanvas(canvas);
   const c = live ? Math.max(-30, Math.min(30, display)) : 0;
@@ -113,9 +113,9 @@ export function drawStrobe(canvas, { display, live, tol }, C, dt, phases) {
   }
 }
 
-// Zoomat spektrogram runt måldeltonen. cols: { col: dB per rad, c: avvikelse }
-// eller null (tystnad), äldst först. Ljusstyrka = signalstyrka inom 12 dB från
-// kolumnens topp, färg = avvikelse i det ögonblicket.
+// Zoomed spectrogram around the target partial. cols: { col: dB per row,
+// c: deviation } or null (silence), oldest first. Brightness = level within
+// 12 dB of the column's peak, color = deviation at that moment.
 const specImg = { canvas: null, ctx: null, data: null };
 const SPEC_RANGE_DB = 12;
 
@@ -166,7 +166,7 @@ export function drawSpectro(canvas, cols, { capacity, bins, cents, tol }, C) {
   ctx.stroke();
   ctx.globalAlpha = 1;
 
-  // Exakt uppmätt avvikelse som tunn linje ovanpå.
+  // Exact measured deviation as a thin line on top.
   const colW = pw / capacity;
   ctx.lineWidth = 1.5;
   ctx.beginPath();
@@ -188,8 +188,8 @@ export function drawSpectro(canvas, cols, { capacity, bins, cents, tol }, C) {
   ctx.fillText('−' + cents, padL - 4, h - 3);
 }
 
-// Svävningsremsa: två toner som skiljer Δf Hz pulserar Δf gånger per sekund.
-// Visar de senaste 3 sekunderna. Returnerar ny fas.
+// Beat strip: two tones Δf Hz apart pulse Δf times per second. Shows the
+// last 3 seconds. Returns the new phase.
 export function drawBeat(canvas, { beatHz, display, live, tol }, C, dt, phase) {
   const { ctx, w, h } = fitCanvas(canvas);
   if (!live) {
@@ -219,10 +219,10 @@ export function drawBeat(canvas, { beatHz, display, live, tol }, C, dt, phase) {
   return phase;
 }
 
-// Avvikelse per tangent som staplar kring målet (nollinjen), ritad på
-// pianolådans mörka bakgrund i båda färglägena. bars: [{ x: 0..1, d: cent }].
-// Skalan är ±5, 10, 20 eller 30 cent efter största avvikelsen; större klipps.
-// Returnerar skalan.
+// Deviation per key as bars around the target (zero line), drawn on the
+// piano case's dark background in both color modes. bars: [{ x: 0..1, d: cents }].
+// The scale is ±5, 10, 20 or 30 cents after the largest deviation; larger are
+// clipped. Returns the scale.
 export function drawDeviations(canvas, { bars, current, barW, tol }, C) {
   const { ctx, w, h } = fitCanvas(canvas);
   const max = Math.max(0, ...bars.map((b) => Math.abs(b.d)));
@@ -250,9 +250,9 @@ export function drawDeviations(canvas, { bars, current, barW, tol }, C) {
   return range;
 }
 
-// Stämkurva: mål per tangent (cent mot liksvävande) och uppmätta lägen.
-// points: [{ k, c, status }]. ticks: [{ k, label }]. Returnerar geometrin så
-// att anroparen kan översätta muspositioner till tangenter.
+// Tuning curve: target per key (cents vs equal temperament) and measured
+// positions. points: [{ k, c, status }]. ticks: [{ k, label }]. Returns the
+// geometry so the caller can map pointer positions to keys.
 export function drawChart(canvas, { top, target, points, ticks, current }, C) {
   const { ctx, w, h } = fitCanvas(canvas);
   const pad = { l: 44, r: 12, t: 12, b: 28 };
@@ -301,7 +301,7 @@ export function drawChart(canvas, { top, target, points, ticks, current }, C) {
   ctx.setLineDash([]);
   ctx.globalAlpha = 1;
 
-  // Målet ritas tangent för tangent så att temperaturens taggighet syns.
+  // The target is drawn key by key so the temperament's jaggedness shows.
   ctx.strokeStyle = C.accent;
   ctx.lineWidth = 2;
   ctx.lineJoin = 'round';

@@ -1,16 +1,16 @@
-// Stämteori: tangentnumrering, temperaturer, inharmonicitet och stretch.
+// Tuning theory: key numbering, temperaments, inharmonicity and stretch.
 //
-// Tangent k = 1..88, där 1 = A0, 49 = A4 och 88 = C8.
-// Alla avvikelser anges i cent relativt teoretisk liksvävande temperatur
-// räknat från referensfrekvensen för A4.
+// Key k = 1..88, where 1 = A0, 49 = A4 and 88 = C8.
+// All deviations are in cents relative to theoretical equal temperament from
+// the reference frequency for A4.
 
 export const KEY_COUNT = 88;
 export const A4 = 49;
 
-const PC = 1200 * Math.log2(531441 / 524288); // pytagoreiskt komma ≈ 23,46 cent
-const SC = 1200 * Math.log2(81 / 80); // syntoniskt komma ≈ 21,51 cent
-const SCHISMA = PC - SC; // ≈ 1,95 cent
-const PURE_FIFTH = 1200 * Math.log2(3 / 2); // ≈ 701,96 cent
+const PC = 1200 * Math.log2(531441 / 524288); // Pythagorean comma ≈ 23.46 cents
+const SC = 1200 * Math.log2(81 / 80); // syntonic comma ≈ 21.51 cents
+const SCHISMA = PC - SC; // ≈ 1.95 cents
+const PURE_FIFTH = 1200 * Math.log2(3 / 2); // ≈ 701.96 cents
 
 const NAMES = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
 
@@ -21,13 +21,13 @@ export const pcName = (pc) => NAMES[pc];
 export const noteName = (k) => pcName(pitchClass(k)) + octave(k);
 
 // ---------------------------------------------------------------------------
-// Temperaturer
+// Temperaments
 //
-// En temperatur beskrivs som hur mycket var och en av de tolv kvinterna i
-// kvintcirkeln avviker från ren kvint (cent). Index i går från tonen 7·i mod 12
-// till nästa: C–G, G–D, D–A, A–E, E–B, B–F♯, F♯–C♯, C♯–G♯, G♯–E♭, E♭–B♭, B♭–F, F–C.
-// Summan måste bli −PC för att cirkeln ska slutas; en post som är null
-// (vargkvinten) får det som blir över.
+// A temperament is given as how much each of the twelve fifths in the circle
+// of fifths deviates from a pure fifth (cents). Index i goes from the note
+// 7·i mod 12 to the next: C–G, G–D, D–A, A–E, E–B, B–F♯, F♯–C♯, C♯–G♯, G♯–E♭,
+// E♭–B♭, B♭–F, F–C. The sum must be −PC for the circle to close; an entry that
+// is null (the wolf fifth) gets what is left over.
 
 function fifths(map, fill = 0) {
   const a = new Array(12).fill(fill);
@@ -50,9 +50,9 @@ function closeCircle(f) {
   return f.map((v) => (v === null ? -PC - known : v));
 }
 
-// Avvikelse från liksvävande per tonklass (0 = C … 11 = B), normaliserat så
-// att A alltid är 0 och referensfrekvensen alltså gäller A4.
-// root transponerar temperaturen så att den utgår från en annan grundton än C.
+// Deviation from equal temperament per pitch class (0 = C … 11 = B),
+// normalised so A is always 0 and the reference frequency applies to A4.
+// root transposes the temperament to start from another note than C.
 export function temperamentOffsets(id, root = 0) {
   const t = TEMPERAMENTS[id] || TEMPERAMENTS.et;
   const f = closeCircle(t.fifths);
@@ -75,25 +75,25 @@ export function temperamentOffsets(id, root = 0) {
 }
 
 // ---------------------------------------------------------------------------
-// Inharmonicitet
+// Inharmonicity
 //
-// En styv sträng har deltoner f_n = n·f0·√(1 + B·n²). B beror på strängens
-// diameter, längd, spänning och styvhet. Modellen nedan är en grov
-// genomsnittskurva: B växer exponentiellt mot diskanten (korta, tjocka strängar
-// i förhållande till längden) och lite mot basen (korta spunna strängar).
-// Uppmätta värden ersätter modellen när de finns.
+// A stiff string has partials f_n = n·f0·√(1 + B·n²). B depends on the string's
+// diameter, length, tension and stiffness. The model below is a rough average
+// curve: B grows exponentially towards the treble (short strings, thick for
+// their length) and slightly towards the bass (short wound strings).
+// Measured values replace the model where they exist.
 
-// Instrumentet beskrivs med typ (pianino/flygel), storlek i cm (pianinots höjd
-// eller flygelns längd) och antal tangenter. Storleken ger faktorer för diskant
-// respektive bas mot en referensflygel på 180 cm; korta strängar ger högre B,
-// mest i basen. Mellan stödpunkterna interpoleras linjärt.
+// The instrument is described by kind (upright/grand), size in cm (the
+// upright's height or the grand's length) and number of keys. The size gives
+// treble and bass factors relative to a 180 cm reference grand; short strings
+// give higher B, most of all in the bass. Linear between the points.
 export const PIANO_KINDS = {
   upright: { min: 90, max: 150, def: 120 },
   grand: { min: 140, max: 310, def: 180 },
 };
 
 const SIZE_FACTORS = {
-  // [cm, diskantfaktor, basfaktor]
+  // [cm, treble factor, bass factor]
   upright: [[100, 1.6, 3], [120, 1.3, 2], [140, 1.1, 1.4]],
   grand: [[150, 1.15, 1.4], [180, 1, 1], [275, 0.8, 0.6]],
 };
@@ -113,7 +113,7 @@ function sizeFactors(kind, cm) {
   return [last[1], last[2]];
 }
 
-// Grov storleksklass för visning.
+// Rough size class for display (a key into the language files).
 export function sizeClass(kind, cm) {
   if (kind === 'grand') return cm < 170 ? 'babyGrand' : cm < 220 ? 'parlourGrand' : 'concertGrand';
   return cm < 110 ? 'smallUpright' : cm < 125 ? 'midUpright' : 'tallUpright';
@@ -131,7 +131,7 @@ function modelB(k, inst) {
   return t * treble + b * bass;
 }
 
-// Äldre sparade stämningar hade ett fast instrumentval (pianoType).
+// Older saved tunings had a fixed instrument choice (pianoType).
 const LEGACY_TYPES = {
   concert: ['grand', 274, 88],
   grand: ['grand', 180, 88],
@@ -147,8 +147,8 @@ export function migrateSettings(s = {}) {
   return { ...rest, pianoKind, sizeCm, keyCount };
 }
 
-// B för alla tangenter. Uppmätta värden används som korrektionsfaktorer mot
-// modellen, interpolerade logaritmiskt mellan mätpunkterna.
+// B for every key. Measured values act as correction factors on the model,
+// interpolated logarithmically between the measured keys.
 function bCurve(inst, measured = {}) {
   const pts = Object.entries(measured)
     .map(([k, b]) => [Number(k), Math.log(b / modelB(Number(k), inst))])
@@ -176,20 +176,20 @@ function bCurve(inst, measured = {}) {
   return out;
 }
 
-// Deltonsfaktor: delton n ligger g(B, n)·n gånger grundtonen (delton 1).
+// Partial factor: partial n lies at g(B, n)·n times the fundamental (partial 1).
 export const partialFactor = (B, n) => Math.sqrt((1 + B * n * n) / (1 + B));
 export const partialFreq = (f1, B, n) => n * f1 * partialFactor(B, n);
 
 // ---------------------------------------------------------------------------
 // Stretch
 //
-// En oktav "p:q" betyder att delton p i den undre tonen och delton q i den övre
-// görs svävningsfria. 2:1 ger den smalaste oktaven, 4:2, 6:3 och 8:4 allt
-// bredare. Ju högre deltoner som matchas, desto mer stretch.
+// An octave "p:q" means partial p of the lower note and partial q of the upper
+// note are made beatless. 2:1 gives the narrowest octave, 4:2, 6:3 and 8:4
+// progressively wider. The higher the matched partials, the more stretch.
 
 export const OCTAVE_TYPES = { '2:1': [2, 1], '4:2': [4, 2], '6:3': [6, 3], '8:4': [8, 4] };
 
-// Hur många cent bredare än 1200 oktaven blir med given oktavtyp.
+// How many cents wider than 1200 the octave becomes with a given octave type.
 export function octaveStretch(Blow, Bup, type) {
   const [pl, pu] = OCTAVE_TYPES[type] || OCTAVE_TYPES['4:2'];
   return 1200 * Math.log2(partialFactor(Blow, pl) / partialFactor(Bup, pu));
@@ -224,13 +224,13 @@ export const DEFAULT_SETTINGS = {
   extraBass: 0,
   pianoKind: 'upright',
   sizeCm: 120,
-  keyCount: 88, // 88 (A0–C8) eller 85 (A0–A7, äldre pianon)
+  keyCount: 88, // 88 (A0–C8) or 85 (A0–A7, older pianos)
   overpull: 0,
   tolerance: 1,
 };
 
-// Temperaturoktaven A3–A4 (tangent 37–49) stäms först. Därifrån byggs
-// oktaverna uppåt och nedåt, en i taget, med vald oktavtyp.
+// The temperament octave A3–A4 (keys 37–49) is tuned first. From there the
+// octaves are built up and down, one at a time, with the chosen octave type.
 const T_LOW = A4 - 12;
 
 export function computeTargets(settings, measuredB = {}) {
@@ -271,8 +271,9 @@ export function computeTargets(settings, measuredB = {}) {
   return { B, stretch: S, temper, cents, freq };
 }
 
-// Vilken delton som mäts som standard. I basen är grundtonen svag (och
-// laptopmikrofoner hör dåligt under ~100 Hz), så där mäts en högre delton.
+// Which partial is measured by default. In the bass the fundamental is weak
+// (and laptop microphones hear little below ~100 Hz), so a higher partial is
+// measured there.
 export function defaultPartial(k) {
   if (k <= 14) return 6;
   if (k <= 26) return 4;

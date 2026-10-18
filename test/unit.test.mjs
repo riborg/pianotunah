@@ -1,4 +1,4 @@
-// Enhetstester för stämteori och signalbehandling. Körs med: npm test
+// Unit tests for tuning theory and signal processing. Run with: npm test
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -11,11 +11,11 @@ const SR = 48000;
 const N = 32768;
 const T = computeTargets(DEFAULT_SETTINGS);
 
-// Seedat brus så att testerna är deterministiska.
+// Seeded noise so the tests are deterministic.
 let seed = 1;
 const noise = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648 - 0.5) * 0.01;
 
-// Syntetisk ton med inharmonicitet B; grundtonen dämpad i basen som på ett piano.
+// Synthetic tone with inharmonicity B; the fundamental damped in the bass as on a piano.
 const tone = (k, detune = 0, B = T.B[k]) => toneFor(T, k, detune, B);
 
 function toneFor(t, k, detune = 0, B = t.B[k]) {
@@ -37,25 +37,25 @@ const analyse = (buf) => {
   return A;
 };
 
-test('temperaturer: Werckmeister III mot publicerade värden (A = 0)', () => {
+test('temperaments: Werckmeister III against published values (A = 0)', () => {
   const w = temperamentOffsets('werckmeister3').map((x) => Math.round(x * 10) / 10);
   assert.deepEqual(w, [11.7, 2, 3.9, 5.9, 2, 9.8, 0, 7.8, 3.9, 0, 7.8, 3.9]);
 });
 
-test('liksvävande utan stretch ger exakt 12-TET', () => {
+test('equal temperament without stretch gives exact 12-TET', () => {
   const t = computeTargets({ ...DEFAULT_SETTINGS, stretch: 'none' });
   assert.ok(Math.abs(t.freq[49] - 440) < 1e-9);
   assert.ok(Math.abs(t.freq[1] - 27.5) < 1e-9);
 });
 
-test('stretch: basen lägre, diskanten högre, mer för mindre pianon', () => {
+test('stretch: bass lower, treble higher, more for smaller pianos', () => {
   const small = computeTargets({ ...DEFAULT_SETTINGS, sizeCm: 100 });
   const grand = computeTargets({ ...DEFAULT_SETTINGS, pianoKind: 'grand', sizeCm: 274 });
   assert.ok(small.cents[1] < grand.cents[1] && grand.cents[1] < 0);
   assert.ok(small.cents[88] > grand.cents[88] && grand.cents[88] > 0);
 });
 
-test('gamla instrumentval översätts', () => {
+test('old instrument choices are migrated', () => {
   assert.deepEqual(migrateSettings({ pianoType: 'old85' }), { pianoKind: 'upright', sizeCm: 120, keyCount: 85 });
 });
 
@@ -65,7 +65,7 @@ test('recommended overpull: none for small deviations, 25% when flat', () => {
   assert.equal(recommendedOverpull(-15.7), 25); // 436 Hz against 440 Hz
 });
 
-test('tangentigenkänning alla 88 tangenter, två pianostorlekar, i stäm och 20 cent lågt', () => {
+test('key detection on all 88 keys, two piano sizes, in tune and 20 cents flat', () => {
   for (const settings of [DEFAULT_SETTINGS, { ...DEFAULT_SETTINGS, sizeCm: 100 }]) {
     const t = computeTargets(settings);
     for (let k = 1; k <= 88; k++) {
@@ -77,7 +77,7 @@ test('tangentigenkänning alla 88 tangenter, två pianostorlekar, i stäm och 20
   }
 });
 
-test('mätning av delton på hundradels cent', () => {
+test('partial measured to a hundredth of a cent', () => {
   for (const [k, n, det] of [[49, 1, 3], [13, 6, -7.5], [25, 4, 1.2], [76, 1, -2]]) {
     const target = partialFreq(T.freq[k], T.B[k], n);
     const m = analyse(tone(k, det)).measure(target, 150, 8);
@@ -85,13 +85,13 @@ test('mätning av delton på hundradels cent', () => {
   }
 });
 
-test('kraftigt nedstämd ton hittas med brett fönster', () => {
+test('badly flat note is found with a wide window', () => {
   const target = T.freq[49];
   const m = analyse(tone(49, -140)).measure(target, 150, 8);
   assert.ok(Math.abs(centsBetween(m.freq, target) + 140) < 0.1);
 });
 
-test('inharmonicitet skattas ur deltonerna', () => {
+test('inharmonicity is estimated from the partials', () => {
   for (const [k, B] of [[13, 0.0003], [49, 0.0004], [76, 0.003]]) {
     const r = analyse(tone(k, 0, B)).inharmonicity(T.freq[k], T.B[k]);
     assert.ok(Math.abs(r.B / B - 1) < 0.02, `${noteName(k)}: ${r.B}`);

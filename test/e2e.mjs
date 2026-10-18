@@ -1,7 +1,7 @@
-// End-to-end: headless Chrome med syntetisk pianoton som mikrofon.
-// Skapar en tillfällig stämning, klickar Starta mikrofon, läser av och raderar.
+// End-to-end: headless Chrome with a synthetic piano tone as the microphone.
+// Creates a temporary tuning, clicks Start microphone, reads the result and deletes it.
 //   docker run --rm --network caddy -v "$PWD":/usr/src/app/pt zenika/alpine-chrome:with-puppeteer \
-//     node pt/test/e2e.mjs http://pianotunah:8080 [skärmdumpskatalog]
+//     node pt/test/e2e.mjs http://pianotunah:8080 [screenshot dir]
 import { writeFileSync, mkdirSync } from 'node:fs';
 import puppeteer from 'puppeteer';
 import { computeTargets, partialFreq, DEFAULT_SETTINGS } from '../web/js/theory.js';
@@ -11,8 +11,8 @@ const shots = process.argv[3];
 const settings = { ...DEFAULT_SETTINGS };
 const T = computeTargets(settings);
 
-// Ton: tangent k, detune i cent, med inharmonicitet och mjuk avklingning.
-// Chrome spelar filen i loop, så varje varv blir ett nytt anslag.
+// Tone: key k, detune in cents, with inharmonicity and a soft decay.
+// Chrome loops the file, so every loop is a new attack.
 function wav(path, k, detune, secs = 3) {
   const sr = 48000;
   const n = sr * secs;
@@ -52,7 +52,7 @@ async function run({ key, detune, theme = 'light', shot, seed }) {
   const browser = await puppeteer.launch({
     args: ['--no-sandbox', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream',
       `--use-file-for-fake-audio-capture=${file}`, '--autoplay-policy=no-user-gesture-required',
-      // Mikrofonen kräver säker kontext; testservern nås över http.
+      // The microphone needs a secure context; the test server is reached over http.
       `--unsafely-treat-insecure-origin-as-secure=${base}`, '--user-data-dir=/tmp/e2e-profile'],
   });
   try {
@@ -75,7 +75,7 @@ async function run({ key, detune, theme = 'light', shot, seed }) {
       mkdirSync(shots, { recursive: true });
       const clip = { x: 0, y: 0, width: 1360, height: 1110 };
       await page.screenshot({ path: `${shots}/${shot}`, clip });
-      // Inställningspanelen med stämkurvan.
+      // The settings drawer with the tuning curve.
       await page.click('#btn-settings');
       await page.click('[data-tab="curve"]');
       await new Promise((r) => setTimeout(r, 400));
@@ -89,8 +89,8 @@ async function run({ key, detune, theme = 'light', shot, seed }) {
 }
 
 const cases = [
-  { key: 49, detune: 3 }, // A4, +3 cent
-  { key: 25, detune: -12 }, // A2, −12 cent (mäts på delton 4)
+  { key: 49, detune: 3 }, // A4, +3 centss
+  { key: 25, detune: -12 }, // A2, −12 cents (measured on partial 4)
 ];
 let ok = true;
 for (const c of cases) {
@@ -98,11 +98,11 @@ for (const c of cases) {
   const cents = parseFloat(r.cents.replace('−', '-').replace('±', '').replace(',', '.'));
   const pass = Math.abs(cents - c.detune) < 0.6 && r.errors.length === 0;
   ok &&= pass;
-  console.log(`${pass ? 'OK  ' : 'FEL '} tangent ${c.key} ${c.detune} cent → ${r.note} ${r.cents} | ${r.pill} | ${r.beat}${r.errors.length ? ' | ' + r.errors.join('; ') : ''}`);
+  console.log(`${pass ? 'OK  ' : 'FAIL'} key ${c.key} ${c.detune} cents → ${r.note} ${r.cents} | ${r.pill} | ${r.beat}${r.errors.length ? ' | ' + r.errors.join('; ') : ''}`);
 }
 
 if (shots) {
-  // Exempelstämning för README: några uppmätta tangenter och en ton som klingar.
+  // Example tuning for the README: some measured keys and a sounding note.
   const keys = {};
   const devs = { 37: 0.4, 39: -0.6, 40: 1.8, 42: 0.2, 44: -3.1, 45: 0.8, 47: -0.3, 49: 0.1, 51: 6.5, 52: -0.4, 54: 2.6, 56: 0.6 };
   for (const [k, d] of Object.entries(devs)) {
@@ -111,6 +111,6 @@ if (shots) {
   }
   const seed = { name: 'Jehle 115 cm', settings: { pianoKind: 'upright', sizeCm: 115, keyCount: 85 }, keys };
   for (const theme of ['light', 'dark']) await run({ key: 40, detune: 2.3, theme, shot: `screenshot-${theme}.png`, seed });
-  console.log(`Skärmdumpar i ${shots}`);
+  console.log(`Screenshots in ${shots}`);
 }
 process.exit(ok ? 0 : 1);

@@ -1,5 +1,5 @@
-// Piano Tunah: serverar webbappen och lagrar sparade stämningar som
-// JSON-filer i DATA_DIR. Inga beroenden utöver standardbiblioteket.
+// Piano Tunah: serves the web app and stores saved tunings as JSON files in
+// DATA_DIR. No dependencies beyond the standard library.
 package main
 
 import (
@@ -28,7 +28,7 @@ var webFS embed.FS
 
 const maxBody = 2 << 20
 
-// Sätts vid bygget: -ldflags "-X main.version=v1.2.3".
+// Set at build time: -ldflags "-X main.version=v1.2.3".
 var version = "dev"
 
 var idPattern = regexp.MustCompile(`^[A-Za-z0-9-]{1,64}$`)
@@ -76,7 +76,7 @@ func (s *store) list(w http.ResponseWriter, _ *http.Request) {
 func (s *store) get(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if !idPattern.MatchString(id) {
-		http.Error(w, "ogiltigt id", http.StatusBadRequest)
+		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
 	}
 	b, err := os.ReadFile(s.path(id))
@@ -94,29 +94,29 @@ func (s *store) get(w http.ResponseWriter, r *http.Request) {
 func (s *store) put(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if !idPattern.MatchString(id) {
-		http.Error(w, "ogiltigt id", http.StatusBadRequest)
+		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
 	}
 	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxBody))
 	if err != nil {
-		http.Error(w, "för stor eller trasig förfrågan", http.StatusRequestEntityTooLarge)
+		http.Error(w, "request too large or malformed", http.StatusRequestEntityTooLarge)
 		return
 	}
 	var doc map[string]any
 	if err := json.Unmarshal(body, &doc); err != nil {
-		http.Error(w, "ogiltig JSON", http.StatusBadRequest)
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return
 	}
 	if docID, _ := doc["id"].(string); docID != id {
-		http.Error(w, "id i dokumentet stämmer inte med adressen", http.StatusBadRequest)
+		http.Error(w, "document id does not match the URL", http.StatusBadRequest)
 		return
 	}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// Optimistisk låsning: klienten skickar revisionen den utgick från. Har
-	// någon annan sparat under tiden svarar vi 409 i stället för att skriva över.
+	// Optimistic locking: the client sends the revision it started from. If
+	// someone else has saved since, answer 409 instead of overwriting.
 	base, _ := doc["rev"].(float64)
 	cur, err := s.rev(id)
 	if err != nil {
@@ -157,7 +157,7 @@ func (s *store) put(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, map[string]int64{"rev": cur + 1})
 }
 
-// Sparad revision för id, 0 om stämningen inte finns.
+// Saved revision for id, 0 if the tuning does not exist.
 func (s *store) rev(id string) (int64, error) {
 	b, err := os.ReadFile(s.path(id))
 	if errors.Is(err, fs.ErrNotExist) {
@@ -177,7 +177,7 @@ func (s *store) rev(id string) (int64, error) {
 func (s *store) del(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if !idPattern.MatchString(id) {
-		http.Error(w, "ogiltigt id", http.StatusBadRequest)
+		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
 	}
 	s.mu.Lock()
@@ -199,7 +199,7 @@ func httpError(w http.ResponseWriter, err error, code int) {
 	http.Error(w, http.StatusText(code), code)
 }
 
-// Säkerhetsheaders. Mikrofonen tillåts bara för den egna sidan.
+// Security headers. The microphone is only allowed for the page itself.
 func headers(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		h := w.Header()
@@ -222,7 +222,7 @@ func env(key, def string) string {
 func main() {
 	addr := env("ADDR", ":8080")
 
-	// `pianotunah healthcheck` används av Docker (scratch-imagen saknar curl).
+	// `pianotunah healthcheck` is used by Docker (the scratch image has no curl).
 	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
 		_, port, _ := net.SplitHostPort(addr)
 		c := http.Client{Timeout: 3 * time.Second}
@@ -248,7 +248,7 @@ func main() {
 	mux.HandleFunc("GET /api/tunings", s.list)
 	mux.HandleFunc("GET /api/tunings/{id}", s.get)
 	mux.HandleFunc("PUT /api/tunings/{id}", s.put)
-	mux.HandleFunc("POST /api/tunings/{id}", s.put) // sendBeacon när sidan stängs
+	mux.HandleFunc("POST /api/tunings/{id}", s.put) // sendBeacon when the page closes
 	mux.HandleFunc("DELETE /api/tunings/{id}", s.del)
 	mux.Handle("GET /", http.FileServerFS(web))
 
@@ -264,7 +264,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	go func() {
-		log.Printf("Piano Tunah %s lyssnar på %s, data i %s", version, addr, s.dir)
+		log.Printf("Piano Tunah %s listening on %s, data in %s", version, addr, s.dir)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatal(err)
 		}

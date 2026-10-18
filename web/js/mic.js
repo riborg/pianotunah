@@ -1,5 +1,5 @@
-// Mikrofon. AnalyserNode används bara som ringbuffert: read() ger de senaste
-// 32768 samplen (~0,7 s), all analys sker i dsp.js.
+// Microphone. AnalyserNode is only used as a ring buffer: read() returns the
+// latest 32768 samples (~0.7 s); all analysis happens in dsp.js.
 
 export class Mic {
   ctx = null;
@@ -15,10 +15,10 @@ export class Mic {
     return this.ctx.sampleRate;
   }
 
-  // Kastar 'insecure' utan https, annars getUserMedia-fel (t.ex. NotAllowedError).
+  // Throws 'insecure' without https, otherwise getUserMedia errors (e.g. NotAllowedError).
   async start() {
     if (!navigator.mediaDevices?.getUserMedia) throw Object.assign(new Error('insecure'), { name: 'insecure' });
-    // Röstbehandling stör mätningen och måste av.
+    // Voice processing disturbs the measurement and must be off.
     this.stream = await navigator.mediaDevices.getUserMedia({
       audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 },
     });
