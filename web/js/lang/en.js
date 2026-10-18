@@ -169,7 +169,10 @@ export default {
   'ref.adviceNone': 'Survey or measure a few keys in the middle and the app can suggest a reference that suits the piano.',
   'ref.adviceNear': 'The piano was close to the target ({c} cents in the middle) when the pass started.',
   'ref.adviceOff': 'The piano was {c} cents from the target in the middle (≈ A4 = {hz}). ',
-  'ref.adviceLow': 'Lower the reference for a quick tuning, or raise the pitch with 20–30% overpull and plan for a second pass.',
+  'ref.overpull': 'To reach the target: {p}% overpull. A key that starts at {c} cents is tuned to {o} (A4 ≈ {hz}) and settles towards the target as the tension evens out. Check again with a new pass after 2–4 weeks. To avoid raising the pitch, use the piano\'s current pitch instead.',
+  'ref.overpullBig': 'More than 50 cents flat: raise in two passes, a quick one with overpull and then a fine one. Old strings can break; raise gradually.',
+  'ref.useOverpull': 'Use {p}% overpull',
+  'ref.adviceSharp': 'Tune down to the target, or use the piano\'s current pitch.',
   'ref.adviceSmall': 'Small deviations are tuned directly without overpull.',
 
   'tuning.temperament': 'Temperament',
@@ -276,7 +279,7 @@ export default {
 <p><strong>Octave type p:q:</strong> partial p of the lower note and partial q of the upper note are made beatless. 2:1 gives the narrowest octave, then 4:2, 6:3, 8:4.</p>
 <h3>Measuring</h3>
 <p>In the bass, partial 6, 4 or 2 is measured: the fundamental is weak and laptop microphones pick up little below 100 Hz.</p>
-<p><strong>Overpull:</strong> when raising the pitch, strings already tuned go flat as the load increases. With 25%, a note that was at −20 cents is tuned to +5.</p>
+<p><strong>Overpull:</strong> when raising the pitch, strings already tuned go flat as the load increases. With 25%, a note that was at −20 cents is tuned to +5. Under Tuning the app suggests an overpull once the middle of the piano is measured.</p>
 <p><strong>Sine tone:</strong> choose Sine under <em>Tone on click</em> and click a key. Tune until the beats disappear.</p>
 <p><strong>Temperament:</strong> how the fifths are distributed within the octave. Equal temperament is the standard.</p>
 <p class="keys-hint">Keyboard: ← → change key, L locks, A auto, T plays or stops the target tone, S opens settings.</p>`,

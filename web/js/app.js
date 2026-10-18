@@ -3,7 +3,7 @@
 
 import {
   KEY_COUNT, A4, TEMPERAMENTS, PIANO_KINDS, STRETCH_PRESETS, OCTAVE_TYPES, sizeClass,
-  computeTargets, defaultPartial, partialFreq, centsBetween, noteName, pcName, pitchClass, isBlack,
+  computeTargets, recommendedOverpull, defaultPartial, partialFreq, centsBetween, noteName, pcName, pitchClass, isBlack,
 } from './theory.js';
 import { Analyzer, rmsDb, median } from './dsp.js';
 import { listTunings, getTuning, saveTuning, deleteTuning, newTuning, normalize, duplicateTuning } from './store.js';
@@ -299,15 +299,29 @@ function renderRef() {
   for (const b of $('ref-presets').children) b.classList.toggle('on', Number(b.dataset.hz) === ref);
 
   const mid = midBefore();
+  $('btn-overpull').hidden = true;
   if (mid.length < 3) {
     $('ref-advice').textContent = tr('ref.adviceNone');
     return;
   }
   const m = median(mid);
-  $('ref-advice').textContent =
-    Math.abs(m) < 3
-      ? tr('ref.adviceNear', { c: fmtC(m) })
-      : tr('ref.adviceOff', { c: fmtC(m), hz: fmtHz(ref * 2 ** (m / 1200), 1) }) + tr(m < -15 ? 'ref.adviceLow' : 'ref.adviceSmall');
+  if (Math.abs(m) < 3) {
+    $('ref-advice').textContent = tr('ref.adviceNear', { c: fmtC(m) });
+    return;
+  }
+  const p = recommendedOverpull(m);
+  let text = tr('ref.adviceOff', { c: fmtC(m), hz: fmtHz(ref * 2 ** (m / 1200), 1) });
+  if (p) {
+    const o = (-p / 100) * m;
+    text += tr('ref.overpull', { p, c: fmtC(m, 0), o: fmtC(o, 0), hz: fmtHz(ref * 2 ** (o / 1200), 1) });
+    if (m < -50) text += ' ' + tr('ref.overpullBig');
+    $('btn-overpull').textContent = tr('ref.useOverpull', { p });
+    $('btn-overpull').dataset.p = p;
+    $('btn-overpull').hidden = Number(S().overpull) === p;
+  } else {
+    text += tr(m > 0 ? 'ref.adviceSharp' : 'ref.adviceSmall');
+  }
+  $('ref-advice').textContent = text;
 }
 
 function renderKeyInfo() {
@@ -1091,6 +1105,7 @@ function bindEvents() {
   onAll('[data-ref]', (b) => setRef(Number(S().refA4) + Number(b.dataset.ref)));
   onAll('[data-hz]', (b) => setRef(Number(b.dataset.hz)));
   on('btn-fit-ref', 'click', fitRefToPiano);
+  on('btn-overpull', 'click', () => setSetting('overpull', Number($('btn-overpull').dataset.p)));
 
   // Inställningar
   const bindSetting = (id, key, conv = (v) => v) => on(id, 'input', (e) => setSetting(key, conv(e.target.value)));

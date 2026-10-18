@@ -204,6 +204,14 @@ export const STRETCH_PRESETS = {
   custom: {},
 };
 
+// Overpull for a pitch raise, in percent of how flat the piano is. Tuned
+// strings drop as the load on the plate and soundboard grows while the rest
+// are pulled up. 25% is the usual rule of thumb; below 10 cents the drop is
+// within what a fine tuning absorbs.
+export function recommendedOverpull(cents) {
+  return cents <= -10 ? 25 : 0;
+}
+
 export const DEFAULT_SETTINGS = {
   refA4: 440,
   temperament: 'et',

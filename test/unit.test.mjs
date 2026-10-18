@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   computeTargets, temperamentOffsets, partialFreq, centsBetween, noteName,
-  migrateSettings, DEFAULT_SETTINGS,
+  migrateSettings, recommendedOverpull, DEFAULT_SETTINGS,
 } from '../web/js/theory.js';
 import { Analyzer } from '../web/js/dsp.js';
 
@@ -57,6 +57,12 @@ test('stretch: basen lägre, diskanten högre, mer för mindre pianon', () => {
 
 test('gamla instrumentval översätts', () => {
   assert.deepEqual(migrateSettings({ pianoType: 'old85' }), { pianoKind: 'upright', sizeCm: 120, keyCount: 85 });
+});
+
+test('recommended overpull: none for small deviations, 25% when flat', () => {
+  assert.equal(recommendedOverpull(-5), 0);
+  assert.equal(recommendedOverpull(15), 0);
+  assert.equal(recommendedOverpull(-15.7), 25); // 436 Hz against 440 Hz
 });
 
 test('tangentigenkänning alla 88 tangenter, två pianostorlekar, i stäm och 20 cent lågt', () => {

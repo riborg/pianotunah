@@ -169,7 +169,10 @@ export default {
   'ref.adviceNone': 'Kartlägg eller mät några tangenter i mitten så kan appen föreslå en referens som passar pianot.',
   'ref.adviceNear': 'Pianot låg nära målet ({c} cent i mitten) när omgången började.',
   'ref.adviceOff': 'Pianot låg {c} cent från målet i mitten (≈ A4 = {hz}). ',
-  'ref.adviceLow': 'Sänk referensen för en snabb stämning, eller dra upp med 20–30 % överdrag och räkna med en andra omgång.',
+  'ref.overpull': 'För att nå målet: {p} % överdrag. En tangent som börjar på {c} cent stäms till {o} (A4 ≈ {hz}) och sjunker mot målet när spänningen jämnas ut. Kontrollera med en ny omgång efter 2–4 veckor. Vill du inte dra upp: använd pianots nuvarande tonhöjd.',
+  'ref.overpullBig': 'Mer än 50 cent lågt: dra upp i två omgångar, en snabb med överdrag och sedan en fin. Gamla strängar kan brista; dra upp gradvis.',
+  'ref.useOverpull': 'Använd {p} % överdrag',
+  'ref.adviceSharp': 'Stäm ner till målet, eller använd pianots nuvarande tonhöjd.',
   'ref.adviceSmall': 'Små avvikelser stäms direkt utan överdrag.',
 
   'tuning.temperament': 'Temperatur',
@@ -276,7 +279,7 @@ export default {
 <p><strong>Oktavtyp p:q:</strong> delton p i den undre tonen och q i den övre görs svävningsfria. 2:1 ger smalast oktav, sedan 4:2, 6:3, 8:4.</p>
 <h3>Mätningen</h3>
 <p>I basen mäts delton 6, 4 eller 2: grundtonen är svag och laptopmikrofoner hör dåligt under 100 Hz.</p>
-<p><strong>Överdrag:</strong> vid uppdragning sjunker redan stämda strängar när belastningen ökar. Med 25 % stäms en ton som låg −20 cent till +5.</p>
+<p><strong>Överdrag:</strong> vid uppdragning sjunker redan stämda strängar när belastningen ökar. Med 25 % stäms en ton som låg −20 cent till +5. Under Stämning föreslår appen ett överdrag när mitten av pianot är mätt.</p>
 <p><strong>Sinuston:</strong> välj Sinus under <em>Ton vid klick</em> och klicka på en tangent. Stäm tills svävningarna försvinner.</p>
 <p><strong>Temperatur:</strong> hur kvinterna fördelas inom oktaven. Liksvävande är standard.</p>
 <p class="keys-hint">Tangentbord: ← → byter tangent, L låser, A auto, T spelar eller stoppar målton, S öppnar inställningar.</p>`,
