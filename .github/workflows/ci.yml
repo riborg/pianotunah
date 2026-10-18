@@ -25,7 +25,7 @@ jobs:
 
       - uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version: stable # govulncheck kräver en aktuell Go
           cache: false # inga beroenden, ingen go.sum
       - name: Go vet och bygge
         run: |
@@ -41,3 +41,21 @@ jobs:
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Sårbarheter kommer i praktiken från Go-versionen imagen byggs med, så
+      # binären i imagen skannas, inte källkoden med CI:ns Go.
+      - name: Ladda amd64-imagen
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          tags: pianotunah:ci
+          cache-from: type=gha
+      - name: Sårbarhetskontroll (govulncheck)
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          id=$(docker create pianotunah:ci)
+          docker cp "$id:/pianotunah" ./pianotunah-bin
+          docker rm "$id"
+          "$(go env GOPATH)/bin/govulncheck" -mode=binary ./pianotunah-bin

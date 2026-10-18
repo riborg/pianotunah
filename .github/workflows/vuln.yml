@@ -1,0 +1,36 @@
+# Veckovis kontroll av den publicerade imagen. Nya sårbarheter i Go upptäcks
+# efter att en release byggts; en röd körning betyder att det är dags för en
+# ny release (som byggs med senaste Go-patchen).
+name: Sårbarheter
+
+on:
+  schedule:
+    - cron: '17 6 * * 1' # måndagar 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  govulncheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
+          cache: false
+      - name: govulncheck på ghcr.io/${{ github.repository }}:latest
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY}:latest"
+          docker pull "$image"
+          id=$(docker create "$image")
+          docker cp "$id:/pianotunah" ./pianotunah-bin
+          docker rm "$id"
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          "$(go env GOPATH)/bin/govulncheck" -mode=binary ./pianotunah-bin
