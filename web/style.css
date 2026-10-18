@@ -193,6 +193,8 @@ textarea { resize: vertical; width: 100%; }
 }
 .confirm { border-color: var(--bad); }
 .confirm.inline { margin-top: 10px; }
+#message-text { flex: 1 1 auto; min-width: 0; }
+.message .close { padding: 0 8px; font-size: 18px; line-height: 1.4; }
 .message[data-kind="ok"] { border-color: var(--good); }
 .message[data-kind="warn"] { border-color: var(--warn); }
 .message[data-kind="error"] { border-color: var(--bad); }

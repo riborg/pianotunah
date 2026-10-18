@@ -99,14 +99,22 @@ const refPlaying = () => !!state.sine || performance.now() < state.refUntil;
 // ---------------------------------------------------------------------------
 // Meddelanden
 
+// ms = 0 betyder att meddelandet ligger kvar tills det stängs. tag gör att
+// ett meddelande kan tas bort när orsaken försvinner (t.ex. servern svarar igen).
 let msgTimer = 0;
-function message(text, kind = 'info', ms = 6000) {
+function message(text, kind = 'info', ms = 6000, tag = '') {
   const el = $('message');
-  el.textContent = text;
+  $('message-text').textContent = text;
   el.dataset.kind = kind;
+  el.dataset.tag = tag;
   el.hidden = false;
   clearTimeout(msgTimer);
   if (ms) msgTimer = setTimeout(() => (el.hidden = true), ms);
+}
+
+function clearMessage(tag) {
+  const el = $('message');
+  if (!el.hidden && el.dataset.tag === tag) el.hidden = true;
 }
 
 // ---------------------------------------------------------------------------
@@ -145,6 +153,7 @@ async function saveNow() {
   try {
     const r = await saveTuning(t);
     if (r?.rev) t.rev = r.rev;
+    clearMessage('server');
     if (t !== state.tuning) return;
     setSaveState(state.dirty ? 'dirty' : 'idle');
     const item = state.list.find((x) => x.id === t.id);
@@ -233,7 +242,7 @@ async function boot() {
     recompute();
     renderSettings();
     setSaveState('error');
-    message('Kunde inte nå servern. Mätningar sparas inte förrän den svarar.', 'warn', 0);
+    message('Kunde inte nå servern. Mätningar sparas inte förrän den svarar.', 'warn', 0, 'server');
   }
   bindEvents();
   updateReadout();
@@ -1374,6 +1383,7 @@ async function importTuning(file) {
 }
 
 function bindEvents() {
+  $('message-close').addEventListener('click', () => ($('message').hidden = true));
   $('btn-mic').addEventListener('click', () => (state.audio ? stopMic() : startMic()));
   $('btn-prev').addEventListener('click', () => selectKey(state.key - 1));
   $('btn-next').addEventListener('click', () => selectKey(state.key + 1));
