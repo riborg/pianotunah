@@ -1,5 +1,5 @@
 import {
-  KEY_COUNT, A4, TEMPERAMENTS, PIANO_TYPES, STRETCH_PRESETS, OCTAVE_TYPES,
+  KEY_COUNT, A4, TEMPERAMENTS, PIANO_KINDS, STRETCH_PRESETS, OCTAVE_TYPES, sizeClass,
   computeTargets, defaultPartial, partialFreq, centsBetween,
   noteName, pcName, pitchClass, isBlack, octave,
 } from './theory.js';
@@ -71,7 +71,7 @@ const fmtHz = (f, d = 2) => f.toFixed(d).replace('.', ',') + ' Hz';
 const kName = (k) => noteName(k);
 const S = () => state.tuning.settings;
 // Pianots högsta tangent: C8 (88), eller A7 (85) för äldre pianon.
-const top = () => PIANO_TYPES[S().pianoType]?.keys || KEY_COUNT;
+const top = () => (Number(S().keyCount) === 85 ? 85 : KEY_COUNT);
 
 // ---------------------------------------------------------------------------
 // Avvikelser per tangent. Mätningar sparas som frekvensen på den delton som
@@ -272,7 +272,7 @@ function recompute() {
 
 function buildStaticUi() {
   const opt = (v, t) => Object.assign(document.createElement('option'), { value: v, textContent: t });
-  $('set-piano').replaceChildren(...Object.entries(PIANO_TYPES).map(([k, v]) => opt(k, v.name)));
+  $('set-kind').replaceChildren(...Object.entries(PIANO_KINDS).map(([k, v]) => opt(k, v.name)));
   $('set-temperament').replaceChildren(...Object.entries(TEMPERAMENTS).map(([k, v]) => opt(k, v.name)));
   $('set-stretch').replaceChildren(...Object.entries(STRETCH_PRESETS).map(([k, v]) => opt(k, v.name)));
   for (const id of ['set-bass', 'set-mid', 'set-treble']) {
@@ -332,7 +332,9 @@ function renderSettings() {
   const s = S();
   applyKeyCount();
   $('set-name').value = state.tuning.name;
-  $('set-piano').value = s.pianoType;
+  $('set-kind').value = s.pianoKind;
+  $('set-size').value = s.sizeCm;
+  $('set-keys').value = String(top());
   $('set-temperament').value = s.temperament;
   renderRootSelect();
   $('set-root').value = s.root;
@@ -353,6 +355,13 @@ function renderSettingDescs() {
   $('temperament-desc').textContent = (TEMPERAMENTS[s.temperament] || {}).desc || '';
   $('stretch-desc').textContent = (STRETCH_PRESETS[s.stretch] || {}).desc || '';
   $('custom-oct').hidden = s.stretch !== 'custom';
+  const kind = PIANO_KINDS[s.pianoKind] || PIANO_KINDS.upright;
+  $('size-label').textContent = kind.size;
+  $('set-size').min = kind.min;
+  $('set-size').max = kind.max;
+  $('out-size').textContent = sizeClass(s.pianoKind, Number(s.sizeCm));
+  $('size-desc').textContent =
+    `Mät ${kind.how}. Storleken används som startgissning för strängarnas inharmonicitet tills pianot är kartlagt.`;
   $('set-root').disabled = s.temperament === 'et';
   $('out-extra-treble').textContent = fmtC(Number(s.extraTreble), 0) + ' cent vid C8';
   $('out-extra-bass').textContent = (Number(s.extraBass) ? '−' + num(Number(s.extraBass), 0) : '±0') + ' cent vid A0';
@@ -1586,9 +1595,21 @@ function bindEvents() {
 
   // Inställningar
   const bindSel = (id, key, conv = (v) => v) => $(id).addEventListener('input', (e) => setSetting(key, conv(e.target.value)));
-  $('set-piano').addEventListener('input', (e) => {
-    setSetting('pianoType', e.target.value);
-    applyKeyCount(); // instrumentet avgör antalet tangenter
+  $('set-kind').addEventListener('input', (e) => {
+    // Byt till typens normalstorlek; en pianinohöjd är ingen rimlig flygellängd.
+    S().sizeCm = PIANO_KINDS[e.target.value].def;
+    $('set-size').value = S().sizeCm;
+    setSetting('pianoKind', e.target.value);
+  });
+  $('set-size').addEventListener('change', (e) => {
+    const k = PIANO_KINDS[S().pianoKind];
+    const cm = Math.round(Math.max(k.min, Math.min(k.max, Number(e.target.value) || k.def)));
+    e.target.value = cm;
+    setSetting('sizeCm', cm);
+  });
+  $('set-keys').addEventListener('input', (e) => {
+    setSetting('keyCount', Number(e.target.value));
+    applyKeyCount();
   });
   bindSel('set-temperament', 'temperament');
   bindSel('set-root', 'root', Number);

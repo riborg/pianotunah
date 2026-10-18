@@ -172,8 +172,21 @@
         <label for="set-name">Namn</label>
         <input id="set-name" type="text" maxlength="80">
 
-        <label for="set-piano">Instrument</label>
-        <select id="set-piano"></select>
+        <label for="set-kind">Instrument</label>
+        <select id="set-kind"></select>
+
+        <label for="set-size"><span id="size-label">Höjd</span> <output id="out-size"></output></label>
+        <div class="size-row">
+          <input id="set-size" type="number" min="90" max="310" step="1" inputmode="numeric">
+          <span>cm</span>
+        </div>
+        <p class="desc" id="size-desc"></p>
+
+        <label for="set-keys">Tangenter</label>
+        <select id="set-keys">
+          <option value="88">88 (A0–C8)</option>
+          <option value="85">85 (A0–A7, äldre piano)</option>
+        </select>
 
         <label for="set-temperament">Temperatur</label>
         <select id="set-temperament"></select>

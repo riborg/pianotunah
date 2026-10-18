@@ -1,6 +1,6 @@
 // Sparade stämningar på servern (/api/tunings).
 
-import { DEFAULT_SETTINGS } from './theory.js';
+import { DEFAULT_SETTINGS, migrateSettings } from './theory.js';
 
 const API = 'api/tunings';
 
@@ -52,7 +52,7 @@ export function normalize(t) {
   return {
     ...base,
     ...t,
-    settings: { ...DEFAULT_SETTINGS, ...(t.settings || {}) },
+    settings: { ...DEFAULT_SETTINGS, ...migrateSettings(t.settings) },
     inharmonicity: t.inharmonicity || {},
     partials: t.partials || {},
     keys: t.keys || {},

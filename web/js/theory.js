@@ -116,27 +116,75 @@ export function temperamentFifths(id) {
 // i förhållande till längden) och lite mot basen (korta spunna strängar).
 // Uppmätta värden ersätter modellen när de finns.
 
-export const PIANO_TYPES = {
-  concert: { name: 'Konsertflygel (≈ 2,7 m)', treble: 0.8, bass: 0.6 },
-  grand: { name: 'Flygel (≈ 1,8 m)', treble: 1, bass: 1 },
-  upright: { name: 'Piano (≈ 120 cm)', treble: 1.3, bass: 2 },
-  spinet: { name: 'Litet piano (≈ 100 cm)', treble: 1.6, bass: 3 },
-  // Äldre pianon (före ~1930) har ofta sju oktaver, A0–A7.
-  old85: { name: 'Äldre piano, 85 tangenter (A0–A7)', treble: 1.3, bass: 2, keys: 85 },
+// Instrumentet beskrivs med typ (pianino/flygel), storlek i cm (pianinots höjd
+// eller flygelns längd) och antal tangenter. Storleken ger faktorer för diskant
+// respektive bas mot en referensflygel på 180 cm; korta strängar ger högre B,
+// mest i basen. Mellan stödpunkterna interpoleras linjärt.
+export const PIANO_KINDS = {
+  upright: { name: 'Pianino (upprätt piano)', size: 'Höjd', how: 'från golvet till lockets ovansida', min: 90, max: 150, def: 120 },
+  grand: { name: 'Flygel', size: 'Längd', how: 'från klaviaturens framkant till bakkanten', min: 140, max: 310, def: 180 },
 };
 
-export function modelB(k, type) {
-  const t = PIANO_TYPES[type] || PIANO_TYPES.grand;
+const SIZE_FACTORS = {
+  // [cm, diskantfaktor, basfaktor]
+  upright: [[100, 1.6, 3], [120, 1.3, 2], [140, 1.1, 1.4]],
+  grand: [[150, 1.15, 1.4], [180, 1, 1], [275, 0.8, 0.6]],
+};
+
+export function sizeFactors(kind, cm) {
+  const pts = SIZE_FACTORS[kind] || SIZE_FACTORS.upright;
+  if (cm <= pts[0][0]) return [pts[0][1], pts[0][2]];
+  for (let i = 1; i < pts.length; i++) {
+    if (cm <= pts[i][0]) {
+      const [c0, t0, b0] = pts[i - 1];
+      const [c1, t1, b1] = pts[i];
+      const f = (cm - c0) / (c1 - c0);
+      return [t0 + (t1 - t0) * f, b0 + (b1 - b0) * f];
+    }
+  }
+  const last = pts[pts.length - 1];
+  return [last[1], last[2]];
+}
+
+// Grov storleksklass för visning.
+export function sizeClass(kind, cm) {
+  if (kind === 'grand') return cm < 170 ? 'liten flygel' : cm < 220 ? 'salongsflygel' : 'konsertflygel';
+  return cm < 110 ? 'litet pianino' : cm < 125 ? 'mellanstort piano' : 'högt piano';
+}
+
+export const instrumentOf = (s) => ({
+  kind: s.pianoKind in PIANO_KINDS ? s.pianoKind : 'upright',
+  cm: Number(s.sizeCm) || PIANO_KINDS[s.pianoKind]?.def || 120,
+});
+
+export function modelB(k, inst) {
+  const [t, b] = sizeFactors(inst.kind, inst.cm);
   const treble = 0.00035 * 10 ** (((k - A4) * 0.46) / 12);
   const bass = 0.00008 * 10 ** ((25 - k) * 0.025);
-  return t.treble * treble + t.bass * bass;
+  return t * treble + b * bass;
+}
+
+// Äldre sparade stämningar hade ett fast instrumentval (pianoType).
+const LEGACY_TYPES = {
+  concert: ['grand', 274, 88],
+  grand: ['grand', 180, 88],
+  upright: ['upright', 120, 88],
+  spinet: ['upright', 100, 88],
+  old85: ['upright', 120, 85],
+};
+
+export function migrateSettings(s = {}) {
+  if (!s.pianoType || s.pianoKind) return s;
+  const [pianoKind, sizeCm, keyCount] = LEGACY_TYPES[s.pianoType] || LEGACY_TYPES.upright;
+  const { pianoType, ...rest } = s;
+  return { ...rest, pianoKind, sizeCm, keyCount };
 }
 
 // B för alla tangenter. Uppmätta värden används som korrektionsfaktorer mot
 // modellen, interpolerade logaritmiskt mellan mätpunkterna.
-export function bCurve(type, measured = {}) {
+export function bCurve(inst, measured = {}) {
   const pts = Object.entries(measured)
-    .map(([k, b]) => [Number(k), Math.log(b / modelB(Number(k), type))])
+    .map(([k, b]) => [Number(k), Math.log(b / modelB(Number(k), inst))])
     .filter(([k, r]) => k >= 1 && k <= KEY_COUNT && Number.isFinite(r))
     .sort((a, b) => a[0] - b[0]);
   const out = new Float64Array(KEY_COUNT + 1);
@@ -156,7 +204,7 @@ export function bCurve(type, measured = {}) {
         }
       }
     }
-    out[k] = modelB(k, type) * Math.exp(r);
+    out[k] = modelB(k, inst) * Math.exp(r);
   }
   return out;
 }
@@ -199,7 +247,9 @@ export const DEFAULT_SETTINGS = {
   bassOctave: '6:3',
   extraTreble: 0,
   extraBass: 0,
-  pianoType: 'upright',
+  pianoKind: 'upright',
+  sizeCm: 120,
+  keyCount: 88, // 88 (A0–C8) eller 85 (A0–A7, äldre pianon)
   overpull: 0,
   tolerance: 1,
 };
@@ -210,7 +260,7 @@ const T_LOW = A4 - 12;
 
 export function computeTargets(settings, measuredB = {}) {
   const s = { ...DEFAULT_SETTINGS, ...settings };
-  const B = bCurve(s.pianoType, measuredB);
+  const B = bCurve(instrumentOf(s), measuredB);
   const S = new Float64Array(KEY_COUNT + 1);
   let extraTreble = Number(s.extraTreble) || 0;
   const extraBass = Number(s.extraBass) || 0;
