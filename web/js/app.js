@@ -578,7 +578,8 @@ function measureCurrent(A) {
   const T = state.T;
   const n = partialOf(k);
   const target = partialFreq(T.freq[k], T.B[k], n);
-  const m = A.measure(target, state.mode === 'auto' ? 50 : 90, 8);
+  // Låst tangent: brett fönster så att även ett kraftigt nedstämt piano hittas.
+  const m = A.measure(target, state.mode === 'auto' ? 50 : 150, 8);
   if (!m) return idle();
 
   const raw = centsBetween(m.freq, target);
