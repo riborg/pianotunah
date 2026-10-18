@@ -1,9 +1,9 @@
 services:
   pianotunah:
     container_name: pianotunah
-    # Release-imagen; uppdateras när en ny version publiceras.
+    # The release image; updated when a new version is published.
     image: ghcr.io/riborg/pianotunah:latest
-    # Lokalt bygge i stället: docker compose up -d --build
+    # Local build instead: docker compose up -d --build
     build: .
     restart: unless-stopped
     user: "1000:1000"
@@ -22,7 +22,7 @@ services:
       - traefik.http.routers.pianotunah.rule=Host(`pianotunah.example.com`)
       - traefik.http.routers.pianotunah.entrypoints=websecure
       - traefik.http.routers.pianotunah.tls=true
-      # Intern tjänst: endast nåbar från LAN.
+      # Internal service: reachable from the LAN only.
       - traefik.http.routers.pianotunah.middlewares=default-security-headers@file,ip-allowlist@file,compress@file
       - traefik.http.services.pianotunah.loadbalancer.server.port=8080
 

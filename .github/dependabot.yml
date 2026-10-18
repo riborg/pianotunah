@@ -1,4 +1,4 @@
-# Veckovisa pull requests för nya versioner av actions och Go-imagen i Dockerfile.
+# Weekly pull requests for new versions of actions and the Go image in the Dockerfile.
 version: 2
 updates:
   - package-ecosystem: github-actions

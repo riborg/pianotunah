@@ -1,6 +1,6 @@
-# Bygg en statisk binär med webbappen inbäddad och kör den i en tom image.
-# Go korskompilerar på byggmaskinens plattform, så flera arkitekturer kräver
-# ingen emulering.
+# Build a static binary with the web app embedded and run it in an empty image.
+# Go cross-compiles on the build machine's platform, so multiple architectures
+# need no emulation.
 FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS build
 ARG TARGETOS TARGETARCH VERSION=dev
 WORKDIR /src

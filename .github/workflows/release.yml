@@ -1,9 +1,9 @@
-# Release: pusha en tagg vX.Y.Z.
-#   1. CI körs (tester och provbygge).
-#   2. Imagen byggs för amd64 och arm64 och publiceras på ghcr.io med
-#      taggarna X.Y.Z, X.Y, X och latest (latest inte för förhandsversioner,
-#      t.ex. v1.0.0-rc.1).
-#   3. En GitHub Release skapas med commits sedan förra taggen.
+# Release: push a tag vX.Y.Z.
+#   1. CI runs (tests and test build).
+#   2. The image is built for amd64 and arm64 and published on ghcr.io with
+#      the tags X.Y.Z, X.Y, X and latest (no latest for pre-releases,
+#      e.g. v1.0.0-rc.1).
+#   3. A GitHub Release is created with the commits since the previous tag.
 name: Release
 
 on:
@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 0 # hela historiken för ändringslistan
+          fetch-depth: 0 # full history for the changelog
 
       - uses: docker/setup-buildx-action@v4
       - uses: docker/login-action@v4
@@ -42,7 +42,7 @@ jobs:
             type=semver,pattern={{major}}
             type=raw,value=latest,enable=${{ !contains(github.ref_name, '-') }}
 
-      - name: Bygg och publicera imagen
+      - name: Build and publish the image
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -53,14 +53,14 @@ jobs:
           build-args: VERSION=${{ github.ref_name }}
           cache-from: type=gha
 
-      - name: Skapa GitHub Release
+      - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: |
           prev=$(git describe --tags --abbrev=0 "$TAG^" 2>/dev/null || true)
           {
-            echo "## Ändringar${prev:+ sedan $prev}"
+            echo "## Changes${prev:+ since $prev}"
             git log --no-merges --pretty='- %s' "${prev:+$prev..}$TAG"
             echo
             echo "Image: \`ghcr.io/${GITHUB_REPOSITORY}:${TAG#v}\`"
