@@ -699,11 +699,8 @@ function renderKeyStatus() {
 
 function storeB(k, B) {
   state.tuning.inharmonicity[k] = Number(B.toPrecision(4));
-  state.T = computeTargets(S(), state.tuning.inharmonicity);
   markDirty();
-  renderKeyInfo();
-  renderKeyboard();
-  drawChart();
+  recompute();
 }
 
 function mapStep(k) {
