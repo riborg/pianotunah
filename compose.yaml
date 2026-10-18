@@ -1,7 +1,7 @@
 services:
   pianotunah:
     container_name: pianotunah
-    # Release-imagen; Watchtower uppdaterar när en ny version publiceras.
+    # Release-imagen; uppdateras när en ny version publiceras.
     image: ghcr.io/riborg/pianotunah:latest
     # Lokalt bygge i stället: docker compose up -d --build
     build: .

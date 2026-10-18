@@ -77,16 +77,15 @@ git push origin v1.2.0
 
 GitHub Actions kör testerna och publicerar `ghcr.io/riborg/pianotunah` med taggarna `1.2.0`, `1.2`, `1` och `latest`. Därefter skapas en GitHub Release med commits sedan förra taggen. Förhandsversioner (`v1.2.0-rc.1`) får inte `latest`.
 
-Servern följer `latest` via Watchtower, som kollar en gång per dygn som standard. Paketet är privat, så Watchtower behöver inloggning mot ghcr.io. Skapa en token med `read:packages`, och kör sedan:
+Servern följer `latest`. Paketet är privat, så den som hämtar imagen behöver en token med `read:packages`:
 
 ```sh
-echo "$TOKEN" | docker login ghcr.io -u riborg --password-stdin
-# ersätt Watchtower med en som har inloggningen monterad:
-docker rm -f watchtower
-docker run -d --name watchtower --restart unless-stopped \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v "$HOME/.docker/config.json:/config.json:ro" nickfedor/watchtower
+gh auth refresh -h github.com -s read:packages
+gh auth token | docker login ghcr.io -u riborg --password-stdin
+docker compose pull && docker compose up -d
 ```
+
+Ett verktyg som uppdaterar via Docker-socketen, till exempel Dockhand, använder inte `docker login`. Det behöver samma token i sina egna registerinställningar.
 
 ## Utveckling
 
