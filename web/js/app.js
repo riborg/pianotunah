@@ -776,7 +776,10 @@ function readColors() {
 function fitCanvas(c) {
   const dpr = window.devicePixelRatio || 1;
   const w = c.clientWidth;
-  const h = Number(c.getAttribute('height'));
+  // Logisk höjd läses en gång: c.height skrivs om med dpr nedan och får inte
+  // läsas tillbaka, annars växer canvasen för varje bildruta på HiDPI-skärmar.
+  if (!c.dataset.h) c.dataset.h = c.getAttribute('height');
+  const h = Number(c.dataset.h);
   if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
     c.width = Math.round(w * dpr);
     c.height = Math.round(h * dpr);
