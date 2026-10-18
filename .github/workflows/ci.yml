@@ -1,0 +1,42 @@
+# Tester och provbygge av imagen. Körs vid push och pull requests, och av
+# release.yml innan något publiceras.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Enhetstester
+        run: npm test
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Go vet och bygge
+        run: |
+          go vet ./...
+          go build ./...
+
+      - uses: docker/setup-buildx-action@v3
+      - name: Provbygg imagen (amd64, arm64)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
