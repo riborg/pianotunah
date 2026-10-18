@@ -219,6 +219,37 @@ export function drawBeat(canvas, { beatHz, display, live, tol }, C, dt, phase) {
   return phase;
 }
 
+// Avvikelse per tangent som staplar kring målet (nollinjen), ritad på
+// pianolådans mörka bakgrund i båda färglägena. bars: [{ x: 0..1, d: cent }].
+// Skalan är ±5, 10, 20 eller 30 cent efter största avvikelsen; större klipps.
+// Returnerar skalan.
+export function drawDeviations(canvas, { bars, current, barW, tol }, C) {
+  const { ctx, w, h } = fitCanvas(canvas);
+  const max = Math.max(0, ...bars.map((b) => Math.abs(b.d)));
+  const range = [5, 10, 20, 30].find((r) => max <= r) ?? 30;
+  const mid = h / 2;
+  const yOf = (d) => mid - (Math.max(-range, Math.min(range, d)) / range) * (mid - 3);
+  ctx.fillStyle = C.good;
+  ctx.globalAlpha = 0.16;
+  ctx.fillRect(0, yOf(tol), w, yOf(-tol) - yOf(tol));
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = 'rgb(255 255 255 / 0.22)';
+  ctx.fillRect(0, mid - 0.5, w, 1);
+  if (current != null) {
+    ctx.fillStyle = C.accent;
+    ctx.globalAlpha = 0.5;
+    ctx.fillRect(current * w - 1, 0, 2, h);
+    ctx.globalAlpha = 1;
+  }
+  const bw = Math.max(2, barW * w);
+  for (const { x, d } of bars) {
+    const y = yOf(d);
+    ctx.fillStyle = scaleColor(d, tol, C);
+    ctx.fillRect(x * w - bw / 2, Math.min(y, mid), bw, Math.max(1.5, Math.abs(y - mid)));
+  }
+  return range;
+}
+
 // Stämkurva: mål per tangent (cent mot liksvävande) och uppmätta lägen.
 // points: [{ k, c, status }]. ticks: [{ k, label }]. Returnerar geometrin så
 // att anroparen kan översätta muspositioner till tangenter.

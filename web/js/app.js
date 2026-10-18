@@ -11,7 +11,7 @@ import { num, fmtC, fmtHz, fmtB } from './format.js';
 import { Mic } from './mic.js';
 import { TonePlayer } from './tone.js';
 import { Saver } from './saver.js';
-import { readColors, drawMeter, drawStrobe, drawSpectro, drawBeat, drawChart } from './draw.js';
+import { readColors, drawMeter, drawStrobe, drawSpectro, drawBeat, drawChart, drawDeviations } from './draw.js';
 import * as mapping from './mapping.js';
 
 const $ = (id) => document.getElementById(id);
@@ -337,6 +337,7 @@ function renderKeyboard() {
     el.title = label;
   }
   const curEl = $('keyboard').children[cur - 1];
+  renderDeviations(curEl);
   const marker = $('kb-marker');
   marker.style.left = `calc(10px + (100% - 20px) * ${Number(curEl.dataset.cx) / 100})`;
   marker.dataset.s = statusClass(statusDev(cur));
@@ -349,6 +350,19 @@ function renderKeyboard() {
     const x = (Number(curEl.dataset.cx) / 100) * sc.scrollWidth - sc.clientWidth / 2;
     sc.scrollTo({ left: x, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   }
+}
+
+// Remsan under klaviaturen: uppmätt avvikelse mot målet per tangent.
+function renderDeviations(curEl) {
+  const keys = [...$('keyboard').children];
+  const whites = keys.filter((el) => el.classList.contains('white')).length;
+  const bars = [];
+  for (const el of keys) {
+    const d = statusDev(Number(el.dataset.k));
+    if (Number.isFinite(d)) bars.push({ x: el.dataset.cx / 100, d });
+  }
+  const range = drawDeviations($('devstrip'), { bars, current: curEl.dataset.cx / 100, barW: 0.55 / whites, tol: tolerance() }, state.colors);
+  $('dev-range').textContent = range;
 }
 
 function renderPass() {
@@ -947,6 +961,7 @@ function renderThemeButton() {
 
 function refreshColors() {
   state.colors = readColors();
+  renderKeyboard();
   renderChart();
 }
 
@@ -1155,7 +1170,10 @@ function bindEvents() {
   });
 
   // Fönster
-  window.addEventListener('resize', renderChart);
+  window.addEventListener('resize', () => {
+    renderKeyboard();
+    renderChart();
+  });
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', refreshColors);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') saver.flush();

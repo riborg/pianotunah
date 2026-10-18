@@ -391,6 +391,9 @@ body.drawer-open { overflow: hidden; }
 /* Filtlisten som ligger över tangenterna på ett riktigt piano. */
 .kb-felt { height: 7px; margin: 0 -2px; border-radius: 2px; background: linear-gradient(var(--felt-hi), var(--felt)); box-shadow: 0 1px 2px rgb(0 0 0 / 0.5); position: relative; z-index: 3; }
 .keyboard { position: relative; display: flex; height: 172px; user-select: none; }
+/* Avvikelseremsa i lådan under tangenterna, samma x-axel som klaviaturen. */
+.devstrip { display: block; width: 100%; margin-top: 8px; }
+.bar-sw { width: 4px; height: 12px; border-radius: 1px; background: linear-gradient(var(--bad), var(--good) 50%, var(--warn)); display: inline-block; }
 .key { cursor: pointer; padding: 0; border: 0; font: inherit; }
 .key.white {
   flex: 1 1 0;
