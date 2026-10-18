@@ -171,9 +171,9 @@ export class Analyzer {
 
   // Gissa vilken tangent som spelas genom att poängsätta varje tangent efter
   // hur tydligt dess förväntade deltoner syns i spektrumet. Därefter en
-  // undertonskontroll: tonen en oktav (eller oktav + kvint, två oktaver) under
-  // vinnaren har alla vinnarens deltoner, så den väljs om även dess egna
-  // deltoner hörs. margin = vinnarens försprång mot halvtonsgrannarna (dB).
+  // undertonskontroll: tonen en oktav (eller duodecima) under vinnaren har
+  // alla vinnarens deltoner, så den väljs om även dess egna deltoner hörs.
+  // margin = vinnarens försprång mot halvtonsgrannarna (dB).
   detectKey(targets, prevKey = 0, top = KEY_COUNT) {
     const scores = new Float64Array(KEY_COUNT + 1).fill(-Infinity);
     let best = 0;
@@ -199,13 +199,21 @@ export class Analyzer {
       }
     }
     if (!best) return { key: 0, score: -Infinity, margin: 0 };
-    for (const [shift, own] of [[24, [2, 3, 5]], [19, [2, 4, 5]], [12, [3, 5, 7]]]) {
-      const c = best - shift;
-      if (c < 1) continue;
-      const proms = own.map((n) => this.partialProm(targets, c, n)).filter((p) => p !== null);
-      if (proms.length >= 2 && Math.min(...proms) >= 8 && proms.reduce((a, p) => a + p, 0) / proms.length >= 12) {
-        best = c;
-        break;
+    // Ett steg i taget (oktav, duodecima) och upprepa, så att två oktaver ner
+    // blir två oktavsteg. Egna deltoner = de som inte delas med vinnaren.
+    // Kraven ligger över brustoppar (~10 dB).
+    const sounds = (c, own) => {
+      const p = own.map((n) => this.partialProm(targets, c, n)).filter((x) => x !== null);
+      return p.length >= 1 && Math.min(...p) >= 15 && p.reduce((a, x) => a + x, 0) / p.length >= 20;
+    };
+    for (let moved = true; moved; ) {
+      moved = false;
+      for (const [shift, own] of [[12, [3, 5, 7]], [19, [2, 4, 5]]]) {
+        if (best - shift >= 1 && sounds(best - shift, own)) {
+          best -= shift;
+          moved = true;
+          break;
+        }
       }
     }
     const neigh = [best - 2, best - 1, best + 1, best + 2]

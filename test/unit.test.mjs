@@ -11,9 +11,15 @@ const SR = 48000;
 const N = 32768;
 const T = computeTargets(DEFAULT_SETTINGS);
 
+// Seedat brus så att testerna är deterministiska.
+let seed = 1;
+const noise = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648 - 0.5) * 0.01;
+
 // Syntetisk ton med inharmonicitet B; grundtonen dämpad i basen som på ett piano.
-function tone(k, detune = 0, B = T.B[k]) {
-  const f0 = (T.freq[k] * 2 ** (detune / 1200)) / Math.sqrt(1 + B);
+const tone = (k, detune = 0, B = T.B[k]) => toneFor(T, k, detune, B);
+
+function toneFor(t, k, detune = 0, B = t.B[k]) {
+  const f0 = (t.freq[k] * 2 ** (detune / 1200)) / Math.sqrt(1 + B);
   const buf = new Float32Array(N);
   for (let p = 1; p <= 16; p++) {
     const f = p * f0 * Math.sqrt(1 + B * p * p);
@@ -21,7 +27,7 @@ function tone(k, detune = 0, B = T.B[k]) {
     const a = (k < 20 && p === 1 ? 0.05 : 1) / p ** 0.8;
     for (let i = 0; i < N; i++) buf[i] += a * Math.sin((2 * Math.PI * f * i) / SR + p);
   }
-  for (let i = 0; i < N; i++) buf[i] += (Math.random() - 0.5) * 0.01;
+  for (let i = 0; i < N; i++) buf[i] += noise();
   return buf;
 }
 
@@ -53,10 +59,15 @@ test('gamla instrumentval översätts', () => {
   assert.deepEqual(migrateSettings({ pianoType: 'old85' }), { pianoKind: 'upright', sizeCm: 120, keyCount: 85 });
 });
 
-test('tangentigenkänning A0–C8, även med svag grundton i basen', () => {
-  for (const k of [1, 6, 13, 20, 25, 32, 37, 44, 49, 56, 61, 68, 73, 80, 85, 88]) {
-    const d = analyse(tone(k)).detectKey(T);
-    assert.equal(noteName(d.key), noteName(k));
+test('tangentigenkänning alla 88 tangenter, två pianostorlekar, i stäm och 20 cent lågt', () => {
+  for (const settings of [DEFAULT_SETTINGS, { ...DEFAULT_SETTINGS, sizeCm: 100 }]) {
+    const t = computeTargets(settings);
+    for (let k = 1; k <= 88; k++) {
+      for (const det of [0, -20]) {
+        const A = analyse(toneFor(t, k, det));
+        assert.equal(noteName(A.detectKey(t).key), noteName(k), `${noteName(k)} ${det} cent`);
+      }
+    }
   }
 });
 
