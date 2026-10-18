@@ -175,6 +175,7 @@ textarea { resize: vertical; width: 100%; }
 .btn.icon { min-width: 36px; padding: 4px 8px; font-size: 18px; line-height: 1.2; }
 .btn.icon.sm { min-width: 0; font-size: 13px; padding: 4px 8px; font-family: var(--f-mono); }
 .btn.wide { width: 100%; }
+.theme-btn { min-width: 92px; }
 
 .chip { font-size: 12px; padding: 3px 8px; border-radius: 99px; background: var(--sunk); color: var(--muted); }
 .chip[data-state="dirty"], .chip[data-state="saving"] { color: var(--ink); }

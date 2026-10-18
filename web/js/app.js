@@ -9,6 +9,7 @@ import { listTunings, getTuning, saveTuning, deleteTuning, newTuning, normalize,
 const $ = (id) => document.getElementById(id);
 const LAST_ID = 'pianotunah.lastTuning';
 const TONE_MODE = 'pianotunah.toneMode';
+const THEME = 'pianotunah.theme';
 const FRAME_MS = 90;
 const SPEC_COLS = 100; // ≈ 9 s historik i svävningsvyn
 const SPEC_BINS = 48;
@@ -1462,7 +1463,40 @@ async function importTuning(file) {
   }
 }
 
+// Färgläge: auto följer webbläsaren, ljust/mörkt sätter data-theme på <html>.
+// theme.js i <head> tillämpar sparat val innan sidan ritas.
+const THEMES = { auto: ['◐ Auto', 'följer webbläsaren'], light: ['☀ Ljust', 'ljust'], dark: ['☾ Mörkt', 'mörkt'] };
+
+function currentTheme() {
+  return document.documentElement.dataset.theme || 'auto';
+}
+
+function setTheme(t) {
+  if (t === 'auto') delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = t;
+  try {
+    if (t === 'auto') localStorage.removeItem(THEME);
+    else localStorage.setItem(THEME, t);
+  } catch { /* valfritt */ }
+  renderThemeButton();
+  readColors();
+  drawChart();
+}
+
+function renderThemeButton() {
+  const [label, desc] = THEMES[currentTheme()];
+  const b = $('btn-theme');
+  b.textContent = label;
+  b.title = `Färgläge: ${desc}. Klicka för att byta.`;
+  b.setAttribute('aria-label', `Färgläge: ${desc}`);
+}
+
 function bindEvents() {
+  renderThemeButton();
+  $('btn-theme').addEventListener('click', () => {
+    const order = ['auto', 'light', 'dark'];
+    setTheme(order[(order.indexOf(currentTheme()) + 1) % order.length]);
+  });
   $('message-close').addEventListener('click', () => ($('message').hidden = true));
   $('btn-mic').addEventListener('click', () => (state.audio ? stopMic() : startMic()));
   $('btn-prev').addEventListener('click', () => selectKey(state.key - 1));
