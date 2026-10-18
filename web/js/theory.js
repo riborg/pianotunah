@@ -102,11 +102,6 @@ export function temperamentOffsets(id, root = 0) {
   return rotated.map((d) => d - a);
 }
 
-// Kvintavvikelser för visning: kvint i (från tonklass 7·i) i cent mot ren kvint.
-export function temperamentFifths(id) {
-  return closeCircle((TEMPERAMENTS[id] || TEMPERAMENTS.et).fifths);
-}
-
 // ---------------------------------------------------------------------------
 // Inharmonicitet
 //
@@ -131,7 +126,7 @@ const SIZE_FACTORS = {
   grand: [[150, 1.15, 1.4], [180, 1, 1], [275, 0.8, 0.6]],
 };
 
-export function sizeFactors(kind, cm) {
+function sizeFactors(kind, cm) {
   const pts = SIZE_FACTORS[kind] || SIZE_FACTORS.upright;
   if (cm <= pts[0][0]) return [pts[0][1], pts[0][2]];
   for (let i = 1; i < pts.length; i++) {
@@ -152,12 +147,12 @@ export function sizeClass(kind, cm) {
   return cm < 110 ? 'litet pianino' : cm < 125 ? 'mellanstort piano' : 'högt piano';
 }
 
-export const instrumentOf = (s) => ({
+const instrumentOf = (s) => ({
   kind: s.pianoKind in PIANO_KINDS ? s.pianoKind : 'upright',
   cm: Number(s.sizeCm) || PIANO_KINDS[s.pianoKind]?.def || 120,
 });
 
-export function modelB(k, inst) {
+function modelB(k, inst) {
   const [t, b] = sizeFactors(inst.kind, inst.cm);
   const treble = 0.00035 * 10 ** (((k - A4) * 0.46) / 12);
   const bass = 0.00008 * 10 ** ((25 - k) * 0.025);
@@ -182,7 +177,7 @@ export function migrateSettings(s = {}) {
 
 // B för alla tangenter. Uppmätta värden används som korrektionsfaktorer mot
 // modellen, interpolerade logaritmiskt mellan mätpunkterna.
-export function bCurve(inst, measured = {}) {
+function bCurve(inst, measured = {}) {
   const pts = Object.entries(measured)
     .map(([k, b]) => [Number(k), Math.log(b / modelB(Number(k), inst))])
     .filter(([k, r]) => k >= 1 && k <= KEY_COUNT && Number.isFinite(r))
