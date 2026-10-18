@@ -157,7 +157,9 @@ export class Analyzer {
   // runt fc. Används för svävningsvyn.
   zoom(fc, cents, bins) {
     const buf = this.buf;
-    const M = fc < 600 ? 16384 : 8192;
+    // Hela bufferten under 600 Hz: huvudloben blir då ±10 cent vid C4 i stället
+    // för ±38, så att spåret syns inom ±30 cent.
+    const M = Math.min(buf.length, fc < 600 ? 32768 : 16384);
     const w = hann(M);
     const start = buf.length - M;
     const out = new Float32Array(bins);

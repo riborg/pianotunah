@@ -114,9 +114,10 @@ export function drawStrobe(canvas, { display, live, tol }, C, dt, phases) {
 }
 
 // Zoomat spektrogram runt måldeltonen. cols: { col: dB per rad, c: avvikelse }
-// eller null (tystnad), äldst först. Ljusstyrka = signalstyrka relativt
+// eller null (tystnad), äldst först. Ljusstyrka = signalstyrka inom 12 dB från
 // kolumnens topp, färg = avvikelse i det ögonblicket.
 const specImg = { canvas: null, ctx: null, data: null };
+const SPEC_RANGE_DB = 12;
 
 export function drawSpectro(canvas, cols, { capacity, bins, cents, tol }, C) {
   const { ctx, w, h } = fitCanvas(canvas);
@@ -139,7 +140,7 @@ export function drawSpectro(canvas, cols, { capacity, bins, cents, tol }, C) {
       px[o] = r;
       px[o + 1] = g;
       px[o + 2] = b;
-      px[o + 3] = Math.round(Math.max(0, Math.min(1, (s.col[y] - peak + 30) / 30)) ** 1.8 * 255);
+      px[o + 3] = Math.round(Math.max(0, Math.min(1, (s.col[y] - peak + SPEC_RANGE_DB) / SPEC_RANGE_DB)) ** 1.5 * 255);
     }
   });
   specImg.ctx.putImageData(specImg.data, 0, 0);
