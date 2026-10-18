@@ -126,22 +126,33 @@ function markDirty() {
   if (!state.saveTimer) state.saveTimer = setTimeout(flushSave, 2500);
 }
 
-async function flushSave() {
+// Sparningar körs i tur och ordning så att en långsam sparning aldrig kan bli
+// klar efter en senare och skriva över den.
+let saveChain = Promise.resolve();
+function flushSave() {
   clearTimeout(state.saveTimer);
   state.saveTimer = 0;
-  if (!state.dirty || !state.tuning) return;
+  saveChain = saveChain.then(saveNow, saveNow);
+  return saveChain;
+}
+
+async function saveNow() {
+  const t = state.tuning;
+  if (!state.dirty || !t) return;
   state.dirty = false;
-  state.tuning.updatedAt = new Date().toISOString();
+  t.updatedAt = new Date().toISOString();
   setSaveState('saving');
   try {
-    await saveTuning(state.tuning);
+    await saveTuning(t);
+    if (t !== state.tuning) return;
     setSaveState(state.dirty ? 'dirty' : 'idle');
-    const item = state.list.find((t) => t.id === state.tuning.id);
-    if (item && item.name !== state.tuning.name) {
-      item.name = state.tuning.name;
+    const item = state.list.find((x) => x.id === t.id);
+    if (item && item.name !== t.name) {
+      item.name = t.name;
       renderTuningSelect();
     }
   } catch {
+    if (t !== state.tuning) return;
     state.dirty = true;
     setSaveState('error');
     state.saveTimer = setTimeout(flushSave, 10000);
@@ -170,7 +181,7 @@ function renderTuningSelect() {
 }
 
 async function openTuning(t) {
-  if (state.dirty) await flushSave();
+  await flushSave();
   state.tuning = normalize(t);
   try { localStorage.setItem(LAST_ID, t.id); } catch { /* valfritt */ }
   resetReadings();
@@ -1446,6 +1457,7 @@ function bindEvents() {
       clearTimeout(state.saveTimer);
       state.saveTimer = 0;
       state.dirty = false;
+      await saveChain; // låt en pågående sparning bli klar så att den inte återskapar filen
       await deleteTuning(state.tuning.id);
       await refreshList();
       if (state.list[0]) await openTuning(await getTuning(state.list[0].id));
