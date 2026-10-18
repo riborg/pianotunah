@@ -1,10 +1,14 @@
 # Bygg en statisk binär med webbappen inbäddad och kör den i en tom image.
-FROM golang:1.25-alpine AS build
+# Go korskompilerar på byggmaskinens plattform, så flera arkitekturer kräver
+# ingen emulering.
+FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS build
+ARG TARGETOS TARGETARCH VERSION=dev
 WORKDIR /src
 COPY go.mod ./
 COPY main.go ./
 COPY web ./web
-RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/pianotunah . \
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
+    go build -trimpath -ldflags="-s -w -X main.version=${VERSION}" -o /out/pianotunah . \
  && mkdir -p /out/data
 
 FROM scratch

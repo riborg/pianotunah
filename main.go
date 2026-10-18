@@ -28,6 +28,9 @@ var webFS embed.FS
 
 const maxBody = 2 << 20
 
+// Sätts vid bygget: -ldflags "-X main.version=v1.2.3".
+var version = "dev"
+
 var idPattern = regexp.MustCompile(`^[A-Za-z0-9-]{1,64}$`)
 
 type store struct {
@@ -241,6 +244,7 @@ func main() {
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) { io.WriteString(w, "ok") })
+	mux.HandleFunc("GET /api/version", func(w http.ResponseWriter, _ *http.Request) { writeJSON(w, map[string]string{"version": version}) })
 	mux.HandleFunc("GET /api/tunings", s.list)
 	mux.HandleFunc("GET /api/tunings/{id}", s.get)
 	mux.HandleFunc("PUT /api/tunings/{id}", s.put)
@@ -260,7 +264,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	go func() {
-		log.Printf("Piano Tunah lyssnar på %s, data i %s", addr, s.dir)
+		log.Printf("Piano Tunah %s lyssnar på %s, data i %s", version, addr, s.dir)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatal(err)
 		}

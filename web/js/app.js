@@ -1220,6 +1220,7 @@ async function boot() {
   } catch { /* valfritt */ }
   setMapPlan(plan);
   setToneMode(tone);
+  fetch('api/version').then((r) => r.json()).then((v) => ($('app-version').textContent = v.version)).catch(() => {});
   updateReadout();
   requestAnimationFrame(animate);
 }
