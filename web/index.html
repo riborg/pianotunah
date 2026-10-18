@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="sv">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -17,58 +17,58 @@
     <span class="brand-name">Piano Tunah</span>
   </div>
   <div class="tuning-bar">
-    <label class="sr-only" for="tuning-select">Sparad stämning</label>
+    <label class="sr-only" for="tuning-select" data-i18n="top.tuning">Saved tuning</label>
     <select id="tuning-select"></select>
     <span id="save-status" class="chip" data-state="idle">–</span>
   </div>
-  <button id="btn-settings" class="btn ghost" type="button" aria-controls="drawer" aria-expanded="false" title="Inställningar (S)">
+  <button id="btn-settings" class="btn ghost" type="button" aria-controls="drawer" aria-expanded="false" title="Settings (S)" data-i18n-title="top.settingsTitle">
     <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-    Inställningar
+    <span data-i18n="top.settings">Settings</span>
   </button>
-  <button id="btn-mic" class="btn primary" type="button">Starta mikrofon</button>
+  <button id="btn-mic" class="btn primary" type="button">Start microphone</button>
 </header>
 
 <main class="layout">
-  <section class="card keys-card" aria-label="Klaviatur">
+  <section class="card keys-card" aria-label="Keyboard" data-i18n-aria-label="kb.label">
     <div class="kb-scroll" id="kb-scroll">
       <div class="kb-frame">
         <div class="kb-marker" id="kb-marker"><span id="kb-marker-name">A4</span></div>
         <div class="kb-felt" aria-hidden="true"></div>
         <div class="keyboard" id="keyboard"></div>
-        <canvas id="devstrip" class="devstrip" height="52" role="img" aria-label="Avvikelse mot målet per tangent"></canvas>
+        <canvas id="devstrip" class="devstrip" height="52" role="img" aria-label="Deviation from target per key" data-i18n-aria-label="kb.strip"></canvas>
       </div>
     </div>
     <div class="legend">
-      <span class="lg"><i class="sw s-good"></i>Inom tolerans</span>
-      <span class="lg"><i class="sw s-warn"></i>Nära</span>
-      <span class="lg"><i class="sw s-bad"></i>Utanför</span>
-      <span class="lg"><i class="dot-b"></i>Uppmätt inharmonicitet</span>
-      <span class="lg"><i class="bar-sw"></i>Avvikelse mot målet, ±<span id="dev-range">5</span> cent</span>
+      <span class="lg"><i class="sw s-good"></i><span data-i18n="legend.good">Within tolerance</span></span>
+      <span class="lg"><i class="sw s-warn"></i><span data-i18n="legend.warn">Close</span></span>
+      <span class="lg"><i class="sw s-bad"></i><span data-i18n="legend.bad">Outside</span></span>
+      <span class="lg"><i class="dot-b"></i><span data-i18n="legend.b">Measured inharmonicity</span></span>
+      <span class="lg"><i class="bar-sw"></i><span id="dev-legend"></span></span>
     </div>
   </section>
 
-  <section class="tuner card" aria-label="Stämapparat">
+  <section class="tuner card" aria-label="Tuner" data-i18n-aria-label="tuner.label">
     <div class="tuner-head">
-      <button id="btn-prev" class="btn icon" type="button" aria-label="Föregående tangent" title="Föregående tangent (←)">‹</button>
+      <button id="btn-prev" class="btn icon" type="button" aria-label="Previous key" title="Previous key (←)" data-i18n-aria-label="tuner.prev" data-i18n-title="tuner.prevTitle">‹</button>
       <div class="note">
         <div class="note-name" id="note-name">A4</div>
-        <div class="note-sub" id="note-sub">tangent 49</div>
+        <div class="note-sub" id="note-sub"></div>
       </div>
-      <button id="btn-next" class="btn icon" type="button" aria-label="Nästa tangent" title="Nästa tangent (→)">›</button>
-      <button id="btn-ref-chip" class="ref-chip" type="button" title="Ändra referens"></button>
-      <div class="modes" role="group" aria-label="Läge">
-        <button id="mode-auto" class="seg" type="button" aria-pressed="true" title="Hitta tangenten automatiskt (A)">Auto</button>
-        <button id="mode-lock" class="seg" type="button" aria-pressed="false" title="Lås på vald tangent (L)">Lås</button>
-        <button id="mode-map" class="seg" type="button" aria-pressed="false" title="Mät pianot ton för ton innan du stämmer">Kartlägg</button>
+      <button id="btn-next" class="btn icon" type="button" aria-label="Next key" title="Next key (→)" data-i18n-aria-label="tuner.next" data-i18n-title="tuner.nextTitle">›</button>
+      <button id="btn-ref-chip" class="ref-chip" type="button" title="Change reference" data-i18n-title="tuner.refTitle"></button>
+      <div class="modes" role="group" aria-label="Mode" data-i18n-aria-label="tuner.mode">
+        <button id="mode-auto" class="seg" type="button" aria-pressed="true" title="Detect the key automatically (A)" data-i18n="mode.auto" data-i18n-title="mode.autoTitle">Auto</button>
+        <button id="mode-lock" class="seg" type="button" aria-pressed="false" title="Lock on the selected key (L)" data-i18n="mode.lock" data-i18n-title="mode.lockTitle">Lock</button>
+        <button id="mode-map" class="seg" type="button" aria-pressed="false" title="Measure the piano note by note before tuning" data-i18n="mode.map" data-i18n-title="mode.mapTitle">Survey</button>
       </div>
     </div>
 
     <div class="map-panel" id="map-panel" hidden>
       <div class="map-head">
-        <b>Kartläggning</b>
-        <div class="modes plan-modes" role="group" aria-label="Omfattning">
-          <button class="seg" type="button" data-plan="quick" aria-pressed="true">Snabb, 7 toner</button>
-          <button class="seg" type="button" data-plan="full" aria-pressed="false">Hela pianot</button>
+        <b data-i18n="map.title">Survey</b>
+        <div class="modes plan-modes" role="group" aria-label="Scope" data-i18n-aria-label="map.scope">
+          <button class="seg" type="button" data-plan="quick" aria-pressed="true" data-i18n="map.quick">Quick, 7 notes</button>
+          <button class="seg" type="button" data-plan="full" aria-pressed="false" data-i18n="map.full">Whole piano</button>
         </div>
         <span id="map-progress"></span>
       </div>
@@ -78,17 +78,17 @@
         <span class="chk" id="map-chk-pitch"></span>
         <span class="chk" id="map-chk-b"></span>
       </div>
-      <p class="map-intro">Mäter strängarnas inharmonicitet och ger en stämkurva för just ditt piano. Du stämmer inget och behöver ingen filtremsa. <strong>Snabb:</strong> A0–A6, under en minut. <strong>Hela pianot:</strong> alla tangenter; behövs för överdrag och för att se drift sedan sist.</p>
+      <p class="map-intro" data-i18n-html="map.intro"></p>
       <div class="btn-row">
-        <button id="map-skip" class="btn ghost" type="button">Hoppa över</button>
-        <button id="map-redo" class="btn ghost" type="button">Mät om</button>
-        <button id="map-stop" class="btn ghost" type="button">Avsluta</button>
+        <button id="map-skip" class="btn ghost" type="button" data-i18n="map.skip">Skip</button>
+        <button id="map-redo" class="btn ghost" type="button" data-i18n="map.redo">Measure again</button>
+        <button id="map-stop" class="btn ghost" type="button" data-i18n="map.stop">Finish</button>
       </div>
     </div>
 
     <div class="readout">
-      <div class="cents" id="cents"><span id="cents-num">–</span><span class="unit">cent</span></div>
-      <div class="status-pill" id="status-pill" data-s="idle">Starta mikrofonen</div>
+      <div class="cents" id="cents"><span id="cents-num">–</span><span class="unit" data-i18n="unit.cents">cents</span></div>
+      <div class="status-pill" id="status-pill" data-s="idle"></div>
     </div>
     <div class="targetline" id="targetline"></div>
 
@@ -97,7 +97,7 @@
 
     <div class="beats">
       <div class="beats-head">
-        <span class="mini-label">Svävningar runt målet, ±30 cent</span>
+        <span class="mini-label" data-i18n="beats.label">Beats around the target, ±30 cents</span>
         <span class="beat-rate" id="beat-rate">–</span>
       </div>
       <canvas id="spectro" class="spectro" height="140" aria-hidden="true"></canvas>
@@ -106,94 +106,92 @@
 
     <div class="tuner-foot">
       <div class="tone-pick">
-        <span class="mini-label" id="tone-lbl">Ton vid klick</span>
+        <span class="mini-label" id="tone-lbl" data-i18n="tone.label">Tone on click</span>
         <div class="modes" role="group" aria-labelledby="tone-lbl">
-          <button class="seg" type="button" data-tone="off" aria-pressed="true">Tyst</button>
-          <button class="seg" type="button" data-tone="piano" aria-pressed="false" title="Kort pianolik ton">Piano</button>
-          <button class="seg" type="button" data-tone="sine" aria-pressed="false" title="Ren, ihållande sinuston på målfrekvensen">Sinus</button>
+          <button class="seg" type="button" data-tone="off" aria-pressed="true" data-i18n="tone.off">Silent</button>
+          <button class="seg" type="button" data-tone="piano" aria-pressed="false" title="Short piano-like tone" data-i18n="tone.piano" data-i18n-title="tone.pianoTitle">Piano</button>
+          <button class="seg" type="button" data-tone="sine" aria-pressed="false" title="Pure, sustained sine tone at the target frequency" data-i18n="tone.sine" data-i18n-title="tone.sineTitle">Sine</button>
         </div>
       </div>
-      <button id="btn-tone" class="btn ghost" type="button" title="Spela målton (T)">Spela målton</button>
-      <div class="level" title="Mikrofonnivå"><div class="level-bar" id="level-bar"></div></div>
+      <button id="btn-tone" class="btn ghost" type="button" title="Play target tone (T)" data-i18n-title="tone.playTitle"></button>
+      <div class="level" title="Microphone level" data-i18n-title="tuner.level"><div class="level-bar" id="level-bar"></div></div>
     </div>
   </section>
 </main>
 
 <div id="message" class="message" role="status" aria-live="polite" hidden>
   <span id="message-text"></span>
-  <button id="message-close" class="btn ghost close" type="button" aria-label="Stäng meddelandet">×</button>
+  <button id="message-close" class="btn ghost close" type="button" aria-label="Close message" data-i18n-aria-label="msg.close">×</button>
 </div>
 
 <div id="drawer-backdrop" class="backdrop" hidden></div>
 <aside id="drawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-h" hidden>
   <div class="drawer-head">
-    <h2 id="drawer-h">Inställningar</h2>
-    <button id="drawer-close" class="btn ghost close" type="button" aria-label="Stäng inställningar">×</button>
+    <h2 id="drawer-h" data-i18n="top.settings">Settings</h2>
+    <button id="drawer-close" class="btn ghost close" type="button" aria-label="Close settings" data-i18n-aria-label="drawer.close">×</button>
   </div>
-  <nav class="tabs" role="tablist" aria-label="Inställningar">
-    <button class="tab" type="button" role="tab" data-tab="piano">Piano</button>
-    <button class="tab" type="button" role="tab" data-tab="tuning">Stämning</button>
-    <button class="tab" type="button" role="tab" data-tab="measure">Mätning</button>
-    <button class="tab" type="button" role="tab" data-tab="curve">Kurva</button>
-    <button class="tab" type="button" role="tab" data-tab="pass">Omgång</button>
-    <button class="tab" type="button" role="tab" data-tab="help">Hjälp</button>
+  <nav class="tabs" role="tablist" aria-label="Settings" data-i18n-aria-label="top.settings">
+    <button class="tab" type="button" role="tab" data-tab="piano" data-i18n="tab.piano">Piano</button>
+    <button class="tab" type="button" role="tab" data-tab="tuning" data-i18n="tab.tuning">Tuning</button>
+    <button class="tab" type="button" role="tab" data-tab="measure" data-i18n="tab.measure">Measure</button>
+    <button class="tab" type="button" role="tab" data-tab="curve" data-i18n="tab.curve">Curve</button>
+    <button class="tab" type="button" role="tab" data-tab="pass" data-i18n="tab.pass">Pass</button>
+    <button class="tab" type="button" role="tab" data-tab="help" data-i18n="tab.help">Help</button>
+    <button class="tab" type="button" role="tab" data-tab="app" data-i18n="tab.app">App</button>
   </nav>
 
   <section class="panel" role="tabpanel" data-panel="piano">
     <div class="form">
-      <label for="set-name">Namn</label>
+      <label for="set-name" data-i18n="piano.name">Name</label>
       <input id="set-name" type="text" maxlength="80">
 
-      <label for="set-kind">Instrument</label>
+      <label for="set-kind" data-i18n="piano.kind">Instrument</label>
       <select id="set-kind"></select>
 
-      <label for="set-size"><span id="size-label">Höjd</span> <output id="out-size"></output></label>
+      <label for="set-size"><span id="size-label"></span> <output id="out-size"></output></label>
       <div class="size-row">
         <input id="set-size" type="number" min="90" max="310" step="1" inputmode="numeric">
         <span>cm</span>
       </div>
       <p class="desc" id="size-desc"></p>
 
-      <label for="set-keys">Tangenter</label>
+      <label for="set-keys" data-i18n="piano.keys">Keys</label>
       <select id="set-keys">
-        <option value="88">88 (A0–C8)</option>
-        <option value="85">85 (A0–A7, äldre piano)</option>
+        <option value="88" data-i18n="piano.keys88">88 (A0–C8)</option>
+        <option value="85" data-i18n="piano.keys85">85 (A0–A7, older piano)</option>
       </select>
 
-      <label for="set-notes">Anteckningar</label>
-      <textarea id="set-notes" rows="3" placeholder="Märke, modell, rum, fuktighet …"></textarea>
+      <label for="set-notes" data-i18n="piano.notes">Notes</label>
+      <textarea id="set-notes" rows="3" data-i18n-placeholder="piano.notesHint"></textarea>
     </div>
 
-    <h3>Sparade stämningar</h3>
+    <h3 data-i18n="piano.saved">Saved tunings</h3>
     <div class="btn-row">
-      <button id="btn-new" class="btn ghost" type="button">Ny</button>
-      <button id="btn-dup" class="btn ghost" type="button">Duplicera</button>
-      <button id="btn-export" class="btn ghost" type="button">Exportera</button>
-      <label class="btn ghost file-btn">Importera<input id="file-import" type="file" accept="application/json,.json"></label>
-      <button id="btn-del" class="btn ghost danger-text" type="button">Radera</button>
+      <button id="btn-new" class="btn ghost" type="button" data-i18n="piano.new">New</button>
+      <button id="btn-dup" class="btn ghost" type="button" data-i18n="piano.dup">Duplicate</button>
+      <button id="btn-export" class="btn ghost" type="button" data-i18n="piano.export">Export</button>
+      <label class="btn ghost file-btn"><span data-i18n="piano.import">Import</span><input id="file-import" type="file" accept="application/json,.json"></label>
+      <button id="btn-del" class="btn ghost danger-text" type="button" data-i18n="piano.del">Delete</button>
     </div>
     <div id="confirm-del" class="confirm" hidden>
       <span id="confirm-del-text"></span>
-      <button id="confirm-del-yes" class="btn danger" type="button">Radera</button>
-      <button id="confirm-del-no" class="btn ghost" type="button">Avbryt</button>
+      <button id="confirm-del-yes" class="btn danger" type="button" data-i18n="piano.del">Delete</button>
+      <button id="confirm-del-no" class="btn ghost" type="button" data-i18n="cancel">Cancel</button>
     </div>
-
-    <h3>Färgläge</h3>
-    <button id="btn-theme" class="btn ghost theme-btn" type="button"></button>
   </section>
 
   <section class="panel" role="tabpanel" data-panel="tuning" hidden>
-    <h3>Referens A4</h3>
+    <h3 data-i18n="ref.title">Reference A4</h3>
     <div class="ref-row">
-      <button class="btn icon sm" type="button" data-ref="-1">−1</button>
-      <button class="btn icon sm" type="button" data-ref="-0.1">−0,1</button>
+      <button class="btn icon sm" type="button" data-ref="-1"></button>
+      <button class="btn icon sm" type="button" data-ref="-0.1"></button>
       <div class="ref-input">
-        <label class="sr-only" for="set-ref">Referensfrekvens i Hz</label>
+        <label class="sr-only" for="set-ref" data-i18n="ref.input">Reference frequency in Hz</label>
         <input id="set-ref" type="number" min="380" max="480" step="0.1" inputmode="decimal">
         <span>Hz</span>
       </div>
-      <button class="btn icon sm" type="button" data-ref="0.1">+0,1</button>
-      <button class="btn icon sm" type="button" data-ref="1">+1</button>
+      <button class="btn icon sm" type="button" data-ref="0.1"></button>
+      <button class="btn icon sm" type="button" data-ref="1"></button>
     </div>
     <div class="ref-cents" id="ref-cents"></div>
     <div class="chips" id="ref-presets">
@@ -205,112 +203,103 @@
       <button class="chip-btn" type="button" data-hz="442">442</button>
       <button class="chip-btn" type="button" data-hz="444">444</button>
     </div>
-    <button id="btn-fit-ref" class="btn ghost wide" type="button">Använd pianots nuvarande tonhöjd</button>
+    <button id="btn-fit-ref" class="btn ghost wide" type="button" data-i18n="ref.fit">Use the piano's current pitch</button>
     <p class="note-text" id="ref-advice"></p>
 
     <div class="form">
-      <label for="set-temperament">Temperatur</label>
+      <label for="set-temperament" data-i18n="tuning.temperament">Temperament</label>
       <select id="set-temperament"></select>
       <p class="desc" id="temperament-desc"></p>
 
-      <label for="set-root">Grundton</label>
+      <label for="set-root" data-i18n="tuning.root">Root</label>
       <select id="set-root"></select>
 
-      <label for="set-stretch">Stretch</label>
+      <label for="set-stretch" data-i18n="tuning.stretch">Stretch</label>
       <select id="set-stretch"></select>
       <p class="desc" id="stretch-desc"></p>
 
       <div class="custom-oct" id="custom-oct" hidden>
-        <label for="set-bass">Bas</label>
+        <label for="set-bass" data-i18n="tuning.bass">Bass</label>
         <select id="set-bass"></select>
-        <label for="set-mid">Mitt</label>
+        <label for="set-mid" data-i18n="tuning.mid">Middle</label>
         <select id="set-mid"></select>
-        <label for="set-treble">Diskant</label>
+        <label for="set-treble" data-i18n="tuning.treble">Treble</label>
         <select id="set-treble"></select>
       </div>
 
-      <label for="set-extra-treble">Extra diskant <output id="out-extra-treble"></output></label>
+      <label for="set-extra-treble"><span data-i18n="tuning.extraTreble">Extra treble</span> <output id="out-extra-treble"></output></label>
       <input id="set-extra-treble" type="range" min="-10" max="20" step="1">
 
-      <label for="set-extra-bass">Extra bas <output id="out-extra-bass"></output></label>
+      <label for="set-extra-bass"><span data-i18n="tuning.extraBass">Extra bass</span> <output id="out-extra-bass"></output></label>
       <input id="set-extra-bass" type="range" min="-10" max="20" step="1">
 
-      <label for="set-overpull">Överdrag <output id="out-overpull"></output></label>
+      <label for="set-overpull"><span data-i18n="tuning.overpull">Overpull</span> <output id="out-overpull"></output></label>
       <input id="set-overpull" type="range" min="0" max="35" step="5">
 
-      <label for="set-tolerance">Tolerans</label>
+      <label for="set-tolerance" data-i18n="tuning.tolerance">Tolerance</label>
       <select id="set-tolerance">
-        <option value="0.5">±0,5 cent</option>
-        <option value="1">±1 cent</option>
-        <option value="2">±2 cent</option>
-        <option value="3">±3 cent</option>
+        <option value="0.5"></option>
+        <option value="1"></option>
+        <option value="2"></option>
+        <option value="3"></option>
       </select>
     </div>
   </section>
 
   <section class="panel" role="tabpanel" data-panel="measure" hidden>
-    <h3>Deltoner mot mål</h3>
-    <p class="desc">Avvikelse per delton för tangenten som klingar. Markerad = den som mäts.</p>
+    <h3 data-i18n="measure.partials">Partials vs target</h3>
+    <p class="desc" data-i18n="measure.partialsDesc">Deviation per partial for the sounding key. Highlighted = the one being measured.</p>
     <div class="partials" id="partials"></div>
     <div class="partial-pick">
-      <span>Mät delton</span>
-      <button id="partial-dec" class="btn icon sm" type="button" aria-label="Lägre delton">−</button>
+      <span data-i18n="measure.pick">Measure partial</span>
+      <button id="partial-dec" class="btn icon sm" type="button" aria-label="Lower partial" data-i18n-aria-label="measure.lower">−</button>
       <output id="partial-val">1</output>
-      <button id="partial-inc" class="btn icon sm" type="button" aria-label="Högre delton">+</button>
+      <button id="partial-inc" class="btn icon sm" type="button" aria-label="Higher partial" data-i18n-aria-label="measure.higher">+</button>
     </div>
 
-    <h3>Inharmonicitet</h3>
+    <h3 data-i18n="measure.b">Inharmonicity</h3>
     <div class="bval" id="bval"></div>
-    <button id="btn-measure-b" class="btn ghost" type="button">Mät för aktuell tangent</button>
+    <button id="btn-measure-b" class="btn ghost" type="button" data-i18n="measure.bButton">Measure for current key</button>
   </section>
 
   <section class="panel" role="tabpanel" data-panel="curve" hidden>
     <div class="legend">
-      <span class="lg"><i class="ln"></i>Mål relativt liksvävande</span>
-      <span class="lg"><i class="sw s-good round"></i><i class="sw s-warn round"></i><i class="sw s-bad round"></i>Uppmätt</span>
+      <span class="lg"><i class="ln"></i><span data-i18n="curve.target">Target relative to equal temperament</span></span>
+      <span class="lg"><i class="sw s-good round"></i><i class="sw s-warn round"></i><i class="sw s-bad round"></i><span data-i18n="curve.measured">Measured</span></span>
     </div>
     <div class="chart-wrap">
-      <canvas id="chart" class="chart" height="260" role="img" aria-label="Målkurva i cent per tangent"></canvas>
+      <canvas id="chart" class="chart" height="260" role="img" aria-label="Target curve in cents per key" data-i18n-aria-label="curve.label"></canvas>
       <div class="tooltip" id="tooltip" hidden></div>
     </div>
     <details id="table-details">
-      <summary>Visa som tabell</summary>
+      <summary data-i18n="curve.table">Show as table</summary>
       <div class="table-wrap"><table class="ktable" id="ktable"></table></div>
     </details>
   </section>
 
   <section class="panel" role="tabpanel" data-panel="pass" hidden>
     <div class="pass-stats" id="pass-stats"></div>
-    <button id="btn-new-pass" class="btn ghost" type="button">Ny omgång</button>
+    <button id="btn-new-pass" class="btn ghost" type="button" data-i18n="pass.new">New pass</button>
     <div id="confirm-pass" class="confirm" hidden>
-      <span>Spara omgången i historiken och börja om?</span>
-      <button id="confirm-pass-yes" class="btn primary" type="button">Ny omgång</button>
-      <button id="confirm-pass-no" class="btn ghost" type="button">Avbryt</button>
+      <span data-i18n="pass.confirm">Save the pass to the history and start over?</span>
+      <button id="confirm-pass-yes" class="btn primary" type="button" data-i18n="pass.new">New pass</button>
+      <button id="confirm-pass-no" class="btn ghost" type="button" data-i18n="cancel">Cancel</button>
     </div>
-    <h3>Historik</h3>
+    <h3 data-i18n="pass.history">History</h3>
     <ol class="history" id="history"></ol>
   </section>
 
-  <section class="panel help" role="tabpanel" data-panel="help" hidden>
-    <h3>Arbetsgång</h3>
-    <ol>
-      <li><strong>Kartlägg.</strong> <em>Snabb</em> (A0–A6, under en minut) eller <em>Hela pianot</em> (3–5 minuter). Slå an tonen som visas; appen går vidare själv.</li>
-      <li><strong>Välj tonhöjd.</strong> Ligger pianot lågt: <em>Använd pianots nuvarande tonhöjd</em> under Stämning, eller dra upp med överdrag.</li>
-      <li><strong>Stäm A3–A4 först</strong>, sedan uppåt oktav för oktav, sist basen.</li>
-      <li><strong>Dämpa unisonerna</strong> med filtremsa. Stäm en sträng per ton, de övriga efter gehör mot den.</li>
-      <li><strong>Ny omgång</strong> nästa gång. Historiken visar hur mycket pianot drivit.</li>
-    </ol>
-    <h3>Varför stretch?</h3>
-    <p>Strängar är styva, så övertonerna ligger något över heltalsmultipler: f<sub>n</sub> = n·f₀·√(1 + B·n²). B, inharmoniciteten, är störst i diskanten och i korta bassträngar.</p>
-    <p>Rena oktaver kräver att den övre tonens grundton matchar den undre tonens andra (fjärde, sjätte) delton. Därför stäms diskanten högre och basen lägre, typiskt 20–40 cent i ändarna.</p>
-    <p><strong>Oktavtyp p:q:</strong> delton p i den undre tonen och q i den övre görs svävningsfria. 2:1 ger smalast oktav, sedan 4:2, 6:3, 8:4.</p>
-    <h3>Mätningen</h3>
-    <p>I basen mäts delton 6, 4 eller 2: grundtonen är svag och laptopmikrofoner hör dåligt under 100 Hz.</p>
-    <p><strong>Överdrag:</strong> vid uppdragning sjunker redan stämda strängar när belastningen ökar. Med 25 % stäms en ton som låg −20 cent till +5.</p>
-    <p><strong>Sinuston:</strong> välj Sinus under <em>Ton vid klick</em> och klicka på en tangent. Stäm tills svävningarna försvinner.</p>
-    <p><strong>Temperatur:</strong> hur kvinterna fördelas inom oktaven. Liksvävande är standard.</p>
-    <p class="keys-hint">Tangentbord: ← → byter tangent, L låser, A auto, T spelar eller stoppar målton, S öppnar inställningar.</p>
-    <p class="keys-hint">Piano Tunah <span id="app-version">–</span></p>
+  <section class="panel help" role="tabpanel" data-panel="help" data-i18n-html="help" hidden></section>
+
+  <section class="panel" role="tabpanel" data-panel="app" hidden>
+    <h3><label for="set-lang" data-i18n="app.lang">Language</label></h3>
+    <select id="set-lang">
+      <option value="en">English</option>
+      <option value="sv">Svenska</option>
+    </select>
+
+    <h3 data-i18n="app.theme">Color mode</h3>
+    <button id="btn-theme" class="btn ghost theme-btn" type="button"></button>
   </section>
 </aside>
 </body>

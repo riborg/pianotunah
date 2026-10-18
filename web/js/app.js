@@ -7,7 +7,8 @@ import {
 } from './theory.js';
 import { Analyzer, rmsDb, median } from './dsp.js';
 import { listTunings, getTuning, saveTuning, deleteTuning, newTuning, normalize, duplicateTuning } from './store.js';
-import { num, fmtC, fmtHz, fmtB } from './format.js';
+import { num, short, fmtC, fmtHz, fmtB } from './format.js';
+import { tr, lang, locale, setLang, translateDom } from './i18n.js';
 import { Mic } from './mic.js';
 import { TonePlayer } from './tone.js';
 import { Saver } from './saver.js';
@@ -70,6 +71,8 @@ const kName = (k) => noteName(k);
 const tolerance = () => Number(S().tolerance) || 1;
 const top = () => (Number(S().keyCount) === 85 ? 85 : KEY_COUNT); // A7 på äldre pianon, annars C8
 const partialOf = (k) => state.tuning.partials[k] || defaultPartial(k);
+const bSource = (k) => tr(state.tuning.inharmonicity[k] ? 'b.measured' : 'b.model');
+const fmtDate = (d) => d.toLocaleDateString(locale(), { dateStyle: 'medium' });
 
 // Mätningar sparas som frekvensen för den delton som mättes, så att de förblir
 // rätt när referens, temperatur, stretch eller B ändras.
@@ -142,8 +145,8 @@ const markDirty = () => saver.markDirty();
 function setSaveState(s) {
   const el = $('save-status');
   el.dataset.state = s;
-  el.textContent = { idle: 'Sparad', dirty: 'Ändrad', saving: 'Sparar …', error: 'Ej sparad' }[s];
-  el.title = s === 'error' ? 'Servern svarar inte. Försöker igen.' : '';
+  el.textContent = tr('save.' + s);
+  el.title = s === 'error' ? tr('save.errorTitle') : '';
 }
 
 async function reloadAfterConflict(t) {
@@ -151,10 +154,10 @@ async function reloadAfterConflict(t) {
     const latest = await getTuning(t.id);
     saver.dirty = false;
     await openTuning(latest);
-    message('Stämningen har sparats från en annan flik eller enhet. Den senaste versionen är laddad; ändringarna här sparades inte.', 'warn', 0);
+    message(tr('msg.conflict'), 'warn', 0);
   } catch {
     setSaveState('error');
-    message('Stämningen har ändrats någon annanstans men kunde inte laddas om. Ladda om sidan.', 'error', 0);
+    message(tr('msg.conflictFailed'), 'error', 0);
   }
 }
 
@@ -168,7 +171,7 @@ async function refreshList() {
 
 function renderTuningSelect() {
   const sel = $('tuning-select');
-  sel.replaceChildren(...state.list.map((t) => option(t.id, t.name || 'Namnlös')));
+  sel.replaceChildren(...state.list.map((t) => option(t.id, t.name || tr('name.untitled'))));
   if (state.tuning) sel.value = state.tuning.id;
 }
 
@@ -204,12 +207,17 @@ function recompute() {
   if ($('table-details').open) renderTable();
 }
 
+// Language-dependent parts of the static markup. Run again when the language changes.
 function buildStaticUi() {
-  $('set-kind').replaceChildren(...Object.entries(PIANO_KINDS).map(([k, v]) => option(k, v.name)));
-  $('set-temperament').replaceChildren(...Object.entries(TEMPERAMENTS).map(([k, v]) => option(k, v.name)));
-  $('set-stretch').replaceChildren(...Object.entries(STRETCH_PRESETS).map(([k, v]) => option(k, v.name)));
+  translateDom();
+  $('set-lang').value = lang();
+  $('set-kind').replaceChildren(...Object.keys(PIANO_KINDS).map((k) => option(k, tr('kind.' + k))));
+  $('set-temperament').replaceChildren(...Object.keys(TEMPERAMENTS).map((k) => option(k, tr('temperament.' + k))));
+  $('set-stretch').replaceChildren(...Object.keys(STRETCH_PRESETS).map((k) => option(k, tr('stretch.' + k))));
   for (const id of ['set-bass', 'set-mid', 'set-treble']) $(id).replaceChildren(...Object.keys(OCTAVE_TYPES).map((k) => option(k, k)));
   $('set-root').replaceChildren(...Array.from({ length: 12 }, (_, pc) => option(pc, pcName(pc))));
+  for (const o of $('set-tolerance').options) o.textContent = tr('tuning.cents', { n: short(Number(o.value)) });
+  document.querySelectorAll('[data-ref]').forEach((b) => (b.textContent = (b.dataset.ref < 0 ? '−' : '+') + short(Math.abs(b.dataset.ref))));
 }
 
 // Vita tangenter i flex, svarta absolut positionerade mellan dem. Byggs om
@@ -267,18 +275,19 @@ function renderSettings() {
 
 function renderSettingDescs() {
   const s = S();
-  const kind = PIANO_KINDS[s.pianoKind] || PIANO_KINDS.upright;
-  $('temperament-desc').textContent = TEMPERAMENTS[s.temperament]?.desc || '';
-  $('stretch-desc').textContent = STRETCH_PRESETS[s.stretch]?.desc || '';
+  const kindId = s.pianoKind in PIANO_KINDS ? s.pianoKind : 'upright';
+  const kind = PIANO_KINDS[kindId];
+  $('temperament-desc').textContent = s.temperament in TEMPERAMENTS ? tr(`temperament.${s.temperament}.desc`) : '';
+  $('stretch-desc').textContent = s.stretch in STRETCH_PRESETS ? tr(`stretch.${s.stretch}.desc`) : '';
   $('custom-oct').hidden = s.stretch !== 'custom';
   $('set-root').disabled = s.temperament === 'et';
-  $('size-label').textContent = kind.size;
+  $('size-label').textContent = tr(`kind.${kindId}.size`);
   Object.assign($('set-size'), { min: kind.min, max: kind.max });
-  $('out-size').textContent = sizeClass(s.pianoKind, Number(s.sizeCm));
-  $('size-desc').textContent = `Mät ${kind.how}. Används som startgissning för strängarnas inharmonicitet tills pianot är kartlagt.`;
-  $('out-extra-treble').textContent = fmtC(Number(s.extraTreble), 0) + ' cent vid C8';
-  $('out-extra-bass').textContent = (Number(s.extraBass) ? '−' + num(Number(s.extraBass), 0) : '±0') + ' cent vid A0';
-  $('out-overpull').textContent = s.overpull + ' %';
+  $('out-size').textContent = tr('size.' + sizeClass(s.pianoKind, Number(s.sizeCm)));
+  $('size-desc').textContent = tr('piano.sizeDesc', { how: tr(`kind.${kindId}.how`) });
+  $('out-extra-treble').textContent = tr('tuning.atC8', { c: fmtC(Number(s.extraTreble), 0) });
+  $('out-extra-bass').textContent = tr('tuning.atA0', { c: Number(s.extraBass) ? '−' + num(Number(s.extraBass), 0) : '±0' });
+  $('out-overpull').textContent = s.overpull + (lang() === 'sv' ? ' %' : '%');
 }
 
 function renderRef() {
@@ -286,22 +295,19 @@ function renderRef() {
   if (document.activeElement !== $('set-ref')) $('set-ref').value = ref.toFixed(1);
   $('btn-ref-chip').textContent = `A4 = ${fmtHz(ref, 1)}`;
   const c = centsBetween(ref, 440);
-  $('ref-cents').textContent = Math.abs(c) < 0.05 ? 'Standardstämton' : `${fmtC(c)} cent mot 440 Hz`;
+  $('ref-cents').textContent = Math.abs(c) < 0.05 ? tr('ref.standard') : tr('ref.vs440', { c: fmtC(c) });
   for (const b of $('ref-presets').children) b.classList.toggle('on', Number(b.dataset.hz) === ref);
 
   const mid = midBefore();
   if (mid.length < 3) {
-    $('ref-advice').textContent = 'Kartlägg eller mät några tangenter i mitten så kan appen föreslå en referens som passar pianot.';
+    $('ref-advice').textContent = tr('ref.adviceNone');
     return;
   }
   const m = median(mid);
   $('ref-advice').textContent =
     Math.abs(m) < 3
-      ? `Pianot låg nära målet (${fmtC(m)} cent i mitten) när omgången började.`
-      : `Pianot låg ${fmtC(m)} cent från målet i mitten (≈ A4 = ${fmtHz(ref * 2 ** (m / 1200), 1)}). ` +
-        (m < -15
-          ? 'Sänk referensen för en snabb stämning, eller dra upp med 20–30 % överdrag och räkna med en andra omgång.'
-          : 'Små avvikelser stäms direkt utan överdrag.');
+      ? tr('ref.adviceNear', { c: fmtC(m) })
+      : tr('ref.adviceOff', { c: fmtC(m), hz: fmtHz(ref * 2 ** (m / 1200), 1) }) + tr(m < -15 ? 'ref.adviceLow' : 'ref.adviceSmall');
 }
 
 function renderKeyInfo() {
@@ -310,13 +316,13 @@ function renderKeyInfo() {
   const n = partialOf(k);
   const g = goal(k);
   $('note-name').textContent = kName(k);
-  $('note-sub').textContent = `tangent ${k} · mål ${fmtC(T.cents[k])} cent`;
+  $('note-sub').textContent = tr('key.sub', { k, c: fmtC(T.cents[k]) });
   $('targetline').textContent =
-    `Grundton ${fmtHz(T.freq[k])}` +
-    (n > 1 ? ` · delton ${n} ${fmtHz(partialFreq(T.freq[k], T.B[k], n))}` : '') +
-    (g ? ` · överdrag ${fmtC(g)} cent` : '');
+    tr('target.fund', { hz: fmtHz(T.freq[k]) }) +
+    (n > 1 ? tr('target.partial', { n, hz: fmtHz(partialFreq(T.freq[k], T.B[k], n)) }) : '') +
+    (g ? tr('target.overpull', { c: fmtC(g) }) : '');
   $('partial-val').textContent = n;
-  $('bval').textContent = `B = ${fmtB(T.B[k])} (${state.tuning.inharmonicity[k] ? 'uppmätt' : 'modell'})`;
+  $('bval').textContent = tr('measure.bval', { b: fmtB(T.B[k]), src: bSource(k) });
   if (tones.sineOn) tones.setSine(sineFreq());
 }
 
@@ -326,7 +332,7 @@ function renderKeyboard() {
   const quickPlan = state.map && state.mapPlan === 'quick';
   for (const el of $('keyboard').children) {
     const k = Number(el.dataset.k);
-    const label = `${kName(k)}, ${Number.isFinite(curDev(k)) ? fmtC(statusDev(k)) + ' cent' : 'ej mätt'}`;
+    const label = tr('key.label', { name: kName(k), dev: Number.isFinite(curDev(k)) ? fmtC(statusDev(k)) + ' ' + tr('unit.cents') : tr('key.unmeasured') });
     el.dataset.s = statusClass(statusDev(k));
     el.classList.toggle('current', k === cur);
     el.classList.toggle('has-b', !!state.tuning.inharmonicity[k]);
@@ -362,7 +368,7 @@ function renderDeviations(curEl) {
     if (Number.isFinite(d)) bars.push({ x: el.dataset.cx / 100, d });
   }
   const range = drawDeviations($('devstrip'), { bars, current: curEl.dataset.cx / 100, barW: 0.55 / whites, tol: tolerance() }, state.colors);
-  $('dev-range').textContent = range;
+  $('dev-legend').textContent = tr('legend.dev', { n: range });
 }
 
 function renderPass() {
@@ -376,16 +382,16 @@ function renderPass() {
   }
   const since = new Date(state.tuning.passStartedAt || state.tuning.createdAt);
   $('pass-stats').replaceChildren(
-    stat(`${ok}/${top()}`, 'inom tolerans'),
-    stat(`${measured}`, 'uppmätta'),
-    stat(since.toLocaleDateString('sv-SE'), 'påbörjad'),
+    stat(`${ok}/${top()}`, tr('pass.inTol')),
+    stat(`${measured}`, tr('pass.measured')),
+    stat(fmtDate(since), tr('pass.started')),
   );
   $('history').replaceChildren(
     ...[...state.tuning.history].reverse().map((p) =>
       Object.assign(document.createElement('li'), {
-        textContent:
-          `${new Date(p.startedAt).toLocaleDateString('sv-SE')}: ${p.measured} tangenter, ref ${num(p.refA4, 1)} Hz, ` +
-          `före ${num(p.meanAbsBefore)} cent → efter ${num(p.meanAbsAfter)} cent i snitt`,
+        textContent: tr('pass.entry', {
+          date: fmtDate(new Date(p.startedAt)), n: p.measured, ref: num(p.refA4, 1), before: num(p.meanAbsBefore), after: num(p.meanAbsAfter),
+        }),
       }),
     ),
   );
@@ -400,18 +406,22 @@ function stat(value, label) {
 function renderTable() {
   const T = state.T;
   const head = document.createElement('thead');
-  head.innerHTML = '<tr><th>Tangent</th><th>Ton</th><th>Mål (cent)</th><th>Mål (Hz)</th><th>B</th><th>Delton</th><th>Före</th><th>Nu</th></tr>';
+  const hrow = document.createElement('tr');
+  for (const h of ['table.key', 'table.note', 'table.targetC', 'table.targetHz', 'B', 'table.partial', 'table.before', 'table.now']) {
+    hrow.append(Object.assign(document.createElement('th'), { textContent: tr(h) }));
+  }
+  head.append(hrow);
   const body = document.createElement('tbody');
   for (let k = top(); k >= 1; k--) {
-    const tr = document.createElement('tr');
+    const row = document.createElement('tr');
     const cells = [
-      k, kName(k), fmtC(T.cents[k]), T.freq[k].toFixed(2).replace('.', ','),
+      k, kName(k), fmtC(T.cents[k]), num(T.freq[k], 2),
       fmtB(T.B[k]) + (state.tuning.inharmonicity[k] ? ' *' : ''), partialOf(k), fmtC(beforeDev(k)), fmtC(statusDev(k)),
     ];
-    for (const c of cells) tr.append(Object.assign(document.createElement('td'), { textContent: c }));
-    tr.lastChild.dataset.s = statusClass(statusDev(k));
-    if (k === state.key) tr.className = 'current';
-    body.append(tr);
+    for (const c of cells) row.append(Object.assign(document.createElement('td'), { textContent: c }));
+    row.lastChild.dataset.s = statusClass(statusDev(k));
+    if (k === state.key) row.className = 'current';
+    body.append(row);
   }
   $('ktable').replaceChildren(head, body);
 }
@@ -452,11 +462,11 @@ function chartHover(e) {
   if (!k) return;
   const T = state.T;
   const rows = [
-    [kName(k), `tangent ${k}`],
-    ['Mål', `${fmtC(T.cents[k])} cent · ${fmtHz(T.freq[k])}`],
-    ['B', `${fmtB(T.B[k])} ${state.tuning.inharmonicity[k] ? 'uppmätt' : 'modell'}`],
+    [kName(k), tr('tip.key', { k })],
+    [tr('tip.target'), `${fmtC(T.cents[k])} ${tr('unit.cents')} · ${fmtHz(T.freq[k])}`],
+    ['B', `${fmtB(T.B[k])} ${bSource(k)}`],
   ];
-  if (Number.isFinite(curDev(k))) rows.push(['Avvikelse', `${fmtC(statusDev(k))} cent`]);
+  if (Number.isFinite(curDev(k))) rows.push([tr('tip.dev'), `${fmtC(statusDev(k))} ${tr('unit.cents')}`]);
   tip.replaceChildren(
     ...rows.map(([a, b]) => {
       const row = document.createElement('div');
@@ -508,18 +518,14 @@ async function startMic() {
   try {
     await mic.start();
   } catch (e) {
-    const text = {
-      insecure: 'Mikrofonen kräver https. Öppna appen via https.',
-      NotAllowedError: 'Mikrofonen nekades. Tillåt den för sidan via ikonen i adressfältet och försök igen.',
-    }[e.name];
-    message(text || `Kunde inte starta mikrofonen: ${e.message}`, 'error', 0);
+    const key = { insecure: 'mic.insecure', NotAllowedError: 'mic.denied' }[e.name];
+    message(key ? tr(key) : tr('mic.failed', { err: e.message }), 'error', 0);
     return;
   }
   state.analyzer = new Analyzer(mic.sampleRate);
   state.noise = -70;
   state.timer = setInterval(processFrame, FRAME_MS);
-  $('btn-mic').textContent = 'Stoppa mikrofon';
-  $('btn-mic').classList.remove('primary');
+  renderMicButton();
   requestWakeLock();
 }
 
@@ -529,9 +535,13 @@ function stopMic() {
   state.signal = false;
   state.wakeLock?.release?.().catch(() => {});
   state.wakeLock = null;
-  $('btn-mic').textContent = 'Starta mikrofon';
-  $('btn-mic').classList.add('primary');
+  renderMicButton();
   updateReadout();
+}
+
+function renderMicButton() {
+  $('btn-mic').textContent = tr(mic.running ? 'mic.stop' : 'mic.start');
+  $('btn-mic').classList.toggle('primary', !mic.running);
 }
 
 async function requestWakeLock() {
@@ -650,9 +660,9 @@ function finishMeasureB() {
   if (state.bReadings.length >= 3) {
     const B = median(state.bReadings);
     storeB(k, B);
-    message(`Inharmonicitet för ${kName(k)}: B = ${fmtB(B)}`, 'ok');
+    message(tr('msg.bMeasured', { name: kName(k), b: fmtB(B) }), 'ok');
   } else {
-    message('Kunde inte mäta inharmonicitet. Slå an tangenten kraftigt och låt den klinga i ett par sekunder.', 'warn');
+    message(tr('msg.bFailed'), 'warn');
   }
   state.bReadings = [];
 }
@@ -717,8 +727,8 @@ function finishMapping() {
   const withB = (ks) => ks.filter((k) => state.tuning.inharmonicity[k]).length;
   const all = Array.from({ length: top() }, (_, i) => i + 1);
   const text = isQuick()
-    ? `Snabbmätningen är klar: inharmonicitet för ${withB(planKeys())} av ${planKeys().length} toner. Tangenterna däremellan interpoleras.`
-    : `Kartläggningen är klar: ${all.filter(isMapped).length} tangenter mätta, inharmonicitet för ${withB(all)}. Se rutan Referens A4 för hur pianot ligger.`;
+    ? tr('map.doneQuick', { b: withB(planKeys()), n: planKeys().length })
+    : tr('map.doneFull', { n: all.filter(isMapped).length, b: withB(all) });
   setMode('lock');
   message(text, 'ok', 0);
 }
@@ -729,18 +739,14 @@ function renderMapPanel() {
   const name = kName(state.key);
   const ks = planKeys();
   const done = ks.filter(isMapped).length;
-  $('map-progress').textContent = `${done} av ${ks.length} ${isQuick() ? 'toner' : 'tangenter'}`;
+  $('map-progress').textContent = tr(isQuick() ? 'map.progressQuick' : 'map.progressFull', { done, total: ks.length });
   $('map-bar').style.width = `${(done / ks.length) * 100}%`;
-  $('map-step').textContent = mp.waitAttack
-    ? `Slå an ${name} kraftigt och låt den klinga.`
-    : mp.lost
-      ? `${name} klingade ut innan mätningen var klar. Slå an den igen.`
-      : `Lyssnar på ${name} … låt tonen klinga.`;
+  $('map-step').textContent = tr(mp.waitAttack ? 'map.strike' : mp.lost ? 'map.lost' : 'map.listening', { name });
   const p = Math.min(mp.pitch.length, mapping.PITCH_READINGS);
-  setCheck('map-chk-pitch', `Tonhöjd ${p}/${mapping.PITCH_READINGS}`, p >= mapping.PITCH_READINGS);
-  if (!needsB(state.key)) setCheck('map-chk-b', 'Inharmonicitet redan uppmätt', true);
-  else if (mapping.bGivenUp(mp, state.mapPlan)) setCheck('map-chk-b', 'Inharmonicitet: för svaga övertoner, hoppas över', true);
-  else setCheck('map-chk-b', `Inharmonicitet ${Math.min(mp.bs.length, mapping.B_READINGS)}/${mapping.B_READINGS}`, mp.bs.length >= mapping.B_READINGS);
+  setCheck('map-chk-pitch', tr('map.pitch', { p, n: mapping.PITCH_READINGS }), p >= mapping.PITCH_READINGS);
+  if (!needsB(state.key)) setCheck('map-chk-b', tr('map.bKnown'), true);
+  else if (mapping.bGivenUp(mp, state.mapPlan)) setCheck('map-chk-b', tr('map.bSkipped'), true);
+  else setCheck('map-chk-b', tr('map.b', { p: Math.min(mp.bs.length, mapping.B_READINGS), n: mapping.B_READINGS }), mp.bs.length >= mapping.B_READINGS);
 }
 
 function setCheck(id, text, done) {
@@ -760,7 +766,7 @@ function playPiano() {
 }
 
 function startSine() {
-  if (!tones.sineOn && mic.running) message('Mätningar sparas inte medan sinustonen spelas.', 'info', 4000);
+  if (!tones.sineOn && mic.running) message(tr('msg.sineNoSave'), 'info', 4000);
   tones.startSine(sineFreq());
   renderToneButton();
 }
@@ -788,7 +794,7 @@ function setToneMode(m) {
 
 function renderToneButton() {
   const b = $('btn-tone');
-  b.textContent = tones.sineOn ? 'Stoppa sinuston' : state.toneMode === 'sine' ? 'Spela sinuston' : 'Spela målton';
+  b.textContent = tr(tones.sineOn ? 'tone.stopSine' : state.toneMode === 'sine' ? 'tone.playSine' : 'tone.play');
   b.setAttribute('aria-pressed', tones.sineOn);
 }
 
@@ -799,11 +805,11 @@ function updateReadout() {
   const pill = $('status-pill');
   let text;
   let s = 'idle';
-  if (!mic.running) text = 'Starta mikrofonen';
-  else if (!state.signal) text = state.map?.waitAttack ? `Slå an ${kName(state.key)}` : 'Lyssnar …';
+  if (!mic.running) text = tr('status.start');
+  else if (!state.signal) text = state.map?.waitAttack ? tr('status.strike', { name: kName(state.key) }) : tr('status.listening');
   else {
     s = statusClass(state.display);
-    text = refPlaying() ? 'Referenston, sparas ej' : s === 'good' ? 'I stäm' : state.display > 0 ? 'För högt, släpp efter' : 'För lågt, dra upp';
+    text = tr(refPlaying() ? 'status.ref' : s === 'good' ? 'status.good' : state.display > 0 ? 'status.high' : 'status.low');
   }
   pill.dataset.s = s;
   pill.textContent = text;
@@ -846,7 +852,7 @@ function animate(t) {
     const beatLive = live && Number.isFinite(state.beatHz);
     state.beatPhase = drawBeat($('beat'), { beatHz: state.beatHz, display: state.display, live: beatLive, tol }, C, dt, state.beatPhase);
     const df = Math.abs(state.beatHz);
-    const rate = !beatLive ? '–' : df < 0.1 ? 'Svävningsfritt' : `${num(df, df < 10 ? 1 : 0)} svävningar/s`;
+    const rate = !beatLive ? '–' : df < 0.1 ? tr('beat.none') : tr('beat.rate', { n: num(df, df < 10 ? 1 : 0) });
     if ($('beat-rate').textContent !== rate) $('beat-rate').textContent = rate;
   }
   requestAnimationFrame(animate);
@@ -874,9 +880,9 @@ function fitRefToPiano() {
   let shift;
   if (mid.length >= 3) shift = median(mid);
   else if (state.signal && Number.isFinite(state.display)) shift = state.display + goal(state.key);
-  else return message('Spela A4 (eller kartlägg några tangenter i mitten) så kan appen mäta pianots tonhöjd.', 'warn');
+  else return message(tr('msg.fitNeedsInput'), 'warn');
   setRef(Number(S().refA4) * 2 ** (shift / 1200));
-  message(`Referensen satt till ${fmtHz(Number(S().refA4), 1)} efter pianots nuvarande tonhöjd.`, 'ok');
+  message(tr('msg.fitDone', { hz: fmtHz(Number(S().refA4), 1) }), 'ok');
 }
 
 // Avsluta omgången: spara sammanfattning i historiken och töm mätningarna.
@@ -898,13 +904,13 @@ function newPass() {
   resetReadings();
   recompute();
   markDirty();
-  message('Ny omgång påbörjad. Inharmonicitet och inställningar är kvar.', 'ok');
+  message(tr('msg.newPass'), 'ok');
 }
 
 function exportTuning() {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(state.tuning, null, 2)], { type: 'application/json' }));
-  a.download = (state.tuning.name || 'stamning').replace(/[^\wåäöÅÄÖ-]+/g, '_') + '.json';
+  a.download = (state.tuning.name || tr('name.file')).replace(/[^\p{L}\p{N}_-]+/gu, '_') + '.json';
   document.body.append(a);
   a.click();
   a.remove();
@@ -914,13 +920,14 @@ function exportTuning() {
 async function importTuning(file) {
   try {
     const data = JSON.parse(await file.text());
-    if (!data?.settings) throw new Error('saknar inställningar');
+    if (!data?.settings) throw new Error(tr('msg.importNoSettings'));
     const exists = state.list.some((x) => x.id === data.id);
-    const t = duplicateTuning(data, (data.name || 'Importerad') + (exists ? ' (import)' : ''));
+    const name = data.name || tr('name.imported');
+    const t = duplicateTuning(data, exists ? tr('name.import', { name }) : name);
     await createAndOpen(t);
-    message(`Importerade "${t.name}".`, 'ok');
+    message(tr('msg.imported', { name: t.name }), 'ok');
   } catch (e) {
-    message(`Kunde inte importera filen: ${e.message}`, 'error');
+    message(tr('msg.importFailed', { err: e.message }), 'error');
   }
 }
 
@@ -930,16 +937,15 @@ async function deleteCurrent() {
     await deleteTuning(state.tuning.id);
     await refreshList();
     if (state.list[0]) await openTuning(await getTuning(state.list[0].id));
-    else await createAndOpen(newTuning('Mitt piano'));
-    message('Stämningen raderades.', 'ok');
+    else await createAndOpen(newTuning(tr('name.default')));
+    message(tr('msg.deleted'), 'ok');
   } catch {
-    message('Kunde inte radera stämningen.', 'error');
+    message(tr('msg.deleteFailed'), 'error');
   }
 }
 
 // Färgläge: auto följer webbläsaren. theme.js i <head> tillämpar sparat val
 // innan sidan ritas.
-const THEMES = { auto: ['◐ Auto', 'följer webbläsaren'], light: ['☀ Ljust', 'ljust'], dark: ['☾ Mörkt', 'mörkt'] };
 const currentTheme = () => document.documentElement.dataset.theme || 'auto';
 
 function setTheme(t) {
@@ -954,9 +960,25 @@ function setTheme(t) {
 }
 
 function renderThemeButton() {
-  const [label, desc] = THEMES[currentTheme()];
-  Object.assign($('btn-theme'), { textContent: label, title: `Färgläge: ${desc}. Klicka för att byta.` });
-  $('btn-theme').setAttribute('aria-label', `Färgläge: ${desc}`);
+  const th = currentTheme();
+  const desc = tr(`theme.${th}.desc`);
+  Object.assign($('btn-theme'), { textContent: tr('theme.' + th), title: tr('theme.title', { desc }) });
+  $('btn-theme').setAttribute('aria-label', tr('theme.aria', { desc }));
+}
+
+// Redraw everything that shows text.
+function changeLanguage(l) {
+  setLang(l);
+  buildStaticUi();
+  $('message').hidden = true;
+  setSaveState($('save-status').dataset.state);
+  renderSettings();
+  recompute();
+  renderMapPanel();
+  renderToneButton();
+  renderThemeButton();
+  renderMicButton();
+  updateReadout();
 }
 
 function refreshColors() {
@@ -1001,7 +1023,8 @@ function bindEvents() {
   const onAll = (sel, fn) => document.querySelectorAll(sel).forEach((el) => el.addEventListener('click', () => fn(el)));
   const show = (id, v) => () => ($(id).hidden = !v);
 
-  // Topp
+  // Top
+  on('set-lang', 'input', (e) => changeLanguage(e.target.value));
   on('btn-theme', 'click', () => {
     const order = ['auto', 'light', 'dark'];
     setTheme(order[(order.indexOf(currentTheme()) + 1) % order.length]);
@@ -1055,11 +1078,11 @@ function bindEvents() {
   on('partial-dec', 'click', () => setPartial(-1));
   on('partial-inc', 'click', () => setPartial(1));
   on('btn-measure-b', 'click', () => {
-    if (!mic.running) return message('Starta mikrofonen först.', 'warn');
+    if (!mic.running) return message(tr('msg.micFirst'), 'warn');
     state.bReadings = [];
     state.measureB = { k: state.key, until: performance.now() + 4000 };
     $('btn-measure-b').disabled = true;
-    message(`Slå an ${kName(state.key)} kraftigt och låt den klinga …`, 'info', 4000);
+    message(tr('msg.strikeB', { name: kName(state.key) }), 'info', 4000);
     setTimeout(() => state.measureB && finishMeasureB(), 6000); // om tonen tystnar innan
   });
 
@@ -1097,7 +1120,7 @@ function bindEvents() {
   bindSetting('set-overpull', 'overpull', Number);
   bindSetting('set-tolerance', 'tolerance', Number);
   on('set-name', 'input', (e) => {
-    state.tuning.name = e.target.value.trim() || 'Namnlös';
+    state.tuning.name = e.target.value.trim() || tr('name.untitled');
     const item = state.list.find((t) => t.id === state.tuning.id);
     if (item) item.name = state.tuning.name;
     renderTuningSelect();
@@ -1113,17 +1136,17 @@ function bindEvents() {
     try {
       await openTuning(await getTuning(e.target.value));
     } catch {
-      message('Kunde inte öppna stämningen.', 'error');
+      message(tr('msg.openFailed'), 'error');
       renderTuningSelect();
     }
   });
-  on('btn-new', 'click', () => createAndOpen(newTuning(`Piano ${state.list.length + 1}`)).catch(() => message('Kunde inte skapa stämningen.', 'error')));
+  on('btn-new', 'click', () => createAndOpen(newTuning(tr('name.new', { n: state.list.length + 1 }))).catch(() => message(tr('msg.createFailed'), 'error')));
   on('btn-dup', 'click', async () => {
     await saver.flush();
-    createAndOpen(duplicateTuning(state.tuning, state.tuning.name + ' (kopia)')).catch(() => message('Kunde inte duplicera.', 'error'));
+    createAndOpen(duplicateTuning(state.tuning, tr('name.copy', { name: state.tuning.name }))).catch(() => message(tr('msg.dupFailed'), 'error'));
   });
   on('btn-del', 'click', () => {
-    $('confirm-del-text').textContent = `Radera "${state.tuning.name}" med alla mätningar? Det går inte att ångra.`;
+    $('confirm-del-text').textContent = tr('piano.confirmDel', { name: state.tuning.name });
     $('confirm-del').hidden = false;
   });
   on('confirm-del-no', 'click', show('confirm-del', false));
@@ -1201,17 +1224,18 @@ async function boot() {
     try { id = localStorage.getItem(LS.tuning); } catch { /* valfritt */ }
     const pick = state.list.find((t) => t.id === id) || state.list[0];
     if (pick) await openTuning(await getTuning(pick.id));
-    else await createAndOpen(newTuning('Mitt piano'));
+    else await createAndOpen(newTuning(tr('name.default')));
   } catch {
     // Servern nås inte: kör ändå, utan sparande.
-    state.tuning = newTuning('Mitt piano');
+    state.tuning = newTuning(tr('name.default'));
     recompute();
     renderSettings();
     setSaveState('error');
-    message('Kunde inte nå servern. Mätningar sparas inte förrän den svarar.', 'warn', 0, 'server');
+    message(tr('msg.noServer'), 'warn', 0, 'server');
   }
   bindEvents();
   renderThemeButton();
+  renderMicButton();
   let plan = 'quick';
   let tone = 'off';
   try {
@@ -1220,7 +1244,6 @@ async function boot() {
   } catch { /* valfritt */ }
   setMapPlan(plan);
   setToneMode(tone);
-  fetch('api/version').then((r) => r.json()).then((v) => ($('app-version').textContent = v.version)).catch(() => {});
   updateReadout();
   requestAnimationFrame(animate);
 }

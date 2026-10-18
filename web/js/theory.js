@@ -36,41 +36,13 @@ function fifths(map, fill = 0) {
 }
 
 export const TEMPERAMENTS = {
-  et: {
-    name: 'Liksvävande',
-    desc: 'Alla kvinter minskas lika mycket (1/12 pytagoreiskt komma). Standard för moderna pianon; alla tonarter låter lika.',
-    fifths: fifths({}, -PC / 12),
-  },
-  werckmeister3: {
-    name: 'Werckmeister III (1691)',
-    desc: 'Fyra kvinter (C–G, G–D, D–A, B–F♯) minskas 1/4 PC, resten rena. Tonarter med få förtecken låter renare.',
-    fifths: fifths({ 0: -PC / 4, 1: -PC / 4, 2: -PC / 4, 5: -PC / 4 }),
-  },
-  kirnberger3: {
-    name: 'Kirnberger III (1779)',
-    desc: 'C–G–D–A–E minskas 1/4 syntoniskt komma (ren stor ters C–E), F♯–C♯ minskas ett schisma.',
-    fifths: fifths({ 0: -SC / 4, 1: -SC / 4, 2: -SC / 4, 3: -SC / 4, 6: -SCHISMA }),
-  },
-  vallotti: {
-    name: 'Vallotti (1700-tal)',
-    desc: 'Sex kvinter F–C–G–D–A–E–B minskas 1/6 PC, övriga sex är rena. Mild välpasserad temperatur.',
-    fifths: fifths({ 11: -PC / 6, 0: -PC / 6, 1: -PC / 6, 2: -PC / 6, 3: -PC / 6, 4: -PC / 6 }),
-  },
-  young2: {
-    name: 'Young II (1799)',
-    desc: 'Som Vallotti men förskjuten en kvint: C–G–D–A–E–B–F♯ minskas 1/6 PC.',
-    fifths: fifths({ 0: -PC / 6, 1: -PC / 6, 2: -PC / 6, 3: -PC / 6, 4: -PC / 6, 5: -PC / 6 }),
-  },
-  meantone4: {
-    name: 'Medeltonstemperatur 1/4 komma',
-    desc: 'Rena stora terser i de vanliga tonarterna. Vargkvint G♯–E♭ gör avlägsna tonarter oanvändbara.',
-    fifths: fifths({ 8: null }, -SC / 4),
-  },
-  meantone6: {
-    name: 'Medeltonstemperatur 1/6 komma',
-    desc: 'Mildare medelton (Silbermann). Vargkvinten G♯–E♭ är mindre men finns kvar.',
-    fifths: fifths({ 8: null }, -SC / 6),
-  },
+  et: { fifths: fifths({}, -PC / 12) },
+  werckmeister3: { fifths: fifths({ 0: -PC / 4, 1: -PC / 4, 2: -PC / 4, 5: -PC / 4 }) },
+  kirnberger3: { fifths: fifths({ 0: -SC / 4, 1: -SC / 4, 2: -SC / 4, 3: -SC / 4, 6: -SCHISMA }) },
+  vallotti: { fifths: fifths({ 11: -PC / 6, 0: -PC / 6, 1: -PC / 6, 2: -PC / 6, 3: -PC / 6, 4: -PC / 6 }) },
+  young2: { fifths: fifths({ 0: -PC / 6, 1: -PC / 6, 2: -PC / 6, 3: -PC / 6, 4: -PC / 6, 5: -PC / 6 }) },
+  meantone4: { fifths: fifths({ 8: null }, -SC / 4) },
+  meantone6: { fifths: fifths({ 8: null }, -SC / 6) },
 };
 
 function closeCircle(f) {
@@ -116,8 +88,8 @@ export function temperamentOffsets(id, root = 0) {
 // respektive bas mot en referensflygel på 180 cm; korta strängar ger högre B,
 // mest i basen. Mellan stödpunkterna interpoleras linjärt.
 export const PIANO_KINDS = {
-  upright: { name: 'Pianino (upprätt piano)', size: 'Höjd', how: 'från golvet till lockets ovansida', min: 90, max: 150, def: 120 },
-  grand: { name: 'Flygel', size: 'Längd', how: 'från klaviaturens framkant till bakkanten', min: 140, max: 310, def: 180 },
+  upright: { min: 90, max: 150, def: 120 },
+  grand: { min: 140, max: 310, def: 180 },
 };
 
 const SIZE_FACTORS = {
@@ -143,8 +115,8 @@ function sizeFactors(kind, cm) {
 
 // Grov storleksklass för visning.
 export function sizeClass(kind, cm) {
-  if (kind === 'grand') return cm < 170 ? 'liten flygel' : cm < 220 ? 'salongsflygel' : 'konsertflygel';
-  return cm < 110 ? 'litet pianino' : cm < 125 ? 'mellanstort piano' : 'högt piano';
+  if (kind === 'grand') return cm < 170 ? 'babyGrand' : cm < 220 ? 'parlourGrand' : 'concertGrand';
+  return cm < 110 ? 'smallUpright' : cm < 125 ? 'midUpright' : 'tallUpright';
 }
 
 const instrumentOf = (s) => ({
@@ -224,12 +196,12 @@ export function octaveStretch(Blow, Bup, type) {
 }
 
 export const STRETCH_PRESETS = {
-  none: { name: 'Ingen (teoretisk liksvävande)', desc: 'Exakt 1200 cent per oktav. Låter för smalt på ett riktigt piano, användbart som jämförelse.' },
-  light: { name: 'Lätt', mid: '2:1', treble: '2:1', bass: '4:2', desc: 'Rena 2:1-oktaver i diskanten och 4:2 i basen. Bra för små pianon och mjuk klang.' },
-  normal: { name: 'Normal', mid: '4:2', treble: '4:2', bass: '6:3', desc: 'Den vanligaste kompromissen: 4:2 i mitten och diskanten, 6:3 i basen.' },
-  wide: { name: 'Bred (konsert)', mid: '4:2', treble: '4:2', bass: '8:4', extraTreble: 5, desc: 'Mer stretch för stora flyglar och konsertbruk: 8:4 i basen och extra höjd i diskanten.' },
-  railsback: { name: 'Railsback-kurva', desc: 'Fast genomsnittskurva efter Railsbacks mätningar (≈ −25 cent på A0, +30 cent på C8). Använder inte inharmonicitet.' },
-  custom: { name: 'Egen', desc: 'Välj oktavtyp för bas, mitt och diskant själv.' },
+  none: {},
+  light: { mid: '2:1', treble: '2:1', bass: '4:2' },
+  normal: { mid: '4:2', treble: '4:2', bass: '6:3' },
+  wide: { mid: '4:2', treble: '4:2', bass: '8:4', extraTreble: 5 },
+  railsback: {},
+  custom: {},
 };
 
 export const DEFAULT_SETTINGS = {

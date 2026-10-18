@@ -1,11 +1,18 @@
-// Talformat med svenskt decimalkomma.
+// Number formatting with the language's decimal separator.
 
-export const num = (x, d = 1) => Math.abs(x).toFixed(d).replace('.', ',');
+import { decimal } from './i18n.js';
 
-// Cent med tecken: +1,2 / −0,4 / ±0,0. NaN blir ett streck.
+const dec = (s) => s.replace('.', decimal());
+
+export const num = (x, d = 1) => dec(Math.abs(x).toFixed(d));
+
+// Shortest form: 0.5 → "0.5", 1 → "1".
+export const short = (x) => dec(String(x));
+
+// Cents with sign: +1.2 / −0.4 / ±0.0. NaN becomes a dash.
 export const fmtC = (c, d = 1) =>
   Number.isFinite(c) ? (c > 0.049 ? '+' : c < -0.049 ? '−' : '±') + num(c, d) : '–';
 
-export const fmtHz = (f, d = 2) => f.toFixed(d).replace('.', ',') + ' Hz';
+export const fmtHz = (f, d = 2) => dec(f.toFixed(d)) + ' Hz';
 
-export const fmtB = (b) => b.toExponential(2).replace('.', ',');
+export const fmtB = (b) => dec(b.toExponential(2));
