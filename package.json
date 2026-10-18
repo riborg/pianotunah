@@ -1,0 +1,8 @@
+{
+  "name": "pianotunah",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/unit.test.mjs"
+  }
+}
