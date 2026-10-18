@@ -1,0 +1,29 @@
+services:
+  pianotunah:
+    container_name: pianotunah
+    build: .
+    image: pianotunah:latest
+    restart: unless-stopped
+    user: "1000:1000"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./data:/data
+    networks:
+      - caddy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=caddy
+      - traefik.http.routers.pianotunah.rule=Host(`pianotunah.example.com`)
+      - traefik.http.routers.pianotunah.entrypoints=websecure
+      - traefik.http.routers.pianotunah.tls=true
+      # Intern tjänst: endast nåbar från LAN.
+      - traefik.http.routers.pianotunah.middlewares=default-security-headers@file,ip-allowlist@file,compress@file
+      - traefik.http.services.pianotunah.loadbalancer.server.port=8080
+
+networks:
+  caddy:
+    external: true
