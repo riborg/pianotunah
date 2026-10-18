@@ -149,7 +149,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .brand-mark { width: 28px; height: 28px; color: var(--accent); }
 .brand-name { font: italic 600 22px/1 var(--f-display); letter-spacing: 0.01em; }
 .tuning-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.tuning-bar select { min-width: 0; max-width: 220px; }
+.tuning-bar select { min-width: 220px; max-width: 360px; }
+@media (max-width: 520px) { .tuning-bar { width: 100%; } .tuning-bar select { min-width: 0; flex: 1 1 100%; max-width: none; } }
 
 select, input[type="text"], input[type="number"], textarea {
   background: var(--surface);
