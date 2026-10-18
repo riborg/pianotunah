@@ -13,6 +13,11 @@ const FRAME_MS = 90;
 const SPEC_COLS = 100; // ≈ 9 s historik i svävningsvyn
 const SPEC_BINS = 48;
 const SPEC_CENTS = 30;
+// Kartläggning: per tangent samlas tonhöjdsavläsningar och B-skattningar. B ges
+// upp efter MAP_B_MS klingtid (svaga övertoner); interpoleras då från grannarna.
+const MAP_PITCH = 8;
+const MAP_B = 5;
+const MAP_B_MS = 3000;
 
 const state = {
   tuning: null,
@@ -41,7 +46,7 @@ const state = {
   autoFrames: 0, // bildrutor i rad som aktuell tangent varit klar vinnare i auto-läget
   bReadings: [],
   measureB: null, // { k, until }
-  map: null, // { start, waitAttack }
+  map: null, // kartläggning av aktuell tangent, se mapKeyState()
   dirty: false,
   saveTimer: 0,
   saveState: 'idle',
@@ -496,7 +501,8 @@ function selectKey(k, manual = true) {
   if (k === state.key) return;
   state.key = k;
   resetReadings();
-  if (state.map) state.map = { start: performance.now(), waitAttack: true };
+  if (state.map) state.map = mapKeyState();
+  renderMapPanel();
   renderKeyInfo();
   renderKeyboard();
   drawChart();
@@ -508,14 +514,12 @@ function setMode(m) {
   $('mode-auto').setAttribute('aria-pressed', m === 'auto');
   $('mode-lock').setAttribute('aria-pressed', m === 'lock');
   $('mode-map').setAttribute('aria-pressed', m === 'map');
-  state.map = m === 'map' ? { start: performance.now(), waitAttack: false } : null;
+  state.map = m === 'map' ? mapKeyState() : null;
   state.bReadings = [];
-  const info = $('map-info');
-  info.hidden = m !== 'map';
-  if (m === 'map') {
-    info.textContent =
-      'Kartläggning: slå an den markerade tangenten kraftigt och låt den klinga. När den är mätt går appen vidare till nästa. Använd › för att hoppa över.';
-  }
+  $('map-panel').hidden = m !== 'map';
+  // Börja på A0, eller fortsätt där en avbruten kartläggning slutade.
+  if (m === 'map') selectKey(firstUnmapped(), false);
+  renderMapPanel();
 }
 
 // ---------------------------------------------------------------------------
@@ -587,7 +591,6 @@ function analyseFrame() {
   if (state.map?.waitAttack) {
     if (!onset) return idle();
     state.map.waitAttack = false;
-    state.map.start = performance.now();
   }
   if (lvl < Math.max(state.noise + 10, -72)) return idle();
 
@@ -612,6 +615,8 @@ function analyseFrame() {
 
 function idle() {
   state.signal = false;
+  if (state.map && !state.map.waitAttack && state.map.pitch.length) state.map.lost = true;
+  renderMapPanel();
   updateReadout();
 }
 
@@ -657,16 +662,26 @@ function measureCurrent(A) {
   }
 
   // Spara samma värde som visas: medianen av de senaste avläsningarna.
-  if (state.stable) recordKey(k, n, median(state.readings.slice(-5).map((r) => r.hz)));
+  // Under kartläggning sparar mapStep i stället.
+  if (state.stable && !state.map) recordKey(k, n, median(state.readings.slice(-5).map((r) => r.hz)));
 
   // Inharmonicitet (kartläggning eller manuell mätning).
-  const wantB = !ref && (state.map || (state.measureB && state.measureB.k === k));
-  if (wantB) {
-    const f1 = T.freq[k] * 2 ** (raw / 1200);
+  const f1 = T.freq[k] * 2 ** (raw / 1200);
+  if (!ref && state.measureB && state.measureB.k === k) {
     const r = A.inharmonicity(f1, T.B[k]);
     if (r) state.bReadings.push(r.B);
   }
-  if (state.map && !ref) mapStep(k);
+  if (state.map && !ref) {
+    const mp = state.map;
+    mp.pitch.push(m.freq);
+    mp.ms += FRAME_MS;
+    mp.lost = false;
+    if (needsB(k) && mp.bs.length < MAP_B) {
+      const r = A.inharmonicity(f1, T.B[k]);
+      if (r) mp.bs.push(r.B);
+    }
+    mapStep(k);
+  }
   if (state.measureB && performance.now() > state.measureB.until) finishMeasureB();
 
   updateReadout();
@@ -703,21 +718,89 @@ function storeB(k, B) {
   recompute();
 }
 
+// ---------------------------------------------------------------------------
+// Kartläggning: mät pianot tangent för tangent innan stämningen. För varje
+// tangent sparas hur den ligger nu (före-värdet) och, om det inte redan finns,
+// strängens inharmonicitet B. Tonhöjden tas som median över flera avläsningar,
+// så osordnade unisoner (svävningar) gör inget.
+
+function mapKeyState() {
+  return { waitAttack: true, pitch: [], bs: [], ms: 0, lost: false };
+}
+
+const isMapped = (k) => !!keyRec(k)?.mapped;
+const needsB = (k) => !state.tuning.inharmonicity[k];
+
+function firstUnmapped() {
+  for (let k = 1; k <= KEY_COUNT; k++) if (!isMapped(k)) return k;
+  return 1;
+}
+
 function mapStep(k) {
-  const elapsed = performance.now() - state.map.start;
-  const enoughB = state.bReadings.length >= 5;
-  const recorded = !!keyRec(k)?.bhz;
-  if ((enoughB && recorded) || (elapsed > 5000 && recorded)) {
-    if (state.bReadings.length >= 3) storeB(k, median(state.bReadings));
-    flashKey(k);
-    if (k >= KEY_COUNT) {
-      setMode('lock');
-      message('Kartläggningen är klar. Målkurvan bygger nu på pianots egen inharmonicitet.', 'ok');
-      renderRef();
-      return;
-    }
-    selectKey(k + 1, false);
-    renderRef();
+  const mp = state.map;
+  const pitchDone = mp.pitch.length >= MAP_PITCH;
+  const bDone = !needsB(k) || mp.bs.length >= MAP_B || mp.ms >= MAP_B_MS;
+  if (!pitchDone || !bDone) {
+    renderMapPanel();
+    return;
+  }
+  const hz = median(mp.pitch);
+  const n = partialOf(k);
+  state.tuning.keys[k] = { ...(keyRec(k) || {}), bhz: hz, bn: n, hz, n, at: Date.now(), mapped: true };
+  if (mp.bs.length >= 3) storeB(k, median(mp.bs));
+  else {
+    markDirty();
+    recompute();
+  }
+  flashKey(k);
+  if (k >= KEY_COUNT) finishMapping();
+  else selectKey(k + 1, false);
+}
+
+function finishMapping() {
+  let mapped = 0;
+  let withB = 0;
+  for (let k = 1; k <= KEY_COUNT; k++) {
+    if (isMapped(k)) mapped++;
+    if (state.tuning.inharmonicity[k]) withB++;
+  }
+  setMode('lock');
+  message(
+    `Kartläggningen är klar: ${mapped} tangenter mätta, inharmonicitet för ${withB}. ` +
+      'Målkurvan bygger nu på pianots egna värden. Se rutan Referens A4 för hur pianot ligger.',
+    'ok',
+    0,
+  );
+}
+
+function renderMapPanel() {
+  if (!state.map) return;
+  const mp = state.map;
+  const k = state.key;
+  const name = kName(k);
+  let mapped = 0;
+  for (let i = 1; i <= KEY_COUNT; i++) if (isMapped(i)) mapped++;
+  $('map-progress').textContent = `${mapped} av 88 tangenter`;
+  $('map-bar').style.width = `${(mapped / 88) * 100}%`;
+  $('map-step').textContent = mp.waitAttack
+    ? `Slå an ${name} kraftigt och låt den klinga.`
+    : mp.lost
+      ? `${name} klingade ut innan mätningen var klar. Slå an den igen.`
+      : `Lyssnar på ${name} … låt tonen klinga.`;
+  const p = Math.min(mp.pitch.length, MAP_PITCH);
+  const pc = $('map-chk-pitch');
+  pc.textContent = `Tonhöjd ${p}/${MAP_PITCH}`;
+  pc.dataset.done = p >= MAP_PITCH ? '1' : '0';
+  const bc = $('map-chk-b');
+  if (!needsB(k)) {
+    bc.textContent = 'Inharmonicitet redan uppmätt';
+    bc.dataset.done = '1';
+  } else if (mp.bs.length < MAP_B && mp.ms >= MAP_B_MS) {
+    bc.textContent = 'Inharmonicitet: för svaga övertoner, hoppas över';
+    bc.dataset.done = '1';
+  } else {
+    bc.textContent = `Inharmonicitet ${Math.min(mp.bs.length, MAP_B)}/${MAP_B}`;
+    bc.dataset.done = mp.bs.length >= MAP_B ? '1' : '0';
   }
 }
 
@@ -1387,9 +1470,19 @@ function bindEvents() {
   $('mode-auto').addEventListener('click', () => setMode('auto'));
   $('mode-lock').addEventListener('click', () => setMode('lock'));
   $('mode-map').addEventListener('click', () => {
+    if (state.mode === 'map') return;
     setMode('map');
     if (!state.audio) startMic();
   });
+  $('map-skip').addEventListener('click', () => {
+    if (state.key >= KEY_COUNT) finishMapping();
+    else selectKey(state.key + 1, false);
+  });
+  $('map-redo').addEventListener('click', () => {
+    state.map = mapKeyState();
+    renderMapPanel();
+  });
+  $('map-stop').addEventListener('click', () => setMode('lock'));
   $('keyboard').addEventListener('click', (e) => {
     const k = Number(e.target.closest('.key')?.dataset.k);
     if (!k) return;
