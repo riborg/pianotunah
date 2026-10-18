@@ -1,7 +1,7 @@
 # Bygg en statisk binär med webbappen inbäddad och kör den i en tom image.
 # Go korskompilerar på byggmaskinens plattform, så flera arkitekturer kräver
 # ingen emulering.
-FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS build
+FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS build
 ARG TARGETOS TARGETARCH VERSION=dev
 WORKDIR /src
 COPY go.mod ./
