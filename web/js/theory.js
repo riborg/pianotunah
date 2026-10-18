@@ -12,23 +12,20 @@ const SC = 1200 * Math.log2(81 / 80); // syntoniskt komma ≈ 21,51 cent
 const SCHISMA = PC - SC; // ≈ 1,95 cent
 const PURE_FIFTH = 1200 * Math.log2(3 / 2); // ≈ 701,96 cent
 
-const NAMES = {
-  se: ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'B', 'H'],
-  int: ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'],
-};
+const NAMES = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
 
 export const pitchClass = (k) => (k + 8) % 12; // 0 = C, 9 = A
 export const octave = (k) => Math.floor((k + 8) / 12);
 export const isBlack = (k) => [1, 3, 6, 8, 10].includes(pitchClass(k));
-export const pcName = (pc, style = 'se') => (NAMES[style] || NAMES.se)[pc];
-export const noteName = (k, style) => pcName(pitchClass(k), style) + octave(k);
+export const pcName = (pc) => NAMES[pc];
+export const noteName = (k) => pcName(pitchClass(k)) + octave(k);
 
 // ---------------------------------------------------------------------------
 // Temperaturer
 //
 // En temperatur beskrivs som hur mycket var och en av de tolv kvinterna i
 // kvintcirkeln avviker från ren kvint (cent). Index i går från tonen 7·i mod 12
-// till nästa: C–G, G–D, D–A, A–E, E–H, H–F♯, F♯–C♯, C♯–G♯, G♯–D♯, D♯–B, B–F, F–C.
+// till nästa: C–G, G–D, D–A, A–E, E–B, B–F♯, F♯–C♯, C♯–G♯, G♯–E♭, E♭–B♭, B♭–F, F–C.
 // Summan måste bli −PC för att cirkeln ska slutas; en post som är null
 // (vargkvinten) får det som blir över.
 
@@ -46,7 +43,7 @@ export const TEMPERAMENTS = {
   },
   werckmeister3: {
     name: 'Werckmeister III (1691)',
-    desc: 'Fyra kvinter (C–G, G–D, D–A, H–F♯) minskas 1/4 PC, resten rena. Tonarter med få förtecken låter renare.',
+    desc: 'Fyra kvinter (C–G, G–D, D–A, B–F♯) minskas 1/4 PC, resten rena. Tonarter med få förtecken låter renare.',
     fifths: fifths({ 0: -PC / 4, 1: -PC / 4, 2: -PC / 4, 5: -PC / 4 }),
   },
   kirnberger3: {
@@ -56,12 +53,12 @@ export const TEMPERAMENTS = {
   },
   vallotti: {
     name: 'Vallotti (1700-tal)',
-    desc: 'Sex kvinter F–C–G–D–A–E–H minskas 1/6 PC, övriga sex är rena. Mild välpasserad temperatur.',
+    desc: 'Sex kvinter F–C–G–D–A–E–B minskas 1/6 PC, övriga sex är rena. Mild välpasserad temperatur.',
     fifths: fifths({ 11: -PC / 6, 0: -PC / 6, 1: -PC / 6, 2: -PC / 6, 3: -PC / 6, 4: -PC / 6 }),
   },
   young2: {
     name: 'Young II (1799)',
-    desc: 'Som Vallotti men förskjuten en kvint: C–G–D–A–E–H–F♯ minskas 1/6 PC.',
+    desc: 'Som Vallotti men förskjuten en kvint: C–G–D–A–E–B–F♯ minskas 1/6 PC.',
     fifths: fifths({ 0: -PC / 6, 1: -PC / 6, 2: -PC / 6, 3: -PC / 6, 4: -PC / 6, 5: -PC / 6 }),
   },
   meantone4: {
@@ -81,7 +78,7 @@ function closeCircle(f) {
   return f.map((v) => (v === null ? -PC - known : v));
 }
 
-// Avvikelse från liksvävande per tonklass (0 = C … 11 = H), normaliserat så
+// Avvikelse från liksvävande per tonklass (0 = C … 11 = B), normaliserat så
 // att A alltid är 0 och referensfrekvensen alltså gäller A4.
 // root transponerar temperaturen så att den utgår från en annan grundton än C.
 export function temperamentOffsets(id, root = 0) {
@@ -203,7 +200,6 @@ export const DEFAULT_SETTINGS = {
   pianoType: 'upright',
   overpull: 0,
   tolerance: 1,
-  noteNames: 'se',
 };
 
 // Temperaturoktaven A3–A4 (tangent 37–49) stäms först. Därifrån byggs

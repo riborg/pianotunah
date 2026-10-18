@@ -56,8 +56,7 @@ const state = {
 const num = (x, d = 1) => Math.abs(x).toFixed(d).replace('.', ',');
 const fmtC = (c, d = 1) => (Number.isFinite(c) ? (c > 0.049 ? '+' : c < -0.049 ? '−' : '±') + num(c, d) : '–');
 const fmtHz = (f, d = 2) => f.toFixed(d).replace('.', ',') + ' Hz';
-const names = () => state.tuning.settings.noteNames;
-const kName = (k) => noteName(k, names());
+const kName = (k) => noteName(k);
 const S = () => state.tuning.settings;
 
 // ---------------------------------------------------------------------------
@@ -250,7 +249,7 @@ function renderRootSelect() {
   const sel = $('set-root');
   sel.replaceChildren(
     ...Array.from({ length: 12 }, (_, pc) =>
-      Object.assign(document.createElement('option'), { value: pc, textContent: pcName(pc, names()) }),
+      Object.assign(document.createElement('option'), { value: pc, textContent: pcName(pc) }),
     ),
   );
 }
@@ -270,7 +269,6 @@ function renderSettings() {
   $('set-extra-bass').value = s.extraBass;
   $('set-overpull').value = s.overpull;
   $('set-tolerance').value = String(s.tolerance);
-  $('set-names').value = s.noteNames;
   $('set-notes').value = state.tuning.notes || '';
   renderSettingDescs();
 }
@@ -1314,11 +1312,6 @@ function bindEvents() {
   bindSel('set-extra-bass', 'extraBass', Number);
   bindSel('set-overpull', 'overpull', Number);
   bindSel('set-tolerance', 'tolerance', Number);
-  $('set-names').addEventListener('input', (e) => {
-    setSetting('noteNames', e.target.value);
-    renderRootSelect();
-    $('set-root').value = S().root;
-  });
   $('set-name').addEventListener('input', (e) => {
     state.tuning.name = e.target.value.trim() || 'Namnlös';
     const item = state.list.find((t) => t.id === state.tuning.id);
