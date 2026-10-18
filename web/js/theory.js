@@ -121,6 +121,8 @@ export const PIANO_TYPES = {
   grand: { name: 'Flygel (≈ 1,8 m)', treble: 1, bass: 1 },
   upright: { name: 'Piano (≈ 120 cm)', treble: 1.3, bass: 2 },
   spinet: { name: 'Litet piano (≈ 100 cm)', treble: 1.6, bass: 3 },
+  // Äldre pianon (före ~1930) har ofta sju oktaver, A0–A7.
+  old85: { name: 'Äldre piano, 85 tangenter (A0–A7)', treble: 1.3, bass: 2, keys: 85 },
 };
 
 export function modelB(k, type) {

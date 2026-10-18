@@ -70,6 +70,8 @@ const fmtC = (c, d = 1) => (Number.isFinite(c) ? (c > 0.049 ? '+' : c < -0.049 ?
 const fmtHz = (f, d = 2) => f.toFixed(d).replace('.', ',') + ' Hz';
 const kName = (k) => noteName(k);
 const S = () => state.tuning.settings;
+// Pianots högsta tangent: C8 (88), eller A7 (85) för äldre pianon.
+const top = () => PIANO_TYPES[S().pianoType]?.keys || KEY_COUNT;
 
 // ---------------------------------------------------------------------------
 // Avvikelser per tangent. Mätningar sparas som frekvensen på den delton som
@@ -276,28 +278,45 @@ function buildStaticUi() {
   for (const id of ['set-bass', 'set-mid', 'set-treble']) {
     $(id).replaceChildren(...Object.keys(OCTAVE_TYPES).map((k) => opt(k, k)));
   }
-  // Klaviatur: 52 vita tangenter i ett flex-led, svarta absolut positionerade.
+}
+
+// Klaviatur: vita tangenter i ett flex-led, svarta absolut positionerade.
+// Byggs om när antalet tangenter ändras (88 eller 85).
+function buildKeyboard(n) {
   const kb = $('keyboard');
-  const whites = [];
+  if (kb.children.length === n) return;
+  let whiteCount = 0;
+  for (let k = 1; k <= n; k++) if (!isBlack(k)) whiteCount++;
+  const keys = [];
   let wi = 0;
-  for (let k = 1; k <= KEY_COUNT; k++) {
+  for (let k = 1; k <= n; k++) {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'key ' + (isBlack(k) ? 'black' : 'white');
     b.dataset.k = k;
     if (isBlack(k)) {
-      b.style.left = `${(wi / 52) * 100}%`;
-      b.dataset.cx = (wi / 52) * 100;
+      b.style.left = `${(wi / whiteCount) * 100}%`;
+      b.dataset.cx = (wi / whiteCount) * 100;
     } else {
-      b.dataset.cx = ((wi + 0.5) / 52) * 100;
+      b.dataset.cx = ((wi + 0.5) / whiteCount) * 100;
       wi++;
       const lbl = document.createElement('span');
       lbl.className = 'klabel';
       b.append(lbl);
     }
-    whites.push(b);
+    keys.push(b);
   }
-  kb.replaceChildren(...whites);
+  kb.replaceChildren(...keys);
+  renderKeyboard.scrolledTo = 0;
+}
+
+// Bygg klaviaturen för pianots antal tangenter och flytta aktuell tangent
+// innanför om den hamnat ovanför (t.ex. C8 på ett 85-tangenters piano).
+function applyKeyCount() {
+  buildKeyboard(top());
+  if (state.key > top()) selectKey(top(), false);
+  renderKeyboard();
+  drawChart();
 }
 
 function renderRootSelect() {
@@ -311,6 +330,7 @@ function renderRootSelect() {
 
 function renderSettings() {
   const s = S();
+  applyKeyCount();
   $('set-name').value = state.tuning.name;
   $('set-piano').value = s.pianoType;
   $('set-temperament').value = s.temperament;
@@ -387,7 +407,8 @@ function renderKeyInfo() {
 }
 
 function renderKeyboard() {
-  const cur = state.key;
+  buildKeyboard(top()); // gör inget om klaviaturen redan har rätt antal tangenter
+  const cur = Math.min(state.key, top());
   for (const el of $('keyboard').children) {
     const k = Number(el.dataset.k);
     el.dataset.s = statusClass(statusDev(k));
@@ -417,7 +438,7 @@ function renderKeyboard() {
 function renderPass() {
   let measured = 0;
   let ok = 0;
-  for (let k = 1; k <= KEY_COUNT; k++) {
+  for (let k = 1; k <= top(); k++) {
     const d = statusDev(k);
     if (!Number.isFinite(d)) continue;
     measured++;
@@ -425,7 +446,7 @@ function renderPass() {
   }
   const since = new Date(state.tuning.passStartedAt || state.tuning.createdAt);
   $('pass-stats').replaceChildren(
-    stat(`${ok}/88`, 'inom tolerans'),
+    stat(`${ok}/${top()}`, 'inom tolerans'),
     stat(`${measured}`, 'uppmätta'),
     stat(since.toLocaleDateString('sv-SE'), 'påbörjad'),
   );
@@ -458,7 +479,7 @@ function renderTable() {
   const head = document.createElement('thead');
   head.innerHTML = '<tr><th>Tangent</th><th>Ton</th><th>Mål (cent)</th><th>Mål (Hz)</th><th>B</th><th>Delton</th><th>Före</th><th>Nu</th></tr>';
   const body = document.createElement('tbody');
-  for (let k = KEY_COUNT; k >= 1; k--) {
+  for (let k = top(); k >= 1; k--) {
     const tr = document.createElement('tr');
     const cells = [
       k,
@@ -497,7 +518,7 @@ function resetReadings() {
 }
 
 function selectKey(k, manual = true) {
-  k = Math.max(1, Math.min(KEY_COUNT, k));
+  k = Math.max(1, Math.min(top(), k));
   if (manual && state.mode === 'auto') setMode('lock');
   if (k === state.key) return;
   state.key = k;
@@ -599,7 +620,7 @@ function analyseFrame() {
   A.load(state.buf);
 
   if (state.mode === 'auto') {
-    const d = A.detectKey(state.T, state.key);
+    const d = A.detectKey(state.T, state.key, top());
     const clear = d.score > 8 && d.margin >= 6;
     state.autoFrames = clear && d.key === state.key ? state.autoFrames + 1 : 0;
     if (d.score > 8) {
@@ -733,7 +754,7 @@ const isMapped = (k) => !!keyRec(k)?.mapped;
 const needsB = (k) => !state.tuning.inharmonicity[k];
 
 function firstUnmapped() {
-  for (let k = 1; k <= KEY_COUNT; k++) if (!isMapped(k)) return k;
+  for (let k = 1; k <= top(); k++) if (!isMapped(k)) return k;
   return 1;
 }
 
@@ -754,14 +775,14 @@ function mapStep(k) {
     recompute();
   }
   flashKey(k);
-  if (k >= KEY_COUNT) finishMapping();
+  if (k >= top()) finishMapping();
   else selectKey(k + 1, false);
 }
 
 function finishMapping() {
   let mapped = 0;
   let withB = 0;
-  for (let k = 1; k <= KEY_COUNT; k++) {
+  for (let k = 1; k <= top(); k++) {
     if (isMapped(k)) mapped++;
     if (state.tuning.inharmonicity[k]) withB++;
   }
@@ -780,9 +801,9 @@ function renderMapPanel() {
   const k = state.key;
   const name = kName(k);
   let mapped = 0;
-  for (let i = 1; i <= KEY_COUNT; i++) if (isMapped(i)) mapped++;
-  $('map-progress').textContent = `${mapped} av 88 tangenter`;
-  $('map-bar').style.width = `${(mapped / 88) * 100}%`;
+  for (let i = 1; i <= top(); i++) if (isMapped(i)) mapped++;
+  $('map-progress').textContent = `${mapped} av ${top()} tangenter`;
+  $('map-bar').style.width = `${(mapped / top()) * 100}%`;
   $('map-step').textContent = mp.waitAttack
     ? `Slå an ${name} kraftigt och låt den klinga.`
     : mp.lost
@@ -1235,7 +1256,7 @@ function drawChart() {
   ctx.clearRect(0, 0, w, h);
 
   const vals = [];
-  for (let k = 1; k <= KEY_COUNT; k++) {
+  for (let k = 1; k <= top(); k++) {
     vals.push(T.cents[k]);
     const d = curDev(k);
     if (Number.isFinite(d)) vals.push(T.cents[k] + d);
@@ -1245,7 +1266,7 @@ function drawChart() {
   const step = hi - lo > 80 ? 20 : 10;
   chart.yMin = Math.floor(lo / step) * step;
   chart.yMax = Math.ceil(hi / step) * step;
-  const xm = (k) => pad.l + ((k - 1) / (KEY_COUNT - 1)) * (w - pad.l - pad.r);
+  const xm = (k) => pad.l + ((k - 1) / (top() - 1)) * (w - pad.l - pad.r);
   const ym = (c) => pad.t + ((chart.yMax - c) / (chart.yMax - chart.yMin)) * (h - pad.t - pad.b);
   chart.xm = xm;
   chart.ym = ym;
@@ -1263,7 +1284,7 @@ function drawChart() {
     ctx.fillText(c === 0 ? '0' : (c > 0 ? '+' : '−') + Math.abs(c), pad.l - 6, ym(c) + 4);
   }
   ctx.textAlign = 'center';
-  for (let k = 1; k <= KEY_COUNT; k++) {
+  for (let k = 1; k <= top(); k++) {
     if (pitchClass(k) !== 0) continue;
     const x = xm(k);
     ctx.strokeStyle = C.line;
@@ -1293,7 +1314,7 @@ function drawChart() {
   ctx.lineWidth = 2;
   ctx.lineJoin = 'round';
   ctx.beginPath();
-  for (let k = 1; k <= KEY_COUNT; k++) {
+  for (let k = 1; k <= top(); k++) {
     const x = xm(k);
     const y = ym(T.cents[k]);
     if (k === 1) ctx.moveTo(x, y);
@@ -1302,7 +1323,7 @@ function drawChart() {
   ctx.stroke();
 
   // Uppmätt: punkt i statusfärg med ring i ytfärg.
-  for (let k = 1; k <= KEY_COUNT; k++) {
+  for (let k = 1; k <= top(); k++) {
     const d = curDev(k);
     if (!Number.isFinite(d)) continue;
     const x = xm(k);
@@ -1325,9 +1346,9 @@ function chartHover(e) {
   const x = e.clientX - r.left;
   const { pad } = chart;
   const w = r.width;
-  const k = Math.round(((x - pad.l) / (w - pad.l - pad.r)) * (KEY_COUNT - 1)) + 1;
+  const k = Math.round(((x - pad.l) / (w - pad.l - pad.r)) * (top() - 1)) + 1;
   const tip = $('tooltip');
-  if (k < 1 || k > KEY_COUNT) {
+  if (k < 1 || k > top()) {
     tip.hidden = true;
     return;
   }
@@ -1407,7 +1428,7 @@ function newPass() {
   let sb = 0;
   let sa = 0;
   let nb = 0;
-  for (let k = 1; k <= KEY_COUNT; k++) {
+  for (let k = 1; k <= top(); k++) {
     const a = statusDev(k);
     const b = beforeDev(k);
     if (Number.isFinite(a)) {
@@ -1509,7 +1530,7 @@ function bindEvents() {
     if (!state.audio) startMic();
   });
   $('map-skip').addEventListener('click', () => {
-    if (state.key >= KEY_COUNT) finishMapping();
+    if (state.key >= top()) finishMapping();
     else selectKey(state.key + 1, false);
   });
   $('map-redo').addEventListener('click', () => {
@@ -1565,7 +1586,10 @@ function bindEvents() {
 
   // Inställningar
   const bindSel = (id, key, conv = (v) => v) => $(id).addEventListener('input', (e) => setSetting(key, conv(e.target.value)));
-  bindSel('set-piano', 'pianoType');
+  $('set-piano').addEventListener('input', (e) => {
+    setSetting('pianoType', e.target.value);
+    applyKeyCount(); // instrumentet avgör antalet tangenter
+  });
   bindSel('set-temperament', 'temperament');
   bindSel('set-root', 'root', Number);
   bindSel('set-stretch', 'stretch');
@@ -1576,6 +1600,7 @@ function bindEvents() {
   bindSel('set-extra-bass', 'extraBass', Number);
   bindSel('set-overpull', 'overpull', Number);
   bindSel('set-tolerance', 'tolerance', Number);
+
   $('set-name').addEventListener('input', (e) => {
     state.tuning.name = e.target.value.trim() || 'Namnlös';
     const item = state.list.find((t) => t.id === state.tuning.id);
@@ -1645,8 +1670,8 @@ function bindEvents() {
   $('chart').addEventListener('click', (e) => {
     const r = $('chart').getBoundingClientRect();
     const { pad } = chart;
-    const k = Math.round(((e.clientX - r.left - pad.l) / (r.width - pad.l - pad.r)) * (KEY_COUNT - 1)) + 1;
-    if (k >= 1 && k <= KEY_COUNT) selectKey(k);
+    const k = Math.round(((e.clientX - r.left - pad.l) / (r.width - pad.l - pad.r)) * (top() - 1)) + 1;
+    if (k >= 1 && k <= top()) selectKey(k);
   });
   $('table-details').addEventListener('toggle', () => $('table-details').open && renderTable());
 

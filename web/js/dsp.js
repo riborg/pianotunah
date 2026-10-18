@@ -174,11 +174,11 @@ export class Analyzer {
   // undertonskontroll: tonen en oktav (eller oktav + kvint, två oktaver) under
   // vinnaren har alla vinnarens deltoner, så den väljs om även dess egna
   // deltoner hörs. margin = vinnarens försprång mot halvtonsgrannarna (dB).
-  detectKey(targets, prevKey = 0) {
+  detectKey(targets, prevKey = 0, top = KEY_COUNT) {
     const scores = new Float64Array(KEY_COUNT + 1).fill(-Infinity);
     let best = 0;
     let bestScore = -Infinity;
-    for (let k = 1; k <= KEY_COUNT; k++) {
+    for (let k = 1; k <= top; k++) {
       let sum = 0;
       let count = 0;
       for (let n = 1; n <= 8; n++) {
@@ -209,7 +209,7 @@ export class Analyzer {
       }
     }
     const neigh = [best - 2, best - 1, best + 1, best + 2]
-      .filter((k) => k >= 1 && k <= KEY_COUNT)
+      .filter((k) => k >= 1 && k <= top)
       .map((k) => scores[k]);
     return { key: best, score: scores[best], margin: scores[best] - Math.max(...neigh) };
   }
