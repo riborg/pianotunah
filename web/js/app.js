@@ -48,6 +48,8 @@ const state = {
   toneCtx: null,
   toneMode: 'off', // off | piano | sine
   sine: null,
+  refUntil: 0, // referenston hörs i mikrofonen till denna tid (performance.now)
+  refTainted: false,
   strobePhase: [0, 0, 0],
   lastAnim: 0,
   colors: {},
@@ -89,6 +91,9 @@ function statusClass(d) {
   return 'bad';
 }
 const partialOf = (k) => state.tuning.partials[k] || defaultPartial(k);
+// Mikrofonen har ekoreducering avstängd och hör högtalaren. Medan en referenston
+// klingar (plus analysbuffertens ~0,7 s) sparas inga mätningar.
+const refPlaying = () => !!state.sine || performance.now() < state.refUntil;
 
 // ---------------------------------------------------------------------------
 // Meddelanden
@@ -573,13 +578,16 @@ function measureCurrent(A) {
   if (!m) return idle();
 
   const raw = centsBetween(m.freq, target);
+  const ref = refPlaying();
+  if (!ref && state.refTainted) state.readings = [];
+  state.refTainted = ref;
   state.readings.push({ c: raw, hz: m.freq });
   if (state.readings.length > 7) state.readings.shift();
   const last = state.readings.slice(-5).map((r) => r.c);
   const med = median(last);
   const spread = Math.max(...last) - Math.min(...last);
   state.signal = true;
-  state.stable = last.length >= 4 && spread < (k > 70 ? 1.5 : 0.8);
+  state.stable = !ref && last.length >= 4 && spread < (k > 70 ? 1.5 : 0.8);
   const g = goal(k);
   state.display = med - g;
   // Svävningsvyn centreras på målet (inklusive ev. överdrag).
@@ -601,13 +609,13 @@ function measureCurrent(A) {
   if (state.stable) recordKey(k, n, state.readings[state.readings.length - 1].hz);
 
   // Inharmonicitet (kartläggning eller manuell mätning).
-  const wantB = state.map || (state.measureB && state.measureB.k === k);
+  const wantB = !ref && (state.map || (state.measureB && state.measureB.k === k));
   if (wantB) {
     const f1 = T.freq[k] * 2 ** (raw / 1200);
     const r = A.inharmonicity(f1, T.B[k]);
     if (r) state.bReadings.push(r.B);
   }
-  if (state.map) mapStep(k);
+  if (state.map && !ref) mapStep(k);
   if (state.measureB && performance.now() > state.measureB.until) finishMeasureB();
 
   updateReadout();
@@ -702,6 +710,7 @@ function playTone() {
   out.gain.value = 0.22;
   out.connect(ctx.destination);
   const f1 = T.freq[k] * 2 ** (goal(k) / 1200);
+  state.refUntil = Math.max(state.refUntil, performance.now() + 4000);
   for (let n = 1; n <= 10; n++) {
     const f = partialFreq(f1, T.B[k], n);
     if (f > ctx.sampleRate * 0.45) break;
@@ -740,6 +749,7 @@ function startSine() {
   osc.connect(g).connect(ctx.destination);
   osc.start(t);
   state.sine = { ctx, osc, g };
+  if (state.audio) message('Mätningar sparas inte medan sinustonen spelas.', 'info', 4000);
   renderToneButton();
 }
 
@@ -752,6 +762,7 @@ function stopSine() {
   s.g.gain.setValueAtTime(s.g.gain.value, t);
   s.g.gain.linearRampToValueAtTime(0, t + 0.06);
   s.osc.stop(t + 0.08);
+  state.refUntil = performance.now() + 800;
   renderToneButton();
 }
 
@@ -796,7 +807,9 @@ function updateReadout() {
     el.textContent = fmtC(state.display);
     const s = statusClass(state.display);
     pill.dataset.s = s;
-    pill.textContent = s === 'good' ? 'I stäm' : state.display > 0 ? 'För högt, släpp efter' : 'För lågt, dra upp';
+    pill.textContent = refPlaying()
+      ? 'Referenston, sparas ej'
+      : s === 'good' ? 'I stäm' : state.display > 0 ? 'För högt, släpp efter' : 'För lågt, dra upp';
   }
   $('cents').dataset.live = state.signal ? '1' : '0';
   $('level-bar').style.width = `${Math.max(0, Math.min(100, (state.level + 80) * 1.4))}%`;
