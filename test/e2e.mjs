@@ -1,12 +1,12 @@
 // End-to-end: headless Chrome with a synthetic piano tone as the microphone.
 // Creates a temporary tuning, clicks Start microphone, reads the result and deletes it.
-//   docker run --rm --network caddy -v "$PWD":/usr/src/app/pt zenika/alpine-chrome:with-puppeteer \
-//     node pt/test/e2e.mjs http://pianotunah:8080 [screenshot dir]
+//   docker run --rm --network container:pianotunah -v "$PWD":/usr/src/app/pt zenika/alpine-chrome:with-puppeteer \
+//     node pt/test/e2e.mjs http://localhost:8080 [screenshot dir]
 import { writeFileSync, mkdirSync } from 'node:fs';
 import puppeteer from 'puppeteer';
 import { computeTargets, partialFreq, DEFAULT_SETTINGS } from '../web/js/theory.js';
 
-const base = process.argv[2] || 'http://pianotunah:8080';
+const base = process.argv[2] || 'http://localhost:8080';
 const shots = process.argv[3];
 const settings = { ...DEFAULT_SETTINGS };
 const T = computeTargets(settings);

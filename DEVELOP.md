@@ -8,13 +8,14 @@ Node and Go are not needed on the host; everything runs in containers.
 # Unit tests (theory and signal processing)
 docker run --rm -v "$PWD":/app -w /app node:22-alpine npm test
 
-# End-to-end: headless Chrome with a synthetic piano tone as the microphone.
-# With a directory as the second argument, the screenshots in docs/ are retaken.
-docker run --rm --network caddy -v "$PWD":/usr/src/app/pt zenika/alpine-chrome:with-puppeteer \
-  node pt/test/e2e.mjs http://pianotunah:8080 [pt/docs]
+# End-to-end: headless Chrome with a synthetic piano tone as the microphone,
+# against the running container. With a directory as the second argument,
+# the screenshots in docs/ are retaken.
+docker run --rm --network container:pianotunah -v "$PWD":/usr/src/app/pt zenika/alpine-chrome:with-puppeteer \
+  node pt/test/e2e.mjs http://localhost:8080 [pt/docs]
 ```
 
-The end-to-end test creates and deletes its own tuning.
+The end-to-end test shares the app container's network, so it works with any reverse proxy. It creates and deletes its own tuning.
 
 CI (`.github/workflows/ci.yml`) runs the unit tests, `go vet`, a test build for amd64 and arm64, and govulncheck on the binary in the image. `vuln.yml` scans the published `latest` image every Monday; a red run means it is time for a release built with the latest Go patch.
 
