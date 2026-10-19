@@ -1,0 +1,7 @@
+pianotunah.example.com {
+	# LAN only; remove these two lines to make it public.
+	@outside not remote_ip private_ranges
+	abort @outside
+
+	reverse_proxy 127.0.0.1:8080
+}
