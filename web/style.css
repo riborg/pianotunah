@@ -261,6 +261,8 @@ select:disabled { opacity: 0.55; }
 .status-pill[data-s="warn"] { background: var(--warn); color: var(--surface); }
 .status-pill[data-s="bad"] { background: var(--bad); color: var(--surface); }
 .targetline { font: 13px var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; margin-top: -6px; }
+.targetline.measured { color: var(--ink); margin-top: -14px; }
+.targetline.measured[data-live="0"] { color: var(--muted); }
 
 .meter, .strobe, .spectro, .beatstrip, .chart { display: block; width: 100%; }
 .strobe, .spectro, .beatstrip { border-radius: 6px; }

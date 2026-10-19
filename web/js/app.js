@@ -40,6 +40,7 @@ const state = {
   signal: false,
   readings: [], // latest readings for the current key: { c, hz }
   display: NaN, // deviation from the (possibly overpulled) target
+  measHz: NaN, // measured frequency of the partial, the same readings as display
   stable: false,
   spec: [], // spectrogram columns, see drawSpectro
   frameCol: null,
@@ -498,7 +499,7 @@ function chartHover(e) {
 // Key and mode
 
 function resetReadings() {
-  Object.assign(state, { readings: [], spec: [], beatHz: NaN, display: NaN, stable: false, partialDevs: [], bReadings: [], autoFrames: 0 });
+  Object.assign(state, { readings: [], spec: [], beatHz: NaN, display: NaN, measHz: NaN, stable: false, partialDevs: [], bReadings: [], autoFrames: 0 });
 }
 
 function selectKey(k, manual = true) {
@@ -632,6 +633,7 @@ function measureCurrent(A) {
 
   const g = goal(k);
   state.display = median(cs) - g;
+  state.measHz = median(last.map((r) => r.hz));
   const center = target * 2 ** (g / 1200); // the beat view is centred on the target including overpull
   state.beatHz = center * (2 ** (state.display / 1200) - 1);
   state.frameCol = { col: A.zoom(center, SPEC_CENTS, SPEC_BINS), c: state.display };
@@ -855,6 +857,10 @@ function updateReadout() {
   pill.textContent = text;
   $('cents-num').textContent = mic.running ? fmtC(state.display) : '–';
   $('cents').dataset.live = state.signal ? '1' : '0';
+  const n = partialOf(state.key);
+  const hz = mic.running && Number.isFinite(state.measHz) ? fmtHz(state.measHz) : '–';
+  $('measured').textContent = tr(n > 1 ? 'measured.partial' : 'measured', { n, hz });
+  $('measured').dataset.live = state.signal ? '1' : '0';
   $('level-bar').style.width = `${Math.max(0, Math.min(100, (state.level + 80) * 1.4))}%`;
   renderPartials();
 }

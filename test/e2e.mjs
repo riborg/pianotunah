@@ -4,7 +4,7 @@
 //     node pt/test/e2e.mjs http://localhost:8080 [screenshot dir]
 import { writeFileSync, mkdirSync } from 'node:fs';
 import puppeteer from 'puppeteer';
-import { computeTargets, partialFreq, DEFAULT_SETTINGS } from '../web/js/theory.js';
+import { computeTargets, partialFreq, defaultPartial, DEFAULT_SETTINGS } from '../web/js/theory.js';
 
 const base = process.argv[2] || 'http://localhost:8080';
 const shots = process.argv[3];
@@ -69,7 +69,7 @@ async function run({ key, detune, theme = 'light', shot, seed }) {
     const read = (sel) => page.$eval(sel, (el) => el.textContent.trim());
     const res = {
       note: await read('#note-name'), cents: await read('#cents-num'),
-      pill: await read('#status-pill'), beat: await read('#beat-rate'), errors,
+      pill: await read('#status-pill'), beat: await read('#beat-rate'), measured: await read('#measured'), errors,
     };
     if (shot) {
       mkdirSync(shots, { recursive: true });
@@ -96,9 +96,13 @@ let ok = true;
 for (const c of cases) {
   const r = await run(c);
   const cents = parseFloat(r.cents.replace('−', '-').replace('±', '').replace(',', '.'));
-  const pass = Math.abs(cents - c.detune) < 0.6 && r.errors.length === 0;
+  // The measured partial in Hz: partial 1, or the partial measured in the bass.
+  const n = defaultPartial(c.key);
+  const want = partialFreq(T.freq[c.key] * 2 ** (c.detune / 1200), T.B[c.key], n);
+  const hz = parseFloat(r.measured.match(/([\d.,]+) Hz/)?.[1].replace(',', '.'));
+  const pass = Math.abs(cents - c.detune) < 0.6 && Math.abs(1200 * Math.log2(hz / want)) < 0.6 && r.errors.length === 0;
   ok &&= pass;
-  console.log(`${pass ? 'OK  ' : 'FAIL'} key ${c.key} ${c.detune} cents → ${r.note} ${r.cents} | ${r.pill} | ${r.beat}${r.errors.length ? ' | ' + r.errors.join('; ') : ''}`);
+  console.log(`${pass ? 'OK  ' : 'FAIL'} key ${c.key} ${c.detune} cents → ${r.note} ${r.cents} | ${r.measured} (${want.toFixed(2)} Hz) | ${r.pill} | ${r.beat}${r.errors.length ? ' | ' + r.errors.join('; ') : ''}`);
 }
 
 if (shots) {

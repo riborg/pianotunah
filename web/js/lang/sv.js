@@ -37,6 +37,8 @@ export default {
   'key.sub': 'tangent {k} · mål {c} cent',
   'key.label': '{name}, {dev}',
   'key.unmeasured': 'ej mätt',
+  measured: 'Uppmätt {hz}',
+  'measured.partial': 'Uppmätt delton {n}: {hz}',
   'target.fund': 'Grundton {hz}',
   'target.partial': ' · delton {n} {hz}',
   'target.overpull': ' · överdrag {c} cent',

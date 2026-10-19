@@ -37,6 +37,8 @@ export default {
   'key.sub': 'key {k} · target {c} cents',
   'key.label': '{name}, {dev}',
   'key.unmeasured': 'not measured',
+  measured: 'Measured {hz}',
+  'measured.partial': 'Measured partial {n}: {hz}',
   'target.fund': 'Fundamental {hz}',
   'target.partial': ' · partial {n} {hz}',
   'target.overpull': ' · overpull {c} cents',
