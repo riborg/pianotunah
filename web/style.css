@@ -520,7 +520,9 @@ summary { cursor: pointer; color: var(--accent); font-size: 14px; }
 @media (max-width: 520px) {
   .note-name { font-size: 40px; }
   .cents { font-size: 48px; }
-  .tuner-head .modes, .tone-pick .modes { margin-left: 0; width: 100%; }
+  .tuner-head .note { flex: 1 1 calc(100% - 120px); }
+  .tuner-head .ref-chip { margin-inline: auto; }
+  .tuner-head .modes { margin-left: 0; width: 100%; }
   .seg { flex: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
