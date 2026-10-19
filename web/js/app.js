@@ -144,10 +144,17 @@ const saver = new Saver({
 });
 const markDirty = () => saver.markDirty();
 
+// Every label is in the chip, stacked, so it is as wide as the longest one and
+// the top bar does not shift when the state changes.
 function setSaveState(s) {
   const el = $('save-status');
   el.dataset.state = s;
-  el.textContent = tr('save.' + s);
+  el.replaceChildren(...['idle', 'dirty', 'saving', 'error'].map((x) => {
+    const span = document.createElement('span');
+    span.textContent = tr('save.' + x);
+    span.classList.toggle('on', x === s);
+    return span;
+  }));
   el.title = s === 'error' ? tr('save.errorTitle') : '';
 }
 

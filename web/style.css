@@ -201,6 +201,9 @@ select:disabled { opacity: 0.55; }
 .chip { font-size: 12px; padding: 3px 8px; border-radius: 99px; background: var(--sunk); color: var(--muted); }
 .chip[data-state="dirty"], .chip[data-state="saving"] { color: var(--ink); }
 .chip[data-state="error"] { background: var(--bad); color: #fff; }
+#save-status { display: inline-grid; text-align: center; }
+#save-status > span { grid-area: 1 / 1; }
+#save-status > span:not(.on) { visibility: hidden; }
 
 .confirm {
   display: flex;
