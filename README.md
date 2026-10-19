@@ -56,18 +56,22 @@ where $\mathrm{wrap}$ puts the angle in $(-\pi, \pi]$.
 ## Installation
 
 ```sh
-cp .env.example .env                          # hostname, Traefik network, entrypoint, middlewares
+cp .env.example .env                          # reverse proxy settings
 docker compose pull && docker compose up -d   # release image from ghcr.io
 docker compose up -d --build                  # or build locally
 ```
 
-The image is built `FROM scratch` (~7 MB) for amd64 and arm64: a static Go binary with the web app embedded. The container runs read-only as uid 1000 without capabilities, and data lives in `./data`.
-
-The microphone requires https. `compose.yaml` expects Traefik on an existing Docker network; the site-specific values are in `.env`.
+The image is built `FROM scratch` (~7 MB) for amd64 and arm64: a static Go binary with the web app embedded. The container runs read-only as uid 1000 without capabilities, and data lives in `./data`. It listens on port 8080 over plain http.
 
 | Variable   | Default | |
 |------------|---------|-|
 | `ADDR`     | `:8080` | listen address |
 | `DATA_DIR` | `/data` | saved tunings (JSON) |
+
+### Reverse proxy
+
+Browsers only allow the microphone over https (or on `localhost`), so the app runs behind a reverse proxy.
+
+**Traefik.** `.env.example` is set up for Traefik: `COMPOSE_FILE` adds `compose.traefik.yaml` with the router labels, and the `TRAEFIK_*` values set the hostname, Docker network, entrypoint and middlewares.
 
 Tests, releases and code layout: [DEVELOP.md](DEVELOP.md).

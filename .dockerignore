@@ -8,3 +8,4 @@ package.json
 .env
 .env.example
 DEVELOP.md
+compose.traefik.yaml

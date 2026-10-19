@@ -14,19 +14,3 @@ services:
       - no-new-privileges:true
     volumes:
       - ./data:/data
-    networks:
-      - proxy
-    # Site-specific values live in .env (see .env.example).
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=${TRAEFIK_NETWORK:?set in .env}
-      - traefik.http.routers.pianotunah.rule=Host(`${PIANOTUNAH_HOST:?set in .env}`)
-      - traefik.http.routers.pianotunah.entrypoints=${TRAEFIK_ENTRYPOINT:?set in .env}
-      - traefik.http.routers.pianotunah.tls=true
-      - traefik.http.routers.pianotunah.middlewares=${TRAEFIK_MIDDLEWARES:?set in .env}
-      - traefik.http.services.pianotunah.loadbalancer.server.port=8080
-
-networks:
-  proxy:
-    name: ${TRAEFIK_NETWORK:?set in .env}
-    external: true
