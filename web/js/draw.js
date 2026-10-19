@@ -93,23 +93,35 @@ export function drawMeter(canvas, { display, signal, tol }, C) {
   ctx.globalAlpha = 1;
 }
 
-// Strobe: three bands at 1, 2 and 4 times the speed. Still = in tune,
-// moving right = too high. phases (three numbers) is updated.
-export function drawStrobe(canvas, { display, live, tol }, C, dt, phases) {
+// Strobe: one band per partial, an octave apart (bands: [{ p, c }], top
+// first). As on a mechanical strobe, a band an octave up moves twice as fast
+// for the same deviation. Still = in tune, moving right = too high. A band
+// without a reading is grey and still. phases (three numbers) is updated.
+export function drawStrobe(canvas, { bands, live, tol }, C, dt, phases) {
   const { ctx, w, h } = fitCanvas(canvas);
-  const c = live ? Math.max(-30, Math.min(30, display)) : 0;
   const still = reducedMotion();
   const bandH = (h - 8) / 3;
   const period = 28;
+  const labelW = 26;
+  ctx.font = `11px ${MONO}`;
+  ctx.textAlign = 'center';
   for (let i = 0; i < 3; i++) {
+    const band = bands[i];
+    const on = live && Number.isFinite(band?.c);
+    const c = on ? Math.max(-30, Math.min(30, band.c)) : 0;
     if (!still) phases[i] = (phases[i] + c * 9 * 2 ** i * dt) % (period * 2);
     const y = 2 + i * (bandH + 2);
+    ctx.fillStyle = C.muted;
+    ctx.fillText(band ? band.p : '', labelW / 2, y + bandH / 2 + 4);
     ctx.fillStyle = C.stripe2;
-    ctx.fillRect(0, y, w, bandH);
-    ctx.fillStyle = live ? scaleColor(display, tol, C) : C.faint;
+    ctx.fillRect(labelW, y, w - labelW, bandH);
+    ctx.fillStyle = on ? scaleColor(band.c, tol, C) : C.faint;
     const p = phases[i] / 2 ** i;
     const per = period / 2 ** (i * 0.5);
-    for (let x = -per * 2 + (((p % per) + per) % per); x < w; x += per) ctx.fillRect(x, y, per / 2, bandH);
+    for (let x = labelW - per * 2 + (((p % per) + per) % per); x < w; x += per) {
+      const x0 = Math.max(x, labelW);
+      if (x + per / 2 > x0) ctx.fillRect(x0, y, x + per / 2 - x0, bandH);
+    }
   }
 }
 

@@ -52,6 +52,7 @@ export default {
   'status.low': 'För lågt, dra upp',
 
   'beats.label': 'Svävningar runt målet, ±30 cent',
+  'strobe.title': 'Strobe per deltons: den uppmätta och två oktaver upp. Stilla = rent, rör sig åt höger = för högt.',
   'beat.none': 'Svävningsfritt',
   'beat.rate': '{n} svävningar/s',
 
@@ -288,6 +289,7 @@ export default {
 <h3>Mätningen</h3>
 <p>I basen mäts delton 6, 4 eller 2: grundtonen är svag och laptopmikrofoner hör dåligt under 100 Hz.</p>
 <p><strong>Överdrag:</strong> vid uppdragning sjunker redan stämda strängar när belastningen ökar. Med 25 % stäms en ton som låg −20 cent till +5. Under Stämning föreslår appen ett överdrag när mitten av pianot är mätt.</p>
+<p><strong>Strobe:</strong> ett band per deltons, numrerat till vänster: den uppmätta och de två oktaverna ovanför. Stilla = rent, rör sig åt höger = för högt. Står det översta bandet still men de andra glider, avviker strängens inharmonicitet från modellen; mät B för tangenten under Mätning.</p>
 <p><strong>Sinuston:</strong> välj Sinus under <em>Ton vid klick</em> och klicka på en tangent. Stäm tills svävningarna försvinner.</p>
 <p><strong>Temperatur:</strong> hur kvinterna fördelas inom oktaven. Liksvävande är standard för piano; de historiska under Stämning är för tidig musik.</p>
 <p class="keys-hint">Tangentbord: ← → byter tangent, L låser, A auto, T spelar eller stoppar målton, S öppnar inställningar.</p>`,

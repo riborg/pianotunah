@@ -47,6 +47,8 @@ const state = {
   beatHz: NaN,
   beatPhase: 0,
   partialDevs: [],
+  strobe: [], // [{ p, c }] per strobe band: partial and deviation from its goal
+  strobeReadings: [[], []], // recent readings of the two upper bands
   cand: 0, // candidate key in auto mode and frames in a row
   candCount: 0,
   autoFrames: 0, // frames in a row the current key has been a clear winner
@@ -528,7 +530,7 @@ function chartHover(e) {
 // Key and mode
 
 function resetReadings() {
-  Object.assign(state, { readings: [], spec: [], beatHz: NaN, display: NaN, measHz: NaN, stable: false, partialDevs: [], bReadings: [], autoFrames: 0 });
+  Object.assign(state, { readings: [], spec: [], beatHz: NaN, display: NaN, measHz: NaN, stable: false, partialDevs: [], strobe: [], strobeReadings: [[], []], bReadings: [], autoFrames: 0 });
 }
 
 function selectKey(k, manual = true) {
@@ -671,6 +673,20 @@ function measureCurrent(A) {
     if (fi > A.sr * 0.45 || fi < 40) return null;
     const mi = i + 1 === n ? m : A.measure(fi, 50, 8);
     return mi ? centsBetween(mi.freq, fi) : null;
+  });
+
+  // Strobe: the measured partial and the two octaves above it, each against
+  // its own target. The upper ones are searched where the measured partial
+  // says they should be and smoothed like the main reading.
+  state.strobe = [{ p: n, c: state.display }];
+  [2 * n, 4 * n].forEach((p, i) => {
+    const fp = partialFreq(T.freq[k], T.B[k], p);
+    const mp = fp < A.sr * 0.45 ? A.measure(fp * 2 ** (raw / 1200), 30, 8) : null;
+    const rs = state.strobeReadings[i];
+    rs.push(mp ? centsBetween(mp.freq, fp) - g : NaN);
+    if (rs.length > 5) rs.shift();
+    const ok = rs.filter(Number.isFinite);
+    state.strobe.push({ p, c: ok.length >= 3 ? median(ok) : NaN });
   });
 
   // Save the value that is shown. During a survey, collectMapping saves instead.
@@ -922,7 +938,7 @@ function animate(t) {
     const tol = tolerance();
     const live = state.signal && Number.isFinite(state.display);
     drawMeter($('meter'), { display: state.display, signal: state.signal, tol }, C);
-    drawStrobe($('strobe'), { display: state.display, live, tol }, C, dt, state.strobePhase);
+    drawStrobe($('strobe'), { bands: state.strobe, live, tol }, C, dt, state.strobePhase);
     drawSpectro($('spectro'), state.spec, { capacity: SPEC_COLS, bins: SPEC_BINS, cents: SPEC_CENTS, tol }, C);
     const beatLive = live && Number.isFinite(state.beatHz);
     state.beatPhase = drawBeat($('beat'), { beatHz: state.beatHz, display: state.display, live: beatLive, tol }, C, dt, state.beatPhase);
