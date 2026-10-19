@@ -6,10 +6,10 @@
 export const PITCH_READINGS = 8;
 export const B_READINGS = 5;
 
-// Quick: B at A0–A6 is enough for the shape of the curve; the keys in between
-// are interpolated. A0 is included because the lowest strings often deviate
-// from the model and give the most stretch.
-export const QUICK_KEYS = [1, 13, 25, 37, 49, 61, 73];
+// All A (the quick plan): B at A0–A7 is enough for the shape of the curve;
+// the keys in between are interpolated. The ends matter most: the lowest
+// strings often deviate from the model, and stretch is largest at both ends.
+export const QUICK_KEYS = [1, 13, 25, 37, 49, 61, 73, 85];
 
 export const planKeys = (plan, top) =>
   plan === 'quick' ? QUICK_KEYS.filter((k) => k <= top) : Array.from({ length: top }, (_, i) => i + 1);
@@ -31,7 +31,7 @@ export function nextPending(run, plan, top, k) {
   return keys.find((x) => x > k) ?? keys[0] ?? null;
 }
 
-// The quick survey exists for B, so it waits longer for clear overtones.
+// The quick plan exists for B, so it waits longer for clear overtones.
 export const bTimeoutMs = (plan) => (plan === 'quick' ? 6000 : 3000);
 
 export const newKeyState = () => ({ waitAttack: true, pitch: [], bs: [], ms: 0, lost: false });

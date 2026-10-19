@@ -72,9 +72,9 @@ export default {
 
   'map.title': 'Kartläggning',
   'map.scope': 'Omfattning',
-  'map.quick': 'Snabb, 7 toner',
-  'map.full': 'Hela pianot',
-  'map.intro': 'Mäter strängarnas inharmonicitet och ger en stämkurva för just ditt piano. Du stämmer inget och behöver ingen filtremsa. <strong>Snabb:</strong> A0–A6, under en minut. <strong>Hela pianot:</strong> alla tangenter; behövs för överdrag och för att se drift sedan sist.',
+  'map.quick': 'Alla A, 8 toner',
+  'map.full': 'Alla tangenter',
+  'map.intro': 'Mäter strängarnas inharmonicitet och ger en stämkurva för just ditt piano. Du stämmer inget och behöver ingen filtremsa. <strong>Alla A:</strong> A0–A7, ungefär en minut. <strong>Alla tangenter:</strong> hela pianot; behövs för överdrag och för att se drift sedan sist. Byter du börjar kartläggningen om.',
   'map.skip': 'Hoppa över',
   'map.redo': 'Mät om',
   'map.stop': 'Avsluta',
@@ -87,7 +87,7 @@ export default {
   'map.bKnown': 'Inharmonicitet redan uppmätt',
   'map.bSkipped': 'Inharmonicitet: för svaga övertoner, hoppas över',
   'map.b': 'Inharmonicitet {p}/{n}',
-  'map.doneQuick': 'Snabbmätningen är klar: inharmonicitet för {b} av {n} toner. Tangenterna däremellan interpoleras.',
+  'map.doneQuick': 'Kartläggningen av alla A är klar: inharmonicitet för {b} av {n} toner. Tangenterna däremellan interpoleras.',
   'map.skipped': ' Överhoppade: {keys}.',
   'map.skippedMany': ' {n} tangenter överhoppade.',
   'map.doneFull': 'Kartläggningen är klar: {n} tangenter mätta, inharmonicitet för {b}. Se rutan Referens A4 för hur pianot ligger.',
@@ -269,7 +269,7 @@ export default {
 
   help: `<h3>Arbetsgång</h3>
 <ol>
-  <li><strong>Kartlägg.</strong> <em>Snabb</em> (A0–A6, under en minut) eller <em>Hela pianot</em> (3–5 minuter). Slå an tonen som visas; appen går vidare själv.</li>
+  <li><strong>Kartlägg.</strong> Välj <em>Alla A</em> (A0–A7, ungefär en minut) eller <em>Alla tangenter</em> (3–5 minuter) i panelen som öppnas. Slå an tonen som visas; appen går vidare själv och slutar när alla tangenter är klara.</li>
   <li><strong>Välj tonhöjd.</strong> Ligger pianot lågt: <em>Använd pianots nuvarande tonhöjd</em> under Stämning, eller dra upp med överdrag.</li>
   <li><strong>Stäm A3–A4 först</strong>, sedan uppåt oktav för oktav, sist basen.</li>
   <li><strong>Dämpa unisonerna</strong> med filtremsa. Stäm en sträng per ton, de övriga efter gehör mot den.</li>

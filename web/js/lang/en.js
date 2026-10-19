@@ -72,9 +72,9 @@ export default {
 
   'map.title': 'Survey',
   'map.scope': 'Scope',
-  'map.quick': 'Quick, 7 notes',
-  'map.full': 'Whole piano',
-  'map.intro': 'Measures the inharmonicity of the strings and gives a tuning curve for your piano. You do not tune anything and need no felt strip. <strong>Quick:</strong> A0–A6, under a minute. <strong>Whole piano:</strong> every key; needed for overpull and to see drift since last time.',
+  'map.quick': 'All A, 8 notes',
+  'map.full': 'All keys',
+  'map.intro': 'Measures the inharmonicity of the strings and gives a tuning curve for your piano. You do not tune anything and need no felt strip. <strong>All A:</strong> A0–A7, about a minute. <strong>All keys:</strong> every key; needed for overpull and to see drift since last time. Switching starts the survey over.',
   'map.skip': 'Skip',
   'map.redo': 'Measure again',
   'map.stop': 'Finish',
@@ -87,7 +87,7 @@ export default {
   'map.bKnown': 'Inharmonicity already measured',
   'map.bSkipped': 'Inharmonicity: overtones too weak, skipped',
   'map.b': 'Inharmonicity {p}/{n}',
-  'map.doneQuick': 'Quick survey done: inharmonicity for {b} of {n} notes. The keys in between are interpolated.',
+  'map.doneQuick': 'Survey of all A done: inharmonicity for {b} of {n} notes. The keys in between are interpolated.',
   'map.skipped': ' Skipped: {keys}.',
   'map.skippedMany': ' {n} keys skipped.',
   'map.doneFull': 'Survey done: {n} keys measured, inharmonicity for {b}. See Reference A4 for where the piano is.',
@@ -269,7 +269,7 @@ export default {
 
   help: `<h3>Workflow</h3>
 <ol>
-  <li><strong>Survey.</strong> <em>Quick</em> (A0–A6, under a minute) or <em>Whole piano</em> (3–5 minutes). Strike the note shown; the app moves on by itself.</li>
+  <li><strong>Survey.</strong> Choose <em>All A</em> (A0–A7, about a minute) or <em>All keys</em> (3–5 minutes) in the panel that opens. Strike the note shown; the app moves on by itself and stops when every key is done.</li>
   <li><strong>Choose the pitch.</strong> If the piano is flat: <em>Use the piano's current pitch</em> under Tuning, or raise it with overpull.</li>
   <li><strong>Tune A3–A4 first</strong>, then upwards octave by octave, the bass last.</li>
   <li><strong>Mute the unisons</strong> with a felt strip. Tune one string per note and the others by ear against it.</li>

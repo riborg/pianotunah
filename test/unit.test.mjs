@@ -106,7 +106,7 @@ test('survey run: ends when every planned key is measured or skipped', () => {
     seen.push(k);
     (k === 37 ? run.skipped : run.done).add(k);
   }
-  assert.deepEqual(seen, [1, 13, 25, 37, 49, 61, 73]);
+  assert.deepEqual(seen, [1, 13, 25, 37, 49, 61, 73, 85]);
   assert.ok(handled(run, 37) && run.skipped.size === 1);
 });
 

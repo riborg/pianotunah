@@ -10,7 +10,7 @@ Piano tuner in the browser. Listens through the computer's microphone, computes 
 ## Features
 
 - Key detection A0–C8 and measurement to a hundredth of a cent. In the bass, partial 6, 4 or 2 is measured.
-- Survey: *Quick* (A0–A6) or *Whole piano*. Measures inharmonicity and the current pitch.
+- Survey: *All A* (A0–A7) or *All keys*. Measures inharmonicity and the current pitch.
 - Stretch with octave type 2:1–8:4 per register, Railsback curve and extra stretch at the ends.
 - Temperaments: equal, Werckmeister III, Kirnberger III, Vallotti, Young II, ¼- and ⅙-comma meantone.
 - Reference A4 380–480 Hz, or set from the piano's current pitch. Overpull for pitch raises, with a recommended amount when the piano is flat.
