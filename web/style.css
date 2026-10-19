@@ -149,7 +149,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tuning-bar { display: flex; align-items: center; gap: 6px; }
 .tuning-bar select { min-width: 220px; max-width: 360px; }
 .ico { width: 18px; height: 18px; vertical-align: -4px; margin-right: 4px; }
-@media (max-width: 620px) { .tuning-bar { order: 5; width: 100%; } .tuning-bar select { min-width: 0; flex: 1 1 auto; max-width: none; } }
+/* Narrow: Settings as an icon and the brand as its mark, so both buttons fit
+   on the first row and the tuning gets the second. */
+@media (max-width: 620px) {
+  .tuning-bar { order: 5; width: 100%; }
+  .tuning-bar select { min-width: 0; flex: 1 1 auto; max-width: none; }
+  #btn-settings span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #btn-settings .ico { margin-right: 0; }
+}
+@media (max-width: 480px) { .brand-name { display: none; } }
 
 /* Controls */
 select, input[type="text"], input[type="number"], textarea {
