@@ -183,6 +183,8 @@ export default {
 
   'tuning.temperament': 'Temperament',
   'tuning.root': 'Root',
+  'tuning.historical': 'Historical temperaments',
+  'tuning.historicalDesc': 'For harpsichords, organs and early music. Modern pianos are tuned in equal temperament; with the others some keys sound out of tune.',
   'tuning.stretch': 'Stretch',
   'tuning.bass': 'Bass',
   'tuning.mid': 'Middle',
@@ -287,6 +289,6 @@ export default {
 <p>In the bass, partial 6, 4 or 2 is measured: the fundamental is weak and laptop microphones pick up little below 100 Hz.</p>
 <p><strong>Overpull:</strong> when raising the pitch, strings already tuned go flat as the load increases. With 25%, a note that was at −20 cents is tuned to +5. Under Tuning the app suggests an overpull once the middle of the piano is measured.</p>
 <p><strong>Sine tone:</strong> choose Sine under <em>Tone on click</em> and click a key. Tune until the beats disappear.</p>
-<p><strong>Temperament:</strong> how the fifths are distributed within the octave. Equal temperament is the standard.</p>
+<p><strong>Temperament:</strong> how the fifths are distributed within the octave. Equal temperament is the standard for pianos; the historical ones under Tuning are for early music.</p>
 <p class="keys-hint">Keyboard: ← → change key, L locks, A auto, T plays or stops the target tone, S opens settings.</p>`,
 };

@@ -502,6 +502,7 @@ body.drawer-open { overflow: hidden; }
 .tooltip span { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
 details { margin-top: 12px; }
 summary { cursor: pointer; color: var(--accent); font-size: 14px; }
+details > .form { margin-top: 10px; }
 .table-wrap { overflow-x: auto; max-height: 420px; overflow-y: auto; margin-top: 8px; }
 .ktable { border-collapse: collapse; width: 100%; font: 12px var(--f-mono); font-variant-numeric: tabular-nums; }
 .ktable th, .ktable td { text-align: right; padding: 4px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }

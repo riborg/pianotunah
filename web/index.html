@@ -209,13 +209,6 @@
     <button id="btn-overpull" class="btn ghost wide" type="button" hidden></button>
 
     <div class="form">
-      <label for="set-temperament" data-i18n="tuning.temperament">Temperament</label>
-      <select id="set-temperament"></select>
-      <p class="desc" id="temperament-desc"></p>
-
-      <label for="set-root" data-i18n="tuning.root">Root</label>
-      <select id="set-root"></select>
-
       <label for="set-stretch" data-i18n="tuning.stretch">Stretch</label>
       <select id="set-stretch"></select>
       <p class="desc" id="stretch-desc"></p>
@@ -246,6 +239,19 @@
         <option value="3"></option>
       </select>
     </div>
+
+    <details id="temper-details">
+      <summary data-i18n="tuning.historical">Historical temperaments</summary>
+      <p class="desc" data-i18n="tuning.historicalDesc">For harpsichords, organs and early music. Modern pianos are tuned in equal temperament; with the others some keys sound out of tune.</p>
+      <div class="form">
+        <label for="set-temperament" data-i18n="tuning.temperament">Temperament</label>
+        <select id="set-temperament"></select>
+        <p class="desc" id="temperament-desc"></p>
+
+        <label for="set-root" data-i18n="tuning.root">Root</label>
+        <select id="set-root"></select>
+      </div>
+    </details>
   </section>
 
   <section class="panel" role="tabpanel" data-panel="measure" hidden>

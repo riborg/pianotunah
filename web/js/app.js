@@ -270,6 +270,7 @@ function renderSettings() {
   $('set-keys').value = String(top());
   $('set-temperament').value = s.temperament;
   $('set-root').value = s.root;
+  if (s.temperament !== 'et') $('temper-details').open = true; // never hide an active historical temperament
   $('set-stretch').value = s.stretch;
   $('set-bass').value = s.bassOctave;
   $('set-mid').value = s.midOctave;

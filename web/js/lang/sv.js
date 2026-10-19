@@ -183,6 +183,8 @@ export default {
 
   'tuning.temperament': 'Temperatur',
   'tuning.root': 'Grundton',
+  'tuning.historical': 'Historiska temperaturer',
+  'tuning.historicalDesc': 'För cembalo, orgel och tidig musik. Moderna pianon stäms liksvävande; med de andra låter vissa tonarter ostämda.',
   'tuning.stretch': 'Stretch',
   'tuning.bass': 'Bas',
   'tuning.mid': 'Mitt',
@@ -287,6 +289,6 @@ export default {
 <p>I basen mäts delton 6, 4 eller 2: grundtonen är svag och laptopmikrofoner hör dåligt under 100 Hz.</p>
 <p><strong>Överdrag:</strong> vid uppdragning sjunker redan stämda strängar när belastningen ökar. Med 25 % stäms en ton som låg −20 cent till +5. Under Stämning föreslår appen ett överdrag när mitten av pianot är mätt.</p>
 <p><strong>Sinuston:</strong> välj Sinus under <em>Ton vid klick</em> och klicka på en tangent. Stäm tills svävningarna försvinner.</p>
-<p><strong>Temperatur:</strong> hur kvinterna fördelas inom oktaven. Liksvävande är standard.</p>
+<p><strong>Temperatur:</strong> hur kvinterna fördelas inom oktaven. Liksvävande är standard för piano; de historiska under Stämning är för tidig musik.</p>
 <p class="keys-hint">Tangentbord: ← → byter tangent, L låser, A auto, T spelar eller stoppar målton, S öppnar inställningar.</p>`,
 };
