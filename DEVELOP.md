@@ -13,9 +13,14 @@ docker run --rm -v "$PWD":/app -w /app node:22-alpine npm test
 # the screenshots in docs/ are retaken.
 docker run --rm --network container:pianotunah -v "$PWD":/usr/src/app/pt zenika/alpine-chrome:with-puppeteer \
   node pt/test/e2e.mjs http://localhost:8080 [pt/docs]
+
+# Survey: a synthetic piano plays the keys the app asks for, including wrong
+# keys and a skip. "full" adds a survey of all keys (about 2 minutes).
+docker run --rm --network container:pianotunah -v "$PWD":/usr/src/app/pt zenika/alpine-chrome:with-puppeteer \
+  node pt/test/survey.mjs http://localhost:8080 [full]
 ```
 
-The end-to-end test shares the app container's network, so it works with any reverse proxy. It creates and deletes its own tuning.
+The end-to-end tests share the app container's network, so they work with any reverse proxy. They create and delete their own tuning.
 
 CI (`.github/workflows/ci.yml`) runs the unit tests, `go vet`, a test build for amd64 and arm64, and govulncheck on the binary in the image. `vuln.yml` scans the published `latest` image every Monday; a red run means it is time for a release built with the latest Go patch.
 
