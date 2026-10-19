@@ -2,3 +2,4 @@ data/*
 !data/.gitkeep
 pianotunah-bin
 .env
+.claude/settings.local.json

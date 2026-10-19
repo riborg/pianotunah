@@ -9,3 +9,4 @@ package.json
 .env.example
 DEVELOP.md
 compose.traefik.yaml
+.claude
