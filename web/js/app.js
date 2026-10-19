@@ -463,10 +463,20 @@ function renderChart() {
     if (Number.isFinite(d)) points.push({ k, c: T.cents[k] + d, status: statusClass(statusDev(k)) });
     if (pitchClass(k) === 0) ticks.push({ k, label: kName(k) });
   }
+  // The main page copy uses the keyboard's key positions as its x axis.
+  const xs = [0, ...[...$('keyboard').children].map((el) => el.dataset.cx / 100)];
   state.chartGeo = {};
   for (const id in TIPS) {
-    if ($(id).clientWidth) state.chartGeo[id] = drawChart($(id), { top: top(), target: T.cents, points, ticks, current: state.key }, state.colors);
+    const data = { top: top(), target: T.cents, points, ticks, current: state.key, xs: id === 'minichart' ? xs : null, labelX: $('kb-scroll').scrollLeft };
+    if ($(id).clientWidth) state.chartGeo[id] = drawChart($(id), data, state.colors);
   }
+}
+
+function setCurveOpen(open) {
+  $('curve-row').hidden = !open;
+  document.querySelector('.lg-curve').hidden = !open;
+  $('curve-toggle').setAttribute('aria-expanded', open);
+  if (open) renderChart(); // not drawn while folded
 }
 
 // Update key status at most once per frame, even if readings are saved more often.
@@ -507,7 +517,10 @@ function chartHover(e) {
       return row;
     }),
   );
-  tip.style.left = Math.min(Math.max(geo.xOf(k) + 12, 4), c.clientWidth - tip.offsetWidth - 4) + 'px';
+  // Keep the tooltip within the visible part; the main page curve scrolls with the keyboard.
+  const sc = $('kb-scroll');
+  const [x0, x1] = c.id === 'minichart' ? [sc.scrollLeft, sc.scrollLeft + sc.clientWidth] : [0, c.clientWidth];
+  tip.style.left = Math.min(Math.max(geo.xOf(k) + 12, x0 + 4), x1 - tip.offsetWidth - 4) + 'px';
   tip.style.top = Math.max(4, geo.yOf(T.cents[k]) - tip.offsetHeight - 10) + 'px';
 }
 
@@ -1239,10 +1252,12 @@ function bindEvents() {
     on(id, 'click', (e) => chartKeyAt(e) && selectKey(chartKeyAt(e)));
   }
   on('table-details', 'toggle', () => $('table-details').open && renderTable());
-  on('curve-fold', 'toggle', () => {
-    const open = $('curve-fold').open;
+  let scrollRaf = 0;
+  on('kb-scroll', 'scroll', () => (scrollRaf ||= requestAnimationFrame(() => { scrollRaf = 0; renderChart(); })));
+  on('curve-toggle', 'click', () => {
+    const open = $('curve-row').hidden;
+    setCurveOpen(open);
     try { localStorage.setItem(LS.curve, open ? 'open' : 'closed'); } catch { /* optional */ }
-    if (open) renderChart(); // not drawn while folded
   });
 
   // Keyboard shortcuts
@@ -1311,7 +1326,7 @@ async function boot() {
   try {
     plan = localStorage.getItem(LS.plan) === 'full' ? 'full' : 'quick';
     tone = localStorage.getItem(LS.tone) || 'off';
-    if (localStorage.getItem(LS.curve) === 'closed') $('curve-fold').open = false;
+    if (localStorage.getItem(LS.curve) === 'closed') setCurveOpen(false);
   } catch { /* optional */ }
   setMapPlan(plan);
   setToneMode(tone);

@@ -391,9 +391,11 @@ body.drawer-open { overflow: hidden; }
 .dot-b { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; }
 
 .kb-scroll { overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+/* Keyboard and curve scroll together and share the x axis. */
+.kb-track { min-width: 780px; }
+.chart-wrap.mini { margin-top: 6px; }
 .kb-frame {
   position: relative;
-  min-width: 780px;
   padding: 34px 10px 12px;
   border-radius: 10px;
   background: linear-gradient(var(--case-top), var(--case));
@@ -503,9 +505,10 @@ body.drawer-open { overflow: hidden; }
 details { margin-top: 12px; }
 summary { cursor: pointer; color: var(--accent); font-size: 14px; }
 details > .form { margin-top: 10px; }
-.curve-fold { margin-top: 0; }
-.curve-fold > summary { width: max-content; color: var(--muted); font-size: 12px; }
-.curve-fold:not([open]) ~ .legend .lg-curve { display: none; }
+/* Folds the curve under the keyboard. */
+.fold { padding: 0; border: 0; background: none; font: inherit; color: var(--accent); cursor: pointer; }
+.fold::before { content: "▾ "; }
+.fold[aria-expanded="false"]::before { content: "▸ "; }
 .table-wrap { overflow-x: auto; max-height: 420px; overflow-y: auto; margin-top: 8px; }
 .ktable { border-collapse: collapse; width: 100%; font: 12px var(--f-mono); font-variant-numeric: tabular-nums; }
 .ktable th, .ktable td { text-align: right; padding: 4px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }

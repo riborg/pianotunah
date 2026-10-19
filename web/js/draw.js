@@ -253,9 +253,14 @@ export function drawDeviations(canvas, { bars, current, barW, tol }, C) {
 // Tuning curve: target per key (cents vs equal temperament) and measured
 // positions. points: [{ k, c, status }]. ticks: [{ k, label }]. Returns the
 // geometry so the caller can map pointer positions to keys.
-export function drawChart(canvas, { top, target, points, ticks, current }, C) {
+// With xs (key centres as fractions of the keyboard width, indexed by key)
+// the chart lines up with the keyboard: same 10 px inset as the keyboard
+// case, no axis margins, y labels inside the plot and C guides instead of
+// x labels. labelX keeps the y labels at the visible left edge when the
+// keyboard is scrolled.
+export function drawChart(canvas, { top, target, points, ticks, current, xs, labelX = 0 }, C) {
   const { ctx, w, h } = fitCanvas(canvas);
-  const pad = { l: 44, r: 12, t: 12, b: 28 };
+  const pad = xs ? { l: 10, r: 10, t: 8, b: 8 } : { l: 44, r: 12, t: 12, b: 28 };
 
   const vals = [...target.slice(1, top + 1), ...points.map((p) => p.c)];
   const lo = Math.min(-10, ...vals);
@@ -265,7 +270,7 @@ export function drawChart(canvas, { top, target, points, ticks, current }, C) {
   const step = [10, 20, 50, 100].find((s) => lines(s) <= (h - pad.t - pad.b) / 18) ?? 100;
   const yMin = Math.floor(lo / step) * step;
   const yMax = Math.ceil(hi / step) * step;
-  const xOf = (k) => pad.l + ((k - 1) / (top - 1)) * (w - pad.l - pad.r);
+  const xOf = xs ? (k) => pad.l + xs[k] * (w - pad.l - pad.r) : (k) => pad.l + ((k - 1) / (top - 1)) * (w - pad.l - pad.r);
   const yOf = (c) => pad.t + ((yMax - c) / (yMax - yMin)) * (h - pad.t - pad.b);
 
   ctx.font = `11px ${MONO}`;
@@ -277,11 +282,21 @@ export function drawChart(canvas, { top, target, points, ticks, current }, C) {
     ctx.moveTo(pad.l, yOf(c));
     ctx.lineTo(w - pad.r, yOf(c));
     ctx.stroke();
+    if (xs) continue;
     ctx.fillStyle = C.muted;
     ctx.fillText(signed(c), pad.l - 6, yOf(c) + 4);
   }
   ctx.textAlign = 'center';
-  ticks.forEach(({ k, label }, i) => {
+  if (xs) {
+    ctx.strokeStyle = C.line;
+    for (const { k } of ticks) {
+      ctx.beginPath();
+      ctx.moveTo(xOf(k), pad.t);
+      ctx.lineTo(xOf(k), h - pad.b);
+      ctx.stroke();
+    }
+  }
+  if (!xs) ticks.forEach(({ k, label }, i) => {
     ctx.strokeStyle = C.line;
     ctx.beginPath();
     ctx.moveTo(xOf(k), h - pad.b);
@@ -322,9 +337,28 @@ export function drawChart(canvas, { top, target, points, ticks, current }, C) {
     ctx.fill();
   }
 
+  if (xs) {
+    // On top of the curve, with a halo so they stay readable where it passes.
+    ctx.font = `10px ${MONO}`;
+    ctx.textAlign = 'left';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = C.surface;
+    ctx.fillStyle = C.muted;
+    for (let c = yMin; c <= yMax; c += step) {
+      if (c === yMin) continue; // no room below the bottom line
+      ctx.strokeText(signed(c), labelX + pad.l + 2, yOf(c) + 11);
+      ctx.fillText(signed(c), labelX + pad.l + 2, yOf(c) + 11);
+    }
+  }
+
+  const nearest = (x) => {
+    let best = 1;
+    for (let k = 2; k <= top; k++) if (Math.abs(xOf(k) - x) < Math.abs(xOf(best) - x)) best = k;
+    return best;
+  };
   return {
     xOf,
     yOf,
-    keyAt: (x) => Math.round(((x - pad.l) / (w - pad.l - pad.r)) * (top - 1)) + 1,
+    keyAt: xs ? nearest : (x) => Math.round(((x - pad.l) / (w - pad.l - pad.r)) * (top - 1)) + 1,
   };
 }
