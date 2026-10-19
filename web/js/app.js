@@ -21,7 +21,7 @@ const FRAME_MS = 90; // analysis interval
 const SPEC_COLS = 100; // spectrogram history, ≈ 9 s
 const SPEC_BINS = 48;
 const SPEC_CENTS = 30;
-const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab', curve: 'pianotunah.curve' };
+const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab', curve: 'pianotunah.curve', mic: 'pianotunah.mic' };
 
 const mic = new Mic();
 const tones = new TonePlayer();
@@ -49,6 +49,7 @@ const state = {
   partialDevs: [],
   strobe: [], // [{ p, c }] per strobe band: partial and deviation from its goal
   strobeReadings: [[], []], // recent readings of the two upper bands
+  micId: '', // chosen input, '' = system default
   cand: 0, // candidate key in auto mode and frames in a row
   candCount: 0,
   autoFrames: 0, // frames in a row the current key has been a clear winner
@@ -227,6 +228,7 @@ function buildStaticUi() {
   $('set-stretch').replaceChildren(...Object.keys(STRETCH_PRESETS).map((k) => option(k, tr('stretch.' + k))));
   for (const id of ['set-bass', 'set-mid', 'set-treble']) $(id).replaceChildren(...Object.keys(OCTAVE_TYPES).map((k) => option(k, k)));
   $('set-root').replaceChildren(...Array.from({ length: 12 }, (_, pc) => option(pc, pcName(pc))));
+  renderMicList();
   for (const o of $('set-tolerance').options) o.textContent = tr('tuning.cents', { n: short(Number(o.value)) });
   document.querySelectorAll('[data-ref]').forEach((b) => (b.textContent = (b.dataset.ref < 0 ? '−' : '+') + short(Math.abs(b.dataset.ref))));
 }
@@ -564,7 +566,14 @@ function setMode(m) {
 
 async function startMic() {
   try {
-    await mic.start();
+    try {
+      await mic.start(state.micId);
+    } catch (e) {
+      if (!state.micId || !['OverconstrainedError', 'NotFoundError'].includes(e.name)) throw e;
+      // The chosen input is unplugged. Keep the choice for when it is back.
+      message(tr('mic.missing'), 'warn');
+      await mic.start();
+    }
   } catch (e) {
     const key = { insecure: 'mic.insecure', NotAllowedError: 'mic.denied' }[e.name];
     message(key ? tr(key) : tr('mic.failed', { err: e.message }), 'error', 0);
@@ -574,6 +583,7 @@ async function startMic() {
   state.noise = -70;
   state.timer = setInterval(processFrame, FRAME_MS);
   renderMicButton();
+  renderMicList(); // names are known now
   requestWakeLock();
 }
 
@@ -585,6 +595,17 @@ function stopMic() {
   state.wakeLock = null;
   renderMicButton();
   updateReadout();
+}
+
+async function renderMicList() {
+  let inputs = [];
+  try { inputs = await Mic.inputs(); } catch { /* listed as default only */ }
+  const id = state.micId;
+  const opts = [option('', tr('mic.default')), ...inputs.map((d, i) => option(d.deviceId, d.label || tr('mic.n', { n: i + 1 })))];
+  if (id && !inputs.some((d) => d.deviceId === id)) opts.push(option(id, tr('mic.notConnected')));
+  $('set-mic').replaceChildren(...opts);
+  $('set-mic').value = id;
+  $('mic-desc').textContent = !inputs.some((d) => d.label) ? tr('mic.namesHint') : mic.running ? tr('mic.inUse', { name: mic.label }) : '';
 }
 
 function renderMicButton() {
@@ -1268,6 +1289,15 @@ function bindEvents() {
     on(id, 'click', (e) => chartKeyAt(e) && selectKey(chartKeyAt(e)));
   }
   on('table-details', 'toggle', () => $('table-details').open && renderTable());
+  on('set-mic', 'change', async () => {
+    state.micId = $('set-mic').value;
+    try { localStorage.setItem(LS.mic, state.micId); } catch { /* optional */ }
+    if (mic.running) {
+      stopMic();
+      await startMic();
+    }
+  });
+  navigator.mediaDevices?.addEventListener?.('devicechange', renderMicList);
   let scrollRaf = 0;
   on('kb-scroll', 'scroll', () => (scrollRaf ||= requestAnimationFrame(() => { scrollRaf = 0; renderChart(); })));
   on('curve-toggle', 'click', () => {
@@ -1317,6 +1347,7 @@ function bindEvents() {
 // Start
 
 async function boot() {
+  try { state.micId = localStorage.getItem(LS.mic) || ''; } catch { /* optional */ }
   buildStaticUi();
   state.colors = readColors();
   try {

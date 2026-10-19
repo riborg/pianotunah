@@ -72,6 +72,12 @@ export default {
   'mic.insecure': 'The microphone requires https. Open the app over https.',
   'mic.denied': 'Microphone access was denied. Allow it for this page via the icon in the address bar and try again.',
   'mic.failed': 'Could not start the microphone: {err}',
+  'mic.default': 'System default',
+  'mic.n': 'Microphone {n}',
+  'mic.notConnected': 'Chosen microphone (not connected)',
+  'mic.namesHint': 'Start the microphone once to list the inputs by name.',
+  'mic.inUse': 'In use: {name}',
+  'mic.missing': 'The chosen microphone is not connected; using the system default.',
 
   'map.title': 'Survey',
   'map.scope': 'Scope',
@@ -269,6 +275,7 @@ export default {
   'theme.title': 'Color mode: {desc}. Click to change.',
   'theme.aria': 'Color mode: {desc}',
 
+  'app.mic': 'Microphone',
   'app.lang': 'Language',
   'app.theme': 'Color mode',
   'app.about': 'About',
@@ -287,7 +294,7 @@ export default {
 <p>Beatless octaves require the upper note's fundamental to match the lower note's second (fourth, sixth) partial. So the treble is tuned sharp and the bass flat, typically 20–40 cents at the ends.</p>
 <p><strong>Octave type p:q:</strong> partial p of the lower note and partial q of the upper note are made beatless. 2:1 gives the narrowest octave, then 4:2, 6:3, 8:4.</p>
 <h3>Measuring</h3>
-<p>In the bass, partial 6, 4 or 2 is measured: the fundamental is weak and laptop microphones pick up little below 100 Hz.</p>
+<p>In the bass, partial 6, 4 or 2 is measured: the fundamental is weak and laptop microphones pick up little below 100 Hz. An external USB microphone 20–40 cm above the strings helps; choose it under App.</p>
 <p><strong>Overpull:</strong> when raising the pitch, strings already tuned go flat as the load increases. With 25%, a note that was at −20 cents is tuned to +5. Under Tuning the app suggests an overpull once the middle of the piano is measured.</p>
 <p><strong>Strobe:</strong> one band per partial, marked on the left: the measured one and the two octaves above it. Still = in tune, moving right = too high. If the top band stands still but the others drift, the string's inharmonicity differs from the model; measure B for the key under Measure.</p>
 <p><strong>Sine tone:</strong> choose Sine under <em>Tone on click</em> and click a key. Tune until the beats disappear.</p>
