@@ -2,6 +2,8 @@
 # and network. Compose loads it automatically.
 services:
   pianotunah:
+    # Traefik reaches the container over the network; no published port.
+    ports: !reset []
     networks:
       - proxy
     labels:

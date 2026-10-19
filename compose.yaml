@@ -14,3 +14,6 @@ services:
       - no-new-privileges:true
     volumes:
       - ./data:/data
+    # Plain http; put a reverse proxy with https in front (see README).
+    ports:
+      - ${PIANOTUNAH_PORT:-8080}:8080

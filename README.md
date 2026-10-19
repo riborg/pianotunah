@@ -60,7 +60,7 @@ docker compose pull && docker compose up -d   # release image from ghcr.io
 docker compose up -d --build                  # or build locally
 ```
 
-The image is built `FROM scratch` (~7 MB) for amd64 and arm64: a static Go binary with the web app embedded. The container runs read-only as uid 1000 without capabilities, and data lives in `./data`. It listens on port 8080 over plain http.
+The image is built `FROM scratch` (~7 MB) for amd64 and arm64: a static Go binary with the web app embedded. The container runs read-only as uid 1000 without capabilities, and data lives in `./data`. It listens on port 8080 over plain http, published on the host as `PIANOTUNAH_PORT` (default 8080); `http://localhost:8080` works on the same machine.
 
 | Variable   | Default | |
 |------------|---------|-|
@@ -71,8 +71,8 @@ The image is built `FROM scratch` (~7 MB) for amd64 and arm64: a static Go binar
 
 Browsers only allow the microphone over https (or on `localhost`), so the app runs behind a reverse proxy. Put the proxy settings in `compose.override.yaml`; Compose loads it automatically and git ignores it. Examples in [`examples/`](examples):
 
-- **Traefik:** `cp examples/traefik/compose.override.yaml .`, then set the hostname and the Docker network Traefik is attached to.
-- **Caddy:** `cp examples/caddy/compose.override.yaml .` publishes the port on localhost; add [`examples/caddy/Caddyfile`](examples/caddy/Caddyfile) to Caddy's config. Caddy gets the certificate itself; a host that is not reachable from the internet needs the DNS challenge or `tls internal`. If Caddy runs in a container, put it on the same Docker network instead and use `reverse_proxy pianotunah:8080`.
+- **Traefik:** `cp examples/traefik/compose.override.yaml .`, then set the hostname and the Docker network Traefik is attached to. It removes the published port.
+- **Caddy:** `cp examples/caddy/compose.override.yaml .` publishes the port on localhost only; add [`examples/caddy/Caddyfile`](examples/caddy/Caddyfile) to Caddy's config. Caddy gets the certificate itself; a host that is not reachable from the internet needs the DNS challenge or `tls internal`. If Caddy runs in a container, put it on the same Docker network instead and use `reverse_proxy pianotunah:8080`.
 
 Tests, releases and code layout: [DEVELOP.md](DEVELOP.md).
 
