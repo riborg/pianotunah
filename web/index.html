@@ -38,12 +38,17 @@
         <canvas id="devstrip" class="devstrip" height="52" role="img" aria-label="Deviation from target per key" data-i18n-aria-label="kb.strip"></canvas>
       </div>
     </div>
+    <div class="chart-wrap">
+      <canvas id="minichart" class="chart" height="120" role="img" aria-label="Target curve in cents per key" data-i18n-aria-label="curve.label"></canvas>
+      <div class="tooltip" id="minitip" hidden></div>
+    </div>
     <div class="legend">
       <span class="lg"><i class="sw s-good"></i><span data-i18n="legend.good">Within tolerance</span></span>
       <span class="lg"><i class="sw s-warn"></i><span data-i18n="legend.warn">Close</span></span>
       <span class="lg"><i class="sw s-bad"></i><span data-i18n="legend.bad">Outside</span></span>
       <span class="lg"><i class="dot-b"></i><span data-i18n="legend.b">Measured inharmonicity</span></span>
       <span class="lg"><i class="bar-sw"></i><span id="dev-legend"></span></span>
+      <span class="lg"><i class="ln"></i><span data-i18n="curve.target">Target relative to equal temperament</span></span>
     </div>
   </section>
 

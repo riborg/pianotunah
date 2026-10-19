@@ -450,8 +450,11 @@ function renderTable() {
   $('ktable').replaceChildren(head, body);
 }
 
+// The curve is drawn on the main page and, when that tab is open, in settings.
+const TIPS = { minichart: 'minitip', chart: 'tooltip' };
+
 function renderChart() {
-  if (!state.T || !$('chart').clientWidth) return; // hidden tab: drawn when shown
+  if (!state.T) return;
   const T = state.T;
   const points = [];
   const ticks = [];
@@ -460,7 +463,10 @@ function renderChart() {
     if (Number.isFinite(d)) points.push({ k, c: T.cents[k] + d, status: statusClass(statusDev(k)) });
     if (pitchClass(k) === 0) ticks.push({ k, label: kName(k) });
   }
-  state.chartGeo = drawChart($('chart'), { top: top(), target: T.cents, points, ticks, current: state.key }, state.colors);
+  state.chartGeo = {};
+  for (const id in TIPS) {
+    if ($(id).clientWidth) state.chartGeo[id] = drawChart($(id), { top: top(), target: T.cents, points, ticks, current: state.key }, state.colors);
+  }
 }
 
 // Update key status at most once per frame, even if readings are saved more often.
@@ -475,13 +481,16 @@ function renderKeyStatus() {
 }
 
 function chartKeyAt(e) {
-  const k = state.chartGeo?.keyAt(e.clientX - $('chart').getBoundingClientRect().left);
+  const c = e.currentTarget;
+  const k = state.chartGeo?.[c.id]?.keyAt(e.clientX - c.getBoundingClientRect().left);
   return k >= 1 && k <= top() ? k : 0;
 }
 
 function chartHover(e) {
   const k = chartKeyAt(e);
-  const tip = $('tooltip');
+  const c = e.currentTarget;
+  const geo = state.chartGeo[c.id];
+  const tip = $(TIPS[c.id]);
   tip.hidden = !k;
   if (!k) return;
   const T = state.T;
@@ -498,9 +507,8 @@ function chartHover(e) {
       return row;
     }),
   );
-  const w = $('chart').clientWidth;
-  tip.style.left = Math.min(Math.max(state.chartGeo.xOf(k) + 12, 4), w - tip.offsetWidth - 4) + 'px';
-  tip.style.top = Math.max(4, state.chartGeo.yOf(T.cents[k]) - tip.offsetHeight - 10) + 'px';
+  tip.style.left = Math.min(Math.max(geo.xOf(k) + 12, 4), c.clientWidth - tip.offsetWidth - 4) + 'px';
+  tip.style.top = Math.max(4, geo.yOf(T.cents[k]) - tip.offsetHeight - 10) + 'px';
 }
 
 // ---------------------------------------------------------------------------
@@ -1225,9 +1233,11 @@ function bindEvents() {
   });
 
   // Chart
-  on('chart', 'pointermove', chartHover);
-  on('chart', 'pointerleave', show('tooltip', false));
-  on('chart', 'click', (e) => chartKeyAt(e) && selectKey(chartKeyAt(e)));
+  for (const [id, tip] of Object.entries(TIPS)) {
+    on(id, 'pointermove', chartHover);
+    on(id, 'pointerleave', show(tip, false));
+    on(id, 'click', (e) => chartKeyAt(e) && selectKey(chartKeyAt(e)));
+  }
   on('table-details', 'toggle', () => $('table-details').open && renderTable());
 
   // Keyboard shortcuts

@@ -260,7 +260,9 @@ export function drawChart(canvas, { top, target, points, ticks, current }, C) {
   const vals = [...target.slice(1, top + 1), ...points.map((p) => p.c)];
   const lo = Math.min(-10, ...vals);
   const hi = Math.max(10, ...vals);
-  const step = hi - lo > 80 ? 20 : 10;
+  // Coarser grid when the range is large or the chart is low.
+  const lines = (s) => Math.ceil(hi / s) - Math.floor(lo / s);
+  const step = [10, 20, 50, 100].find((s) => lines(s) <= (h - pad.t - pad.b) / 18) ?? 100;
   const yMin = Math.floor(lo / step) * step;
   const yMax = Math.ceil(hi / step) * step;
   const xOf = (k) => pad.l + ((k - 1) / (top - 1)) * (w - pad.l - pad.r);
