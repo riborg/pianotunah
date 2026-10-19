@@ -14,7 +14,22 @@ export const QUICK_KEYS = [1, 13, 25, 37, 49, 61, 73];
 export const planKeys = (plan, top) =>
   plan === 'quick' ? QUICK_KEYS.filter((k) => k <= top) : Array.from({ length: top }, (_, i) => i + 1);
 
-export const nextInPlan = (plan, top, k) => planKeys(plan, top).find((x) => x > k) ?? null;
+// A run is one survey from start to finish: the keys measured or skipped so
+// far. A full survey continues where the last one stopped (keys already
+// marked as mapped); once every key is mapped it starts over.
+export function newRun(plan, top, isMapped) {
+  const keys = planKeys(plan, top);
+  const done = plan === 'full' ? keys.filter(isMapped) : [];
+  return { done: new Set(done.length < keys.length ? done : []), skipped: new Set() };
+}
+
+export const handled = (run, k) => run.done.has(k) || run.skipped.has(k);
+
+// Next pending key after k, wrapping around; null when every key is handled.
+export function nextPending(run, plan, top, k) {
+  const keys = planKeys(plan, top).filter((x) => !handled(run, x));
+  return keys.find((x) => x > k) ?? keys[0] ?? null;
+}
 
 // The quick survey exists for B, so it waits longer for clear overtones.
 export const bTimeoutMs = (plan) => (plan === 'quick' ? 6000 : 3000);

@@ -6,6 +6,7 @@ import {
   migrateSettings, recommendedOverpull, DEFAULT_SETTINGS,
 } from '../web/js/theory.js';
 import { Analyzer } from '../web/js/dsp.js';
+import { newRun, nextPending, handled } from '../web/js/mapping.js';
 
 const SR = 48000;
 const N = 32768;
@@ -96,4 +97,24 @@ test('inharmonicity is estimated from the partials', () => {
     const r = analyse(tone(k, 0, B)).inharmonicity(T.freq[k], T.B[k]);
     assert.ok(Math.abs(r.B / B - 1) < 0.02, `${noteName(k)}: ${r.B}`);
   }
+});
+
+test('survey run: ends when every planned key is measured or skipped', () => {
+  const run = newRun('quick', 88, () => true); // earlier surveys do not count for the quick plan
+  const seen = [];
+  for (let k = nextPending(run, 'quick', 88, 0); k; k = nextPending(run, 'quick', 88, k)) {
+    seen.push(k);
+    (k === 37 ? run.skipped : run.done).add(k);
+  }
+  assert.deepEqual(seen, [1, 13, 25, 37, 49, 61, 73]);
+  assert.ok(handled(run, 37) && run.skipped.size === 1);
+});
+
+test('survey run: a full survey resumes, wraps around and starts over when complete', () => {
+  const mapped = (k) => k <= 10 || k === 50;
+  const run = newRun('full', 88, mapped);
+  assert.equal(nextPending(run, 'full', 88, 0), 11);
+  assert.equal(nextPending(run, 'full', 88, 49), 51);
+  assert.equal(nextPending(run, 'full', 88, 88), 11);
+  assert.equal(newRun('full', 88, () => true).done.size, 0);
 });

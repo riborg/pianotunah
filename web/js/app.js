@@ -52,6 +52,7 @@ const state = {
   bReadings: [],
   measureB: null, // { k, until } during manual B measurement
   map: null, // survey of the current key, see mapping.newKeyState
+  run: null, // the survey as a whole, see mapping.newRun
   mapPlan: 'quick',
   toneMode: 'off', // off | piano | sine
   refUntil: 0, // reference tone audible in the microphone until this time
@@ -518,9 +519,10 @@ function setMode(m) {
   state.mode = m;
   for (const id of ['auto', 'lock', 'map']) $('mode-' + id).setAttribute('aria-pressed', m === id);
   state.map = m === 'map' ? mapping.newKeyState() : null;
+  state.run = m === 'map' ? newRun() : null;
   state.bReadings = [];
   $('map-panel').hidden = m !== 'map';
-  if (m === 'map') selectKey(firstUnmapped(), false); // start from the beginning, or where the last survey stopped
+  if (m === 'map') selectKey(nextPending(0), false);
   renderKeyboard();
   renderMapPanel();
 }
@@ -695,7 +697,8 @@ const isMapped = (k) => !!keyRec(k)?.mapped;
 const isQuick = () => state.mapPlan === 'quick';
 const needsB = (k) => isQuick() || !state.tuning.inharmonicity[k]; // the quick survey always remeasures B
 const planKeys = () => mapping.planKeys(state.mapPlan, top());
-const firstUnmapped = () => planKeys().find((k) => !isMapped(k)) ?? planKeys()[0];
+const newRun = () => mapping.newRun(state.mapPlan, top(), isMapped);
+const nextPending = (k) => mapping.nextPending(state.run, state.mapPlan, top(), k);
 
 function setMapPlan(p) {
   state.mapPlan = p;
@@ -703,7 +706,8 @@ function setMapPlan(p) {
   document.querySelectorAll('[data-plan]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.plan === p));
   if (!state.map) return;
   state.map = mapping.newKeyState();
-  selectKey(firstUnmapped(), false);
+  state.run = newRun();
+  selectKey(nextPending(0), false);
   renderKeyboard();
   renderMapPanel();
 }
@@ -728,11 +732,17 @@ function collectMapping(A, k, partialHz, f1) {
     recompute();
   }
   flashKey(k);
+  state.run.done.add(k);
   advanceMapping(k);
 }
 
+function skipMapping() {
+  state.run.skipped.add(state.key);
+  advanceMapping(state.key);
+}
+
 function advanceMapping(k) {
-  const next = mapping.nextInPlan(state.mapPlan, top(), k);
+  const next = nextPending(k);
   if (next) selectKey(next, false);
   else finishMapping();
 }
@@ -740,9 +750,12 @@ function advanceMapping(k) {
 function finishMapping() {
   const withB = (ks) => ks.filter((k) => state.tuning.inharmonicity[k]).length;
   const all = Array.from({ length: top() }, (_, i) => i + 1);
-  const text = isQuick()
-    ? tr('map.doneQuick', { b: withB(planKeys()), n: planKeys().length })
-    : tr('map.doneFull', { n: all.filter(isMapped).length, b: withB(all) });
+  const skipped = [...state.run.skipped].sort((a, b) => a - b);
+  const text =
+    (isQuick()
+      ? tr('map.doneQuick', { b: withB(planKeys()), n: planKeys().length })
+      : tr('map.doneFull', { n: all.filter(isMapped).length, b: withB(all) })) +
+    (!skipped.length ? '' : skipped.length <= 8 ? tr('map.skipped', { keys: skipped.map(kName).join(', ') }) : tr('map.skippedMany', { n: skipped.length }));
   setMode('lock');
   message(text, 'ok', 0);
 }
@@ -752,7 +765,7 @@ function renderMapPanel() {
   const mp = state.map;
   const name = kName(state.key);
   const ks = planKeys();
-  const done = ks.filter(isMapped).length;
+  const done = ks.filter((k) => mapping.handled(state.run, k)).length;
   $('map-progress').textContent = tr(isQuick() ? 'map.progressQuick' : 'map.progressFull', { done, total: ks.length });
   $('map-bar').style.width = `${(done / ks.length) * 100}%`;
   $('map-step').textContent = tr(mp.waitAttack ? 'map.strike' : mp.lost ? 'map.lost' : 'map.listening', { name });
@@ -1061,7 +1074,7 @@ function bindEvents() {
     setMode('map');
     if (!mic.running) startMic();
   });
-  on('map-skip', 'click', () => advanceMapping(state.key));
+  on('map-skip', 'click', skipMapping);
   on('map-redo', 'click', () => {
     state.map = mapping.newKeyState();
     renderMapPanel();

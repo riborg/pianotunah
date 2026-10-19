@@ -88,6 +88,8 @@ export default {
   'map.bSkipped': 'Inharmonicity: overtones too weak, skipped',
   'map.b': 'Inharmonicity {p}/{n}',
   'map.doneQuick': 'Quick survey done: inharmonicity for {b} of {n} notes. The keys in between are interpolated.',
+  'map.skipped': ' Skipped: {keys}.',
+  'map.skippedMany': ' {n} keys skipped.',
   'map.doneFull': 'Survey done: {n} keys measured, inharmonicity for {b}. See Reference A4 for where the piano is.',
 
   'save.idle': 'Saved',
