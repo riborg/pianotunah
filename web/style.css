@@ -503,6 +503,9 @@ body.drawer-open { overflow: hidden; }
 details { margin-top: 12px; }
 summary { cursor: pointer; color: var(--accent); font-size: 14px; }
 details > .form { margin-top: 10px; }
+.curve-fold { margin-top: 0; }
+.curve-fold > summary { width: max-content; color: var(--muted); font-size: 12px; }
+.curve-fold:not([open]) ~ .legend .lg-curve { display: none; }
 .table-wrap { overflow-x: auto; max-height: 420px; overflow-y: auto; margin-top: 8px; }
 .ktable { border-collapse: collapse; width: 100%; font: 12px var(--f-mono); font-variant-numeric: tabular-nums; }
 .ktable th, .ktable td { text-align: right; padding: 4px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }

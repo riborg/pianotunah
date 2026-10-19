@@ -21,7 +21,7 @@ const FRAME_MS = 90; // analysis interval
 const SPEC_COLS = 100; // spectrogram history, ≈ 9 s
 const SPEC_BINS = 48;
 const SPEC_CENTS = 30;
-const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab' };
+const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab', curve: 'pianotunah.curve' };
 
 const mic = new Mic();
 const tones = new TonePlayer();
@@ -1239,6 +1239,11 @@ function bindEvents() {
     on(id, 'click', (e) => chartKeyAt(e) && selectKey(chartKeyAt(e)));
   }
   on('table-details', 'toggle', () => $('table-details').open && renderTable());
+  on('curve-fold', 'toggle', () => {
+    const open = $('curve-fold').open;
+    try { localStorage.setItem(LS.curve, open ? 'open' : 'closed'); } catch { /* optional */ }
+    if (open) renderChart(); // not drawn while folded
+  });
 
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
@@ -1306,6 +1311,7 @@ async function boot() {
   try {
     plan = localStorage.getItem(LS.plan) === 'full' ? 'full' : 'quick';
     tone = localStorage.getItem(LS.tone) || 'off';
+    if (localStorage.getItem(LS.curve) === 'closed') $('curve-fold').open = false;
   } catch { /* optional */ }
   setMapPlan(plan);
   setToneMode(tone);
