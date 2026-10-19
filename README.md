@@ -53,7 +53,7 @@ where $\mathrm{wrap}$ puts the angle in $(-\pi, \pi]$.
   <img alt="Settings with the tuning curve for a 115 cm upright" src="docs/settings-light.png">
 </picture>
 
-## Running
+## Installation
 
 ```sh
 cp .env.example .env                          # hostname, Traefik network, entrypoint, middlewares
@@ -70,48 +70,13 @@ The microphone requires https. `compose.yaml` expects Traefik on an existing Doc
 | `ADDR`     | `:8080` | listen address |
 | `DATA_DIR` | `/data` | saved tunings (JSON) |
 
-API: `GET /api/tunings`, `GET|PUT|DELETE /api/tunings/{id}`, `GET /api/version`, `GET /healthz`. `PUT` requires the document's `rev` and answers 409 if someone else has saved since.
-
-## Release
-
-```sh
-git tag -a v1.2.0 -m v1.2.0
-git push origin v1.2.0
-```
-
-GitHub Actions runs the tests and publishes `ghcr.io/riborg/pianotunah` with the tags `1.2.0`, `1.2`, `1` and `latest`. A GitHub Release is then created with the commits since the previous tag. Pre-releases (`v1.2.0-rc.1`) do not get `latest`.
-
-The server follows `latest`. The package is private, so pulling the image needs a token with `read:packages`:
+The package on ghcr.io is private, so pulling the image needs a token with `read:packages`:
 
 ```sh
 gh auth refresh -h github.com -s read:packages
 gh auth token | docker login ghcr.io -u riborg --password-stdin
-docker compose pull && docker compose up -d
 ```
 
 A tool that updates through the Docker socket, such as Dockhand, does not use `docker login`. It needs the same token in its own registry settings.
 
-## Development
-
-```sh
-# Unit tests (theory and signal processing)
-docker run --rm -v "$PWD":/app -w /app node:22-alpine npm test
-
-# End-to-end: headless Chrome with a synthetic piano tone as the microphone.
-# With a directory as the second argument, the screenshots in docs/ are retaken.
-docker run --rm --network caddy -v "$PWD":/usr/src/app/pt zenika/alpine-chrome:with-puppeteer \
-  node pt/test/e2e.mjs http://pianotunah:8080 [pt/docs]
-```
-
-| File | |
-|------|-|
-| `.github/workflows/` | CI and release |
-| `main.go` | server: static files and `/api/tunings` |
-| `web/js/theory.js` | temperaments, inharmonicity, stretch, target frequencies |
-| `web/js/dsp.js` | FFT, key detection, partial measurement, estimation of $B$ |
-| `web/js/draw.js` | canvas drawing |
-| `web/js/mapping.js` | survey plans and completion criteria |
-| `web/js/saver.js` | save queue with revision check |
-| `web/js/mic.js`, `tone.js` | microphone and reference tones |
-| `web/js/i18n.js`, `lang/` | UI strings (English, Swedish) |
-| `web/js/app.js` | state, DOM and events |
+Tests, releases and code layout: [DEVELOP.md](DEVELOP.md).
