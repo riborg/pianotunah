@@ -70,13 +70,4 @@ The microphone requires https. `compose.yaml` expects Traefik on an existing Doc
 | `ADDR`     | `:8080` | listen address |
 | `DATA_DIR` | `/data` | saved tunings (JSON) |
 
-The package on ghcr.io is private, so pulling the image needs a token with `read:packages`:
-
-```sh
-gh auth refresh -h github.com -s read:packages
-gh auth token | docker login ghcr.io -u riborg --password-stdin
-```
-
-A tool that updates through the Docker socket, such as Dockhand, does not use `docker login`. It needs the same token in its own registry settings.
-
 Tests, releases and code layout: [DEVELOP.md](DEVELOP.md).
