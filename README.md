@@ -74,4 +74,27 @@ Browsers only allow the microphone over https (or on `localhost`), so the app ru
 
 **Traefik.** `.env.example` is set up for Traefik: `COMPOSE_FILE` adds `compose.traefik.yaml` with the router labels, and the `TRAEFIK_*` values set the hostname, Docker network, entrypoint and middlewares.
 
+**Caddy.** Leave out `COMPOSE_FILE` and the `TRAEFIK_*` values, and publish the port on localhost in `compose.override.yaml` (Compose loads it automatically):
+
+```yaml
+services:
+  pianotunah:
+    ports:
+      - 127.0.0.1:8080:8080
+```
+
+Caddyfile:
+
+```caddyfile
+pianotunah.example.com {
+	# LAN only; remove these two lines to make it public.
+	@outside not remote_ip private_ranges
+	abort @outside
+
+	reverse_proxy 127.0.0.1:8080
+}
+```
+
+Caddy gets the certificate itself. A host that is not reachable from the internet needs the DNS challenge or `tls internal`. If Caddy runs in a container, put both containers on the same Docker network and use `reverse_proxy pianotunah:8080` instead of publishing the port.
+
 Tests, releases and code layout: [DEVELOP.md](DEVELOP.md).

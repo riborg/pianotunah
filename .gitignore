@@ -3,3 +3,4 @@ data/*
 pianotunah-bin
 .env
 .claude/settings.local.json
+compose.override.yaml
