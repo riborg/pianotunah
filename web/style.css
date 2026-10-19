@@ -526,6 +526,8 @@ summary { cursor: pointer; color: var(--accent); font-size: 14px; }
   .tone-pick { width: 100%; }
   .tone-pick .mini-label { white-space: nowrap; }
   .tone-pick .modes { flex: 1; }
+  .plan-modes { order: 1; width: 100%; }
+  .seg { white-space: nowrap; }
   .seg { flex: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
