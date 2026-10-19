@@ -56,7 +56,6 @@ where $\mathrm{wrap}$ puts the angle in $(-\pi, \pi]$.
 ## Installation
 
 ```sh
-cp .env.example .env                          # reverse proxy settings
 docker compose pull && docker compose up -d   # release image from ghcr.io
 docker compose up -d --build                  # or build locally
 ```
@@ -70,11 +69,31 @@ The image is built `FROM scratch` (~7 MB) for amd64 and arm64: a static Go binar
 
 ### Reverse proxy
 
-Browsers only allow the microphone over https (or on `localhost`), so the app runs behind a reverse proxy.
+Browsers only allow the microphone over https (or on `localhost`), so the app runs behind a reverse proxy. Put the proxy settings in `compose.override.yaml`; Compose loads it automatically and git ignores it.
 
-**Traefik.** `.env.example` is set up for Traefik: `COMPOSE_FILE` adds `compose.traefik.yaml` with the router labels, and the `TRAEFIK_*` values set the hostname, Docker network, entrypoint and middlewares.
+**Traefik**, on an existing Docker network that Traefik uses:
 
-**Caddy.** Leave out `COMPOSE_FILE` and the `TRAEFIK_*` values, and publish the port on localhost in `compose.override.yaml` (Compose loads it automatically):
+```yaml
+services:
+  pianotunah:
+    networks:
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.pianotunah.rule=Host(`pianotunah.example.com`)
+      - traefik.http.routers.pianotunah.entrypoints=websecure
+      - traefik.http.routers.pianotunah.tls=true
+      - traefik.http.services.pianotunah.loadbalancer.server.port=8080
+
+networks:
+  proxy:
+    external: true
+```
+
+Add `traefik.http.routers.pianotunah.middlewares=…` for an IP allowlist or security headers.
+
+**Caddy**, with the port published on localhost:
 
 ```yaml
 services:
@@ -82,8 +101,6 @@ services:
     ports:
       - 127.0.0.1:8080:8080
 ```
-
-Caddyfile:
 
 ```caddyfile
 pianotunah.example.com {

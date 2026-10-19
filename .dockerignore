@@ -5,8 +5,6 @@ compose.yaml
 test
 docs
 package.json
-.env
-.env.example
 DEVELOP.md
-compose.traefik.yaml
+compose.override.yaml
 .claude
