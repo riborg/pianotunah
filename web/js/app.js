@@ -588,6 +588,7 @@ function analyseFrame() {
   const A = state.analyzer;
   A.load(buf);
   if (state.mode === 'auto') followDetectedKey(A.detectKey(state.T, state.key, top()));
+  else if (state.map) state.map.heard = A.detectKey(state.T, state.key, top());
   measureCurrent(A);
 }
 
@@ -649,7 +650,7 @@ function measureCurrent(A) {
     const r = A.inharmonicity(f1, T.B[k]);
     if (r) state.bReadings.push(r.B);
   }
-  if (state.map && !ref) collectMapping(A, k, m.freq, f1);
+  if (state.map && !ref) collectMapping(A, k, m.freq, f1, raw);
   if (state.measureB && performance.now() > state.measureB.until) finishMeasureB();
   updateReadout();
 }
@@ -712,8 +713,17 @@ function setMapPlan(p) {
   renderMapPanel();
 }
 
-function collectMapping(A, k, partialHz, f1) {
+function collectMapping(A, k, partialHz, f1, raw) {
   const mp = state.map;
+  // Nothing from another key is kept; the hint shows after a few frames in a row.
+  const other = mapping.wrongKey(mp.heard, k, raw, median(state.run.offsets), state.run.done);
+  mp.wrongFrames = other ? mp.wrongFrames + 1 : 0;
+  mp.wrong = mp.wrongFrames >= 3 ? other : 0;
+  if (other) {
+    // Drop what was collected: the start of a wrong note can look right.
+    Object.assign(mp, { pitch: [], bs: [], ms: 0 });
+    return renderMapPanel();
+  }
   mp.pitch.push(partialHz);
   mp.ms += FRAME_MS;
   mp.lost = false;
@@ -725,6 +735,7 @@ function collectMapping(A, k, partialHz, f1) {
 
   const hz = median(mp.pitch);
   const n = partialOf(k);
+  state.run.offsets.push(centsBetween(hz, partialFreq(state.T.freq[k], state.T.B[k], n)));
   state.tuning.keys[k] = { ...keyRec(k), bhz: hz, bn: n, hz, n, at: Date.now(), mapped: true };
   if (mp.bs.length >= 3) storeB(k, median(mp.bs));
   else {
@@ -768,7 +779,9 @@ function renderMapPanel() {
   const done = ks.filter((k) => mapping.handled(state.run, k)).length;
   $('map-progress').textContent = tr(isQuick() ? 'map.progressQuick' : 'map.progressFull', { done, total: ks.length });
   $('map-bar').style.width = `${(done / ks.length) * 100}%`;
-  $('map-step').textContent = tr(mp.waitAttack ? 'map.strike' : mp.lost ? 'map.lost' : 'map.listening', { name });
+  $('map-step').textContent = mp.wrong
+    ? mp.wrong > 0 ? tr('map.wrong', { heard: kName(mp.wrong), name }) : tr('map.offPitch', { name, c: mapping.OFFSET_LIMIT })
+    : tr(mp.waitAttack ? 'map.strike' : mp.lost ? 'map.lost' : 'map.listening', { name });
   const p = Math.min(mp.pitch.length, mapping.PITCH_READINGS);
   setCheck('map-chk-pitch', tr('map.pitch', { p, n: mapping.PITCH_READINGS }), p >= mapping.PITCH_READINGS);
   if (!needsB(state.key)) setCheck('map-chk-b', tr('map.bKnown'), true);

@@ -82,6 +82,8 @@ export default {
   'map.progressFull': '{done} of {total} keys',
   'map.strike': 'Strike {name} firmly and let it ring.',
   'map.lost': '{name} died away before the measurement was done. Strike it again.',
+  'map.wrong': 'That sounds like {heard}. Strike {name}, or press Skip.',
+  'map.offPitch': 'More than {c} cents from the keys measured so far. Is this {name}? Strike it again, or press Skip.',
   'map.listening': 'Listening to {name} … let the note ring.',
   'map.pitch': 'Pitch {p}/{n}',
   'map.bKnown': 'Inharmonicity already measured',

@@ -20,7 +20,8 @@ export const planKeys = (plan, top) =>
 export function newRun(plan, top, isMapped) {
   const keys = planKeys(plan, top);
   const done = plan === 'full' ? keys.filter(isMapped) : [];
-  return { done: new Set(done.length < keys.length ? done : []), skipped: new Set() };
+  // offsets: cents from target for each key measured in this run.
+  return { done: new Set(done.length < keys.length ? done : []), skipped: new Set(), offsets: [] };
 }
 
 export const handled = (run, k) => run.done.has(k) || run.skipped.has(k);
@@ -34,7 +35,24 @@ export function nextPending(run, plan, top, k) {
 // The quick plan exists for B, so it waits longer for clear overtones.
 export const bTimeoutMs = (plan) => (plan === 'quick' ? 6000 : 3000);
 
-export const newKeyState = () => ({ waitAttack: true, pitch: [], bs: [], ms: 0, lost: false });
+export const newKeyState = () => ({ waitAttack: true, pitch: [], bs: [], ms: 0, lost: false, heard: null, wrong: 0, wrongFrames: 0 });
+
+// Wrong key struck. Returns the key heard, -1 if only the pitch gives it
+// away, or 0. Either key detection clearly hears a key two or more semitones
+// away (d from Analyzer.detectKey), or the measured pitch (raw, cents from
+// target) is far from where the keys surveyed so far lay (ref): a neighbour
+// struck by mistake. Detection alone cannot tell a neighbour from a badly
+// flat piano. Keys already measured in the run (done) are not reported: the
+// previous key may still ring, and an octave below has all the partials of
+// the key above.
+export const OFFSET_LIMIT = 70;
+
+export function wrongKey(d, k, raw, ref, done = new Set()) {
+  const clear = d && d.key !== k && d.score > 8 && d.margin >= 6 && !done.has(d.key);
+  if (clear && Math.abs(d.key - k) >= 2) return d.key;
+  if (!Number.isFinite(ref) || Math.abs(raw - ref) <= OFFSET_LIMIT) return 0;
+  return clear ? d.key : -1;
+}
 
 export const bGivenUp = (mp, plan) => mp.bs.length < B_READINGS && mp.ms >= bTimeoutMs(plan);
 

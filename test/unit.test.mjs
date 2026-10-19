@@ -6,7 +6,7 @@ import {
   migrateSettings, recommendedOverpull, DEFAULT_SETTINGS,
 } from '../web/js/theory.js';
 import { Analyzer } from '../web/js/dsp.js';
-import { newRun, nextPending, handled } from '../web/js/mapping.js';
+import { newRun, nextPending, handled, wrongKey } from '../web/js/mapping.js';
 
 const SR = 48000;
 const N = 32768;
@@ -117,4 +117,23 @@ test('survey run: a full survey resumes, wraps around and starts over when compl
   assert.equal(nextPending(run, 'full', 88, 49), 51);
   assert.equal(nextPending(run, 'full', 88, 88), 11);
   assert.equal(newRun('full', 88, () => true).done.size, 0);
+});
+
+test('survey: wrong key is recognised, a flat piano is not', () => {
+  const clear = (key) => ({ key, score: 20, margin: 10 });
+  const T2 = computeTargets(DEFAULT_SETTINGS);
+  // A3 struck when A2 is asked for: detection hears A3.
+  const heard = analyse(toneFor(T2, 37)).detectKey(T2);
+  assert.equal(wrongKey(heard, 25, -5, NaN), 37);
+  // B♭4 instead of A4 on a piano that is otherwise in tune.
+  assert.equal(wrongKey(clear(50), 49, 100, 0), 50);
+  // B♭4 again, but detection is unsure: the pitch alone gives it away.
+  assert.equal(wrongKey(null, 49, 100, 0), -1);
+  // A4 on a piano 80 cents flat: detection picks A♭4, the other keys lay as low.
+  assert.equal(wrongKey(clear(48), 49, -80, -75), 0);
+  // First key of a run on a flat piano: no reference yet, so a neighbour is accepted.
+  assert.equal(wrongKey(clear(48), 49, -80, NaN), 0);
+  assert.equal(wrongKey(clear(49), 49, 0, 0), 0);
+  // A2 still ringing when A3 is struck.
+  assert.equal(wrongKey(clear(25), 37, 0, 0, new Set([25])), 0);
 });

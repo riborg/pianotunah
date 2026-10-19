@@ -82,6 +82,8 @@ export default {
   'map.progressFull': '{done} av {total} tangenter',
   'map.strike': 'Slå an {name} kraftigt och låt den klinga.',
   'map.lost': '{name} klingade ut innan mätningen var klar. Slå an den igen.',
+  'map.wrong': 'Det låter som {heard}. Slå an {name}, eller tryck Hoppa över.',
+  'map.offPitch': 'Mer än {c} cent från tangenterna som mätts hittills. Är det {name}? Slå an den igen, eller tryck Hoppa över.',
   'map.listening': 'Lyssnar på {name} … låt tonen klinga.',
   'map.pitch': 'Tonhöjd {p}/{n}',
   'map.bKnown': 'Inharmonicitet redan uppmätt',
