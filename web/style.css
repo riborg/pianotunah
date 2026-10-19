@@ -523,6 +523,9 @@ summary { cursor: pointer; color: var(--accent); font-size: 14px; }
   .tuner-head .note { flex: 1 1 calc(100% - 120px); }
   .tuner-head .ref-chip { margin-inline: auto; }
   .tuner-head .modes { margin-left: 0; width: 100%; }
+  .tone-pick { width: 100%; }
+  .tone-pick .mini-label { white-space: nowrap; }
+  .tone-pick .modes { flex: 1; }
   .seg { flex: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
