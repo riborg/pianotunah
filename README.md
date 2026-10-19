@@ -115,3 +115,7 @@ pianotunah.example.com {
 Caddy gets the certificate itself. A host that is not reachable from the internet needs the DNS challenge or `tls internal`. If Caddy runs in a container, put both containers on the same Docker network and use `reverse_proxy pianotunah:8080` instead of publishing the port.
 
 Tests, releases and code layout: [DEVELOP.md](DEVELOP.md).
+
+## License
+
+MIT, see [LICENSE](LICENSE).
