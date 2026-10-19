@@ -56,13 +56,14 @@ where $\mathrm{wrap}$ puts the angle in $(-\pi, \pi]$.
 ## Running
 
 ```sh
+cp .env.example .env                          # hostname, Traefik network, entrypoint, middlewares
 docker compose pull && docker compose up -d   # release image from ghcr.io
 docker compose up -d --build                  # or build locally
 ```
 
 The image is built `FROM scratch` (~7 MB) for amd64 and arm64: a static Go binary with the web app embedded. The container runs read-only as uid 1000 without capabilities, and data lives in `./data`.
 
-The microphone requires https. The route `pianotunah.example.com` goes through Traefik with `ip-allowlist` and is reachable from the LAN only.
+The microphone requires https. `compose.yaml` expects Traefik on an existing Docker network; the site-specific values are in `.env`.
 
 | Variable   | Default | |
 |------------|---------|-|

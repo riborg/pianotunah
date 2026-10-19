@@ -5,3 +5,5 @@ compose.yaml
 test
 docs
 package.json
+.env
+.env.example

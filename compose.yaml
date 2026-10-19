@@ -15,17 +15,18 @@ services:
     volumes:
       - ./data:/data
     networks:
-      - caddy
+      - proxy
+    # Site-specific values live in .env (see .env.example).
     labels:
       - traefik.enable=true
-      - traefik.docker.network=caddy
-      - traefik.http.routers.pianotunah.rule=Host(`pianotunah.example.com`)
-      - traefik.http.routers.pianotunah.entrypoints=websecure
+      - traefik.docker.network=${TRAEFIK_NETWORK:?set in .env}
+      - traefik.http.routers.pianotunah.rule=Host(`${PIANOTUNAH_HOST:?set in .env}`)
+      - traefik.http.routers.pianotunah.entrypoints=${TRAEFIK_ENTRYPOINT:?set in .env}
       - traefik.http.routers.pianotunah.tls=true
-      # Internal service: reachable from the LAN only.
-      - traefik.http.routers.pianotunah.middlewares=default-security-headers@file,ip-allowlist@file,compress@file
+      - traefik.http.routers.pianotunah.middlewares=${TRAEFIK_MIDDLEWARES:?set in .env}
       - traefik.http.services.pianotunah.loadbalancer.server.port=8080
 
 networks:
-  caddy:
+  proxy:
+    name: ${TRAEFIK_NETWORK:?set in .env}
     external: true
