@@ -1,0 +1,6 @@
+# Copy to the repo root as compose.override.yaml. Compose loads it
+# automatically. Caddy on the host proxies to this port; see Caddyfile.
+services:
+  pianotunah:
+    ports:
+      - 127.0.0.1:8080:8080

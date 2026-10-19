@@ -1,0 +1,20 @@
+# Copy to the repo root as compose.override.yaml and adjust the hostname
+# and network. Compose loads it automatically.
+services:
+  pianotunah:
+    networks:
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.pianotunah.rule=Host(`pianotunah.example.com`)
+      - traefik.http.routers.pianotunah.entrypoints=websecure
+      - traefik.http.routers.pianotunah.tls=true
+      # Optional: IP allowlist, security headers etc.
+      # - traefik.http.routers.pianotunah.middlewares=ip-allowlist@file
+      - traefik.http.services.pianotunah.loadbalancer.server.port=8080
+
+# Existing Docker network that Traefik is attached to.
+networks:
+  proxy:
+    external: true

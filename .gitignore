@@ -2,4 +2,4 @@ data/*
 !data/.gitkeep
 pianotunah-bin
 .claude/settings.local.json
-compose.override.yaml
+/compose.override.yaml
