@@ -98,10 +98,10 @@ export default {
   'map.bKnown': 'Inharmonicity already measured',
   'map.bSkipped': 'Inharmonicity: overtones too weak, skipped',
   'map.b': 'Inharmonicity {p}/{n}',
-  'map.doneQuick': 'Survey of all A done: inharmonicity for {b} of {n} notes. The keys in between are interpolated.',
+  'map.doneQuick': 'Survey of all A done: inharmonicity for {b} of {n} notes. The keys in between are interpolated. See Reference A4 under Tuning for where the piano is.',
   'map.skipped': ' Skipped: {keys}.',
   'map.skippedMany': ' {n} keys skipped.',
-  'map.doneFull': 'Survey done: {n} keys measured, inharmonicity for {b}. See Reference A4 for where the piano is.',
+  'map.doneFull': 'Survey done: {n} keys measured, inharmonicity for {b}. See Reference A4 under Tuning for where the piano is.',
 
   'save.idle': 'Saved',
   'save.dirty': 'Changed',

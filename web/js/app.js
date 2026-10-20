@@ -842,6 +842,7 @@ function finishMapping() {
       : tr('map.doneFull', { n: all.filter(isMapped).length, b: withB(all) })) +
     (!skipped.length ? '' : skipped.length <= 8 ? tr('map.skipped', { keys: skipped.map(kName).join(', ') }) : tr('map.skippedMany', { n: skipped.length }));
   setMode('lock');
+  selectKey(A4, false); // tuning starts in the temperament octave
   message(text, 'ok', 0);
 }
 

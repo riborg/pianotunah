@@ -158,7 +158,7 @@ try {
   let r = await survey('quick', { wrong: { 1: 40, 25: 37, 49: 50 } });
   const allA = [1, 13, 25, 37, 49, 61, 73, 85];
   check(JSON.stringify(r.seq) === JSON.stringify(allA), `all A: asks for A0–A7 (${r.secs.toFixed(0)} s)`);
-  check(r.end.mode === 'lock' && /done/.test(r.end.msg), `all A: ends by itself: "${r.end.msg}"`);
+  check(r.end.mode === 'lock' && r.end.note === 'A4' && /done/.test(r.end.msg), `all A: ends by itself on A4: "${r.end.msg}"`);
   check(/C4/.test(r.hints[1] || ''), `C4 struck for A0 is noticed: "${r.hints[1]}"`);
   check(/A3/.test(r.hints[25] || ''), `A3 struck for A2 is noticed: "${r.hints[25]}"`);
   check(/B♭4/.test(r.hints[49] || ''), `B♭4 struck for A4 is noticed: "${r.hints[49]}"`);
@@ -181,7 +181,7 @@ try {
     const left = Array.from({ length: 88 }, (_, i) => i + 1).filter((k) => !t.keys[k]?.mapped);
     r = await survey('full');
     check(JSON.stringify(r.seq) === JSON.stringify(left), `all keys: resumes at key ${left[0]} and asks only for the ${left.length} keys not yet surveyed (${r.secs.toFixed(0)} s)`);
-    check(r.end.mode === 'lock' && /done/.test(r.end.msg), `all keys: ends by itself: "${r.end.msg}"`);
+    check(r.end.mode === 'lock' && r.end.note === 'A4' && /done/.test(r.end.msg), `all keys: ends by itself on A4: "${r.end.msg}"`);
   }
   check(errors.length === 0, `no page errors ${errors.join('; ')}`);
 } finally {

@@ -98,10 +98,10 @@ export default {
   'map.bKnown': 'Inharmonicitet redan uppmätt',
   'map.bSkipped': 'Inharmonicitet: för svaga övertoner, hoppas över',
   'map.b': 'Inharmonicitet {p}/{n}',
-  'map.doneQuick': 'Kartläggningen av alla A är klar: inharmonicitet för {b} av {n} toner. Tangenterna däremellan interpoleras.',
+  'map.doneQuick': 'Kartläggningen av alla A är klar: inharmonicitet för {b} av {n} toner. Tangenterna däremellan interpoleras. Se Referens A4 under Stämning för hur pianot ligger.',
   'map.skipped': ' Överhoppade: {keys}.',
   'map.skippedMany': ' {n} tangenter överhoppade.',
-  'map.doneFull': 'Kartläggningen är klar: {n} tangenter mätta, inharmonicitet för {b}. Se rutan Referens A4 för hur pianot ligger.',
+  'map.doneFull': 'Kartläggningen är klar: {n} tangenter mätta, inharmonicitet för {b}. Se Referens A4 under Stämning för hur pianot ligger.',
 
   'save.idle': 'Sparad',
   'save.dirty': 'Ändrad',
