@@ -893,7 +893,8 @@ function stopSine() {
 }
 
 function playCurrent() {
-  if (state.toneMode !== 'sine') playPiano();
+  if (state.toneMode === 'off') return;
+  if (state.toneMode === 'piano') playPiano();
   else if (tones.sineOn) stopSine();
   else startSine();
 }
@@ -910,6 +911,7 @@ function renderToneButton() {
   const b = $('btn-tone');
   b.textContent = tr(tones.sineOn ? 'tone.stopSine' : state.toneMode === 'sine' ? 'tone.playSine' : 'tone.play');
   b.setAttribute('aria-pressed', tones.sineOn);
+  b.hidden = state.toneMode === 'off';
 }
 
 // ---------------------------------------------------------------------------
