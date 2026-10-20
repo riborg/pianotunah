@@ -1337,7 +1337,10 @@ function bindEvents() {
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', refreshColors);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') saver.flush();
-    else if (mic.running && !state.wakeLock) requestWakeLock();
+    else if (mic.running) {
+      mic.resume();
+      if (!state.wakeLock) requestWakeLock();
+    }
   });
   // Last chance to save when the tab closes.
   window.addEventListener('pagehide', () => {

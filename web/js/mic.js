@@ -28,8 +28,17 @@ export class Mic {
     // Voice processing disturbs the measurement and must be off.
     const audio = { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 };
     if (deviceId) audio.deviceId = { exact: deviceId };
-    this.stream = await navigator.mediaDevices.getUserMedia({ audio });
-    this.ctx = new AudioContext();
+    // Created before the permission prompt, while the click still counts as a
+    // user gesture; Safari otherwise starts it suspended and the analyser reads silence.
+    const ctx = new AudioContext();
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({ audio });
+    } catch (e) {
+      ctx.close();
+      throw e;
+    }
+    this.ctx = ctx;
+    this.resume();
     this.analyser = this.ctx.createAnalyser();
     this.analyser.fftSize = 32768;
     this.ctx.createMediaStreamSource(this.stream).connect(this.analyser);
@@ -41,6 +50,11 @@ export class Mic {
   static async inputs() {
     const all = (await navigator.mediaDevices?.enumerateDevices?.()) || [];
     return all.filter((d) => d.kind === 'audioinput' && d.deviceId && !['default', 'communications'].includes(d.deviceId));
+  }
+
+  // Safari suspends the context when the screen locks or another app takes the audio.
+  resume() {
+    this.ctx?.resume().catch(() => {});
   }
 
   stop() {
