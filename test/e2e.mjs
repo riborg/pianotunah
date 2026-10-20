@@ -60,7 +60,7 @@ async function run({ key, detune, theme = 'light', shot, seed }) {
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-    await page.setViewport({ width: 1360, height: 1300, deviceScaleFactor: shot ? 2 : 1 });
+    await page.setViewport({ width: 1360, height: 1400, deviceScaleFactor: shot ? 2 : 1 });
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: theme }]);
     await page.evaluateOnNewDocument((tid) => localStorage.setItem('pianotunah.lastTuning', tid), id);
     await page.goto(base + '/', { waitUntil: 'networkidle0' });
@@ -73,7 +73,8 @@ async function run({ key, detune, theme = 'light', shot, seed }) {
     };
     if (shot) {
       mkdirSync(shots, { recursive: true });
-      const clip = { x: 0, y: 0, width: 1360, height: 1270 };
+      // The whole page, without the empty viewport below it.
+      const clip = { x: 0, y: 0, width: 1360, height: await page.evaluate(() => Math.ceil(document.querySelector('.layout').getBoundingClientRect().bottom) + 24) };
       await page.screenshot({ path: `${shots}/${shot}`, clip });
       // The settings drawer with the reference and stretch.
       await page.click('#btn-settings');
