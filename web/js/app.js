@@ -361,7 +361,6 @@ function renderKeyboard() {
   for (const el of $('keyboard').children) {
     const k = Number(el.dataset.k);
     const label = tr('key.label', { name: kName(k), dev: Number.isFinite(curDev(k)) ? fmtC(statusDev(k)) + ' ' + tr('unit.cents') : tr('key.unmeasured') });
-    el.dataset.s = statusClass(statusDev(k));
     el.classList.toggle('current', k === cur);
     el.classList.toggle('has-b', !!state.tuning.inharmonicity[k]);
     el.classList.toggle('plan', !!quickPlan && mapping.QUICK_KEYS.includes(k));

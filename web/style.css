@@ -442,14 +442,6 @@ body.drawer-open { overflow: hidden; }
 }
 .klabel { font: 10px var(--f-mono); color: var(--key-label); margin-bottom: 10px; position: relative; z-index: 1; }
 
-/* Status: a thin bar at the key's bottom edge (white) or front (black). */
-.key::before { content: ""; position: absolute; left: 22%; right: 22%; height: 4px; border-radius: 2px; background: transparent; }
-.key.white::before { bottom: 30px; }
-.key.black::before { bottom: 10px; left: 18%; right: 18%; height: 3px; }
-.key[data-s="good"]::before { background: var(--good); }
-.key[data-s="warn"]::before { background: var(--warn); }
-.key[data-s="bad"]::before { background: var(--bad); }
-
 /* Measured inharmonicity: small dot at the top. */
 .key.has-b::after { content: ""; position: absolute; top: 8px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--accent); opacity: 0.8; }
 .key.black.has-b::after { background: var(--ivory); opacity: 0.6; }
