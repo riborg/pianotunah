@@ -252,6 +252,11 @@ select:disabled { opacity: 0.55; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; min-width: 0; }
 .keys-card { display: flex; flex-direction: column; gap: 10px; }
 .keys-card .legend { justify-content: center; }
+/* Phones and landscape: the readout first, so it is visible without scrolling
+   while tuning. Keys are still reached with ‹ › and auto mode. */
+@media (max-width: 620px), (max-height: 560px) {
+  .tuner { order: -1; }
+}
 
 /* Tuner */
 .tuner { display: flex; flex-direction: column; gap: 14px; }
@@ -538,6 +543,15 @@ details > .form { margin-top: 10px; }
   .seg { flex: 1; }
   .tabs { gap: 0; padding: 0 4px; }
   .tab { padding: 8px 5px; font-size: 14px; }
+}
+/* Landscape phones: a sticky top bar would take a fifth of the height. */
+@media (max-height: 560px) {
+  .top { position: static; padding-block: 8px; }
+  .tuner { gap: 8px; }
+  .note-name { font-size: 40px; }
+  .cents { font-size: 48px; }
+  .targetline { margin-top: -2px; }
+  .targetline.measured { margin-top: -8px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .key.flash, .drawer { animation: none; }
