@@ -285,8 +285,8 @@ export default {
 <ol>
   <li><strong>Kartlägg.</strong> Välj <em>Alla A</em> (A0–A7, ungefär en minut) eller <em>Alla tangenter</em> (3–5 minuter) i panelen som öppnas. Slå an tonen som visas; appen går vidare själv och slutar när alla tangenter är klara.</li>
   <li><strong>Välj tonhöjd.</strong> Ligger pianot lågt: <em>Använd pianots nuvarande tonhöjd</em> under Stämning, eller dra upp med överdrag.</li>
-  <li><strong>Stäm A3–A4 först</strong>, sedan uppåt oktav för oktav, sist basen.</li>
   <li><strong>Dämpa unisonerna</strong> med filtremsa. Stäm en sträng per ton, de övriga efter gehör mot den.</li>
+  <li><strong>Stäm A3–A4 först</strong>, sedan uppåt oktav för oktav, sist basen.</li>
   <li><strong>Ny omgång</strong> nästa gång. Historiken visar hur mycket pianot drivit.</li>
 </ol>
 <h3>Varför stretch?</h3>

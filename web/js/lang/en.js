@@ -285,8 +285,8 @@ export default {
 <ol>
   <li><strong>Survey.</strong> Choose <em>All A</em> (A0–A7, about a minute) or <em>All keys</em> (3–5 minutes) in the panel that opens. Strike the note shown; the app moves on by itself and stops when every key is done.</li>
   <li><strong>Choose the pitch.</strong> If the piano is flat: <em>Use the piano's current pitch</em> under Tuning, or raise it with overpull.</li>
-  <li><strong>Tune A3–A4 first</strong>, then upwards octave by octave, the bass last.</li>
   <li><strong>Mute the unisons</strong> with a felt strip. Tune one string per note and the others by ear against it.</li>
+  <li><strong>Tune A3–A4 first</strong>, then upwards octave by octave, the bass last.</li>
   <li><strong>New pass</strong> next time. The history shows how far the piano has drifted.</li>
 </ol>
 <h3>Why stretch?</h3>
