@@ -15,7 +15,7 @@ Piano tuner in the browser. Listens through the computer's microphone, computes 
 - Temperaments: equal, Werckmeister III, Kirnberger III, Vallotti, Young II, ¼- and ⅙-comma meantone.
 - Reference A4 380–480 Hz, or set from the piano's current pitch. Overpull for pitch raises, with a recommended amount when the piano is flat.
 - Strobe, beat spectrogram and reference tone (piano or sine).
-- Deviation per key as bars under the keyboard; the full tuning curve under Settings.
+- Deviation per key under the keyboard, with the tuning curve and a table below it.
 - Upright or grand, size in cm, 85 or 88 keys.
 - Tunings are saved on the server with a history per pass. Export and import as JSON.
 - English and Swedish UI.
@@ -50,7 +50,7 @@ where $\mathrm{wrap}$ puts the angle in $(-\pi, \pi]$.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/settings-dark.png">
-  <img alt="Settings with the tuning curve for a 115 cm upright" src="docs/settings-light.png">
+  <img alt="Settings: reference pitch and stretch for a 115 cm upright" src="docs/settings-light.png">
 </picture>
 
 ## Installation

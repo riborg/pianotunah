@@ -53,6 +53,10 @@
       <span class="lg"><i class="bar-sw"></i><span id="dev-legend"></span></span>
       <span class="lg lg-curve"><i class="ln"></i><span data-i18n="curve.target">Target relative to equal temperament</span></span>
     </div>
+    <details id="table-details" class="table-details">
+      <summary data-i18n="curve.table">Show as table</summary>
+      <div class="table-wrap"><table class="ktable" id="ktable"></table></div>
+    </details>
   </section>
 
   <section class="tuner card" aria-label="Tuner" data-i18n-aria-label="tuner.label">
@@ -116,6 +120,26 @@
       <canvas id="beat" class="beatstrip" height="40" aria-hidden="true"></canvas>
     </div>
 
+    <div class="partials-box">
+      <button id="partials-toggle" class="fold" type="button" aria-controls="partials-row" aria-expanded="false" data-i18n="measure.partials">Partials vs target</button>
+      <div class="partials-row" id="partials-row" hidden>
+        <p class="desc" data-i18n="measure.partialsDesc">Deviation per partial for the sounding key. Highlighted = the one being measured.</p>
+        <div class="partials" id="partials"></div>
+        <div class="partial-tools">
+          <div class="partial-pick">
+            <span data-i18n="measure.pick">Measure partial</span>
+            <button id="partial-dec" class="btn icon sm" type="button" aria-label="Lower partial" data-i18n-aria-label="measure.lower">−</button>
+            <output id="partial-val">1</output>
+            <button id="partial-inc" class="btn icon sm" type="button" aria-label="Higher partial" data-i18n-aria-label="measure.higher">+</button>
+          </div>
+          <div class="bval-row">
+            <span class="bval" id="bval"></span>
+            <button id="btn-measure-b" class="btn ghost" type="button" data-i18n="measure.bButton">Measure B</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="tuner-foot">
       <div class="tone-pick">
         <span class="mini-label" id="tone-lbl" data-i18n="tone.label">Reference tone</span>
@@ -148,8 +172,6 @@
   <nav class="tabs" role="tablist" aria-label="Settings" data-i18n-aria-label="top.settings">
     <button class="tab" type="button" role="tab" data-tab="piano" data-i18n="tab.piano">Piano</button>
     <button class="tab" type="button" role="tab" data-tab="tuning" data-i18n="tab.tuning">Tuning</button>
-    <button class="tab" type="button" role="tab" data-tab="measure" data-i18n="tab.measure">Measure</button>
-    <button class="tab" type="button" role="tab" data-tab="curve" data-i18n="tab.curve">Curve</button>
     <button class="tab" type="button" role="tab" data-tab="pass" data-i18n="tab.pass">Pass</button>
     <button class="tab" type="button" role="tab" data-tab="help" data-i18n="tab.help">Help</button>
     <button class="tab" type="button" role="tab" data-tab="app" data-i18n="tab.app">App</button>
@@ -265,37 +287,6 @@
         <label for="set-root" data-i18n="tuning.root">Root</label>
         <select id="set-root"></select>
       </div>
-    </details>
-  </section>
-
-  <section class="panel" role="tabpanel" data-panel="measure" hidden>
-    <h3 data-i18n="measure.partials">Partials vs target</h3>
-    <p class="desc" data-i18n="measure.partialsDesc">Deviation per partial for the sounding key. Highlighted = the one being measured.</p>
-    <div class="partials" id="partials"></div>
-    <div class="partial-pick">
-      <span data-i18n="measure.pick">Measure partial</span>
-      <button id="partial-dec" class="btn icon sm" type="button" aria-label="Lower partial" data-i18n-aria-label="measure.lower">−</button>
-      <output id="partial-val">1</output>
-      <button id="partial-inc" class="btn icon sm" type="button" aria-label="Higher partial" data-i18n-aria-label="measure.higher">+</button>
-    </div>
-
-    <h3 data-i18n="measure.b">Inharmonicity</h3>
-    <div class="bval" id="bval"></div>
-    <button id="btn-measure-b" class="btn ghost" type="button" data-i18n="measure.bButton">Measure for current key</button>
-  </section>
-
-  <section class="panel" role="tabpanel" data-panel="curve" hidden>
-    <div class="legend">
-      <span class="lg"><i class="ln"></i><span data-i18n="curve.target">Target relative to equal temperament</span></span>
-      <span class="lg"><i class="sw s-good round"></i><i class="sw s-warn round"></i><i class="sw s-bad round"></i><span data-i18n="curve.measured">Measured</span></span>
-    </div>
-    <div class="chart-wrap">
-      <canvas id="chart" class="chart" height="260" role="img" aria-label="Target curve in cents per key" data-i18n-aria-label="curve.label"></canvas>
-      <div class="tooltip" id="tooltip" hidden></div>
-    </div>
-    <details id="table-details">
-      <summary data-i18n="curve.table">Show as table</summary>
-      <div class="table-wrap"><table class="ktable" id="ktable"></table></div>
     </details>
   </section>
 

@@ -139,7 +139,6 @@ export default {
 
   'tab.piano': 'Piano',
   'tab.tuning': 'Stämning',
-  'tab.measure': 'Mätning',
   'tab.curve': 'Kurva',
   'tab.pass': 'Omgång',
   'tab.help': 'Hjälp',
@@ -237,14 +236,12 @@ export default {
   'measure.pick': 'Mät delton',
   'measure.lower': 'Lägre delton',
   'measure.higher': 'Högre delton',
-  'measure.b': 'Inharmonicitet',
-  'measure.bButton': 'Mät för aktuell tangent',
-  'measure.bval': 'B = {b} ({src})',
+  'measure.bButton': 'Mät B',
+  'measure.bval': 'Inharmonicitet B = {b} ({src})',
   'b.measured': 'uppmätt',
   'b.model': 'modell',
 
   'curve.target': 'Mål relativt liksvävande',
-  'curve.measured': 'Uppmätt',
   'curve.label': 'Målkurva i cent per tangent',
   'curve.table': 'Visa som tabell',
   'table.key': 'Tangent',
@@ -296,7 +293,7 @@ export default {
 <h3>Mätningen</h3>
 <p>I basen mäts delton 6, 4 eller 2: grundtonen är svag och laptopmikrofoner hör dåligt under 100 Hz. En extern USB-mikrofon 20–40 cm ovanför strängarna hjälper; välj den under App.</p>
 <p><strong>Överdrag:</strong> vid uppdragning sjunker redan stämda strängar när belastningen ökar. Med 25 % stäms en ton som låg −20 cent till +5. Under Stämning föreslår appen ett överdrag när mitten av pianot är mätt.</p>
-<p><strong>Strobe:</strong> ett band per deltons, numrerat till vänster: den uppmätta och de två oktaverna ovanför. Stilla = rent, rör sig åt höger = för högt. Står det översta bandet still men de andra glider, avviker strängens inharmonicitet från modellen; mät B för tangenten under Mätning.</p>
+<p><strong>Strobe:</strong> ett band per deltons, numrerat till vänster: den uppmätta och de två oktaverna ovanför. Stilla = rent, rör sig åt höger = för högt. Står det översta bandet still men de andra glider, avviker strängens inharmonicitet från modellen; mät B för tangenten under <em>Deltoner mot mål</em>.</p>
 <p><strong>Sinuston:</strong> välj Sinus under <em>Referenston</em> och klicka på en tangent. Stäm tills svävningarna försvinner.</p>
 <p><strong>Temperatur:</strong> hur kvinterna fördelas inom oktaven. Liksvävande är standard för piano; de historiska under Stämning är för tidig musik.</p>
 <p class="keys-hint">Tangentbord: ← → byter tangent, L låser, A auto, T spelar eller stoppar målton, S öppnar inställningar.</p>`,

@@ -21,7 +21,7 @@ const FRAME_MS = 90; // analysis interval
 const SPEC_COLS = 100; // spectrogram history, ≈ 9 s
 const SPEC_BINS = 48;
 const SPEC_CENTS = 30;
-const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab', curve: 'pianotunah.curve', mic: 'pianotunah.mic' };
+const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab', curve: 'pianotunah.curve', partials: 'pianotunah.partials', mic: 'pianotunah.mic' };
 
 const mic = new Mic();
 const tones = new TonePlayer();
@@ -453,9 +453,6 @@ function renderTable() {
   $('ktable').replaceChildren(head, body);
 }
 
-// The curve is drawn on the main page and, when that tab is open, in settings.
-const TIPS = { minichart: 'minitip', chart: 'tooltip' };
-
 function renderChart() {
   if (!state.T) return;
   const T = state.T;
@@ -466,20 +463,23 @@ function renderChart() {
     if (Number.isFinite(d)) points.push({ k, c: T.cents[k] + d, status: statusClass(statusDev(k)) });
     if (pitchClass(k) === 0) ticks.push({ k, label: kName(k) });
   }
-  // The main page copy uses the keyboard's key positions as its x axis.
+  // The keyboard's key positions are the x axis.
   const xs = [0, ...[...$('keyboard').children].map((el) => el.dataset.cx / 100)];
-  state.chartGeo = {};
-  for (const id in TIPS) {
-    const data = { top: top(), target: T.cents, points, ticks, current: state.key, xs: id === 'minichart' ? xs : null, labelX: $('kb-scroll').scrollLeft };
-    if ($(id).clientWidth) state.chartGeo[id] = drawChart($(id), data, state.colors);
-  }
+  const c = $('minichart');
+  state.chartGeo = c.clientWidth ? drawChart(c, { top: top(), target: T.cents, points, ticks, current: state.key, xs, labelX: $('kb-scroll').scrollLeft }, state.colors) : null;
 }
 
 function setCurveOpen(open) {
-  $('curve-row').hidden = !open;
+  $('curve-row').hidden = $('table-details').hidden = !open;
   document.querySelector('.lg-curve').hidden = !open;
   $('curve-toggle').setAttribute('aria-expanded', open);
   if (open) renderChart(); // not drawn while folded
+}
+
+function setPartialsOpen(open) {
+  $('partials-row').hidden = !open;
+  $('partials-toggle').setAttribute('aria-expanded', open);
+  renderPartials();
 }
 
 // Update key status at most once per frame, even if readings are saved more often.
@@ -495,15 +495,14 @@ function renderKeyStatus() {
 
 function chartKeyAt(e) {
   const c = e.currentTarget;
-  const k = state.chartGeo?.[c.id]?.keyAt(e.clientX - c.getBoundingClientRect().left);
+  const k = state.chartGeo?.keyAt(e.clientX - c.getBoundingClientRect().left);
   return k >= 1 && k <= top() ? k : 0;
 }
 
 function chartHover(e) {
   const k = chartKeyAt(e);
-  const c = e.currentTarget;
-  const geo = state.chartGeo[c.id];
-  const tip = $(TIPS[c.id]);
+  const geo = state.chartGeo;
+  const tip = $('minitip');
   tip.hidden = !k;
   if (!k) return;
   const T = state.T;
@@ -520,9 +519,9 @@ function chartHover(e) {
       return row;
     }),
   );
-  // Keep the tooltip within the visible part; the main page curve scrolls with the keyboard.
+  // Keep the tooltip within the visible part; the curve scrolls with the keyboard.
   const sc = $('kb-scroll');
-  const [x0, x1] = c.id === 'minichart' ? [sc.scrollLeft, sc.scrollLeft + sc.clientWidth] : [0, c.clientWidth];
+  const [x0, x1] = [sc.scrollLeft, sc.scrollLeft + sc.clientWidth];
   tip.style.left = Math.min(Math.max(geo.xOf(k) + 12, x0 + 4), x1 - tip.offsetWidth - 4) + 'px';
   tip.style.top = Math.max(4, geo.yOf(T.cents[k]) - tip.offsetHeight - 10) + 'px';
 }
@@ -940,6 +939,7 @@ function updateReadout() {
 }
 
 function renderPartials() {
+  if ($('partials-row').hidden) return;
   const box = $('partials');
   if (box.children.length !== 8) {
     box.replaceChildren(
@@ -1132,7 +1132,6 @@ function showTab(tab) {
   document.querySelectorAll('[data-tab]').forEach((b) => b.setAttribute('aria-selected', b.dataset.tab === tab));
   document.querySelectorAll('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== tab));
   try { localStorage.setItem(LS.tab, tab); } catch { /* optional */ }
-  if (tab === 'curve') renderChart();
 }
 
 // ---------------------------------------------------------------------------
@@ -1291,11 +1290,9 @@ function bindEvents() {
   });
 
   // Chart
-  for (const [id, tip] of Object.entries(TIPS)) {
-    on(id, 'pointermove', chartHover);
-    on(id, 'pointerleave', show(tip, false));
-    on(id, 'click', (e) => chartKeyAt(e) && selectKey(chartKeyAt(e)));
-  }
+  on('minichart', 'pointermove', chartHover);
+  on('minichart', 'pointerleave', show('minitip', false));
+  on('minichart', 'click', (e) => chartKeyAt(e) && selectKey(chartKeyAt(e)));
   on('table-details', 'toggle', () => $('table-details').open && renderTable());
   on('set-mic', 'change', async () => {
     state.micId = $('set-mic').value;
@@ -1312,6 +1309,11 @@ function bindEvents() {
     const open = $('curve-row').hidden;
     setCurveOpen(open);
     try { localStorage.setItem(LS.curve, open ? 'open' : 'closed'); } catch { /* optional */ }
+  });
+  on('partials-toggle', 'click', () => {
+    const open = $('partials-row').hidden;
+    setPartialsOpen(open);
+    try { localStorage.setItem(LS.partials, open ? 'open' : 'closed'); } catch { /* optional */ }
   });
 
   // Keyboard shortcuts
@@ -1385,6 +1387,7 @@ async function boot() {
     plan = localStorage.getItem(LS.plan) === 'full' ? 'full' : 'quick';
     tone = localStorage.getItem(LS.tone) || 'off';
     if (localStorage.getItem(LS.curve) === 'closed') setCurveOpen(false);
+    if (localStorage.getItem(LS.partials) === 'open') setPartialsOpen(true);
   } catch { /* optional */ }
   setMapPlan(plan);
   setToneMode(tone);

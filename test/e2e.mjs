@@ -75,9 +75,9 @@ async function run({ key, detune, theme = 'light', shot, seed }) {
       mkdirSync(shots, { recursive: true });
       const clip = { x: 0, y: 0, width: 1360, height: 1270 };
       await page.screenshot({ path: `${shots}/${shot}`, clip });
-      // The settings drawer with the tuning curve.
+      // The settings drawer with the reference and stretch.
       await page.click('#btn-settings');
-      await page.click('[data-tab="curve"]');
+      await page.click('[data-tab="tuning"]');
       await new Promise((r) => setTimeout(r, 400));
       await page.screenshot({ path: `${shots}/${shot.replace('screenshot', 'settings')}`, clip });
     }

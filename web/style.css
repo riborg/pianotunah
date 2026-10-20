@@ -363,7 +363,13 @@ body.drawer-open { overflow: hidden; }
 .chip-btn.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .note-text { font-size: 13px; color: var(--muted); margin: 0; }
 
-/* Measure */
+/* Partials */
+.partials-box { display: flex; flex-direction: column; gap: 8px; }
+.partials-box .fold { align-self: flex-start; font-size: 13px; }
+.partials-row { display: flex; flex-direction: column; gap: 8px; }
+.partials-row .desc { margin: 0; }
+.partial-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.bval-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .partials { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
 .pcell { display: flex; flex-direction: column; align-items: center; padding: 4px 2px; border-radius: 6px; background: var(--sunk); border: 2px solid transparent; }
 .pcell.sel { border-color: var(--accent); }
@@ -502,6 +508,8 @@ body.drawer-open { overflow: hidden; }
 .tooltip span { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
 details { margin-top: 12px; }
 summary { cursor: pointer; color: var(--accent); font-size: 14px; }
+.keys-card .table-details { margin: 0; }
+.table-details summary { text-align: center; font-size: 13px; }
 details > .form { margin-top: 10px; }
 /* Folds the curve under the keyboard. */
 .fold { padding: 0; border: 0; background: none; font: inherit; color: var(--accent); cursor: pointer; }

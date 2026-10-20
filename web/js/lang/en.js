@@ -139,7 +139,6 @@ export default {
 
   'tab.piano': 'Piano',
   'tab.tuning': 'Tuning',
-  'tab.measure': 'Measure',
   'tab.curve': 'Curve',
   'tab.pass': 'Pass',
   'tab.help': 'Help',
@@ -237,14 +236,12 @@ export default {
   'measure.pick': 'Measure partial',
   'measure.lower': 'Lower partial',
   'measure.higher': 'Higher partial',
-  'measure.b': 'Inharmonicity',
-  'measure.bButton': 'Measure for current key',
-  'measure.bval': 'B = {b} ({src})',
+  'measure.bButton': 'Measure B',
+  'measure.bval': 'Inharmonicity B = {b} ({src})',
   'b.measured': 'measured',
   'b.model': 'model',
 
   'curve.target': 'Target relative to equal temperament',
-  'curve.measured': 'Measured',
   'curve.label': 'Target curve in cents per key',
   'curve.table': 'Show as table',
   'table.key': 'Key',
@@ -296,7 +293,7 @@ export default {
 <h3>Measuring</h3>
 <p>In the bass, partial 6, 4 or 2 is measured: the fundamental is weak and laptop microphones pick up little below 100 Hz. An external USB microphone 20–40 cm above the strings helps; choose it under App.</p>
 <p><strong>Overpull:</strong> when raising the pitch, strings already tuned go flat as the load increases. With 25%, a note that was at −20 cents is tuned to +5. Under Tuning the app suggests an overpull once the middle of the piano is measured.</p>
-<p><strong>Strobe:</strong> one band per partial, marked on the left: the measured one and the two octaves above it. Still = in tune, moving right = too high. If the top band stands still but the others drift, the string's inharmonicity differs from the model; measure B for the key under Measure.</p>
+<p><strong>Strobe:</strong> one band per partial, marked on the left: the measured one and the two octaves above it. Still = in tune, moving right = too high. If the top band stands still but the others drift, the string's inharmonicity differs from the model; measure B for the key under <em>Partials vs target</em>.</p>
 <p><strong>Sine tone:</strong> choose Sine under <em>Reference tone</em> and click a key. Tune until the beats disappear.</p>
 <p><strong>Temperament:</strong> how the fifths are distributed within the octave. Equal temperament is the standard for pianos; the historical ones under Tuning are for early music.</p>
 <p class="keys-hint">Keyboard: ← → change key, L locks, A auto, T plays or stops the target tone, S opens settings.</p>`,
