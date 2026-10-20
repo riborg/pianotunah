@@ -669,7 +669,11 @@ function measureCurrent(A) {
   const target = partialFreq(T.freq[k], T.B[k], n);
   // Locked key: wide window so that even a badly flat piano is found.
   const m = A.measure(target, state.mode === 'auto' ? 50 : 150, 8);
-  if (!m) return idle();
+  if (!m) {
+    // A key far away has no partial near the target, but detection still hears it.
+    if (state.map && !refPlaying()) trackWrongKey(mapping.wrongKey(state.map.heard, k, NaN, NaN, state.run.done));
+    return idle();
+  }
 
   const raw = centsBetween(m.freq, target);
   const ref = refPlaying();
@@ -781,17 +785,19 @@ function setMapPlan(p) {
   renderMapPanel();
 }
 
-function collectMapping(A, k, partialHz, f1, raw) {
+// Nothing from another key is kept; the hint shows after a few frames in a row.
+function trackWrongKey(other) {
   const mp = state.map;
-  // Nothing from another key is kept; the hint shows after a few frames in a row.
-  const other = mapping.wrongKey(mp.heard, k, raw, median(state.run.offsets), state.run.done);
   mp.wrongFrames = other ? mp.wrongFrames + 1 : 0;
   mp.wrong = mp.wrongFrames >= 3 ? other : 0;
-  if (other) {
-    // Drop what was collected: the start of a wrong note can look right.
-    Object.assign(mp, { pitch: [], bs: [], ms: 0 });
-    return renderMapPanel();
-  }
+  // Drop what was collected: the start of a wrong note can look right.
+  if (other) Object.assign(mp, { pitch: [], bs: [], ms: 0 });
+  return other;
+}
+
+function collectMapping(A, k, partialHz, f1, raw) {
+  const mp = state.map;
+  if (trackWrongKey(mapping.wrongKey(mp.heard, k, raw, median(state.run.offsets), state.run.done))) return renderMapPanel();
   mp.pitch.push(partialHz);
   mp.ms += FRAME_MS;
   mp.lost = false;

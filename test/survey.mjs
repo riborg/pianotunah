@@ -155,10 +155,11 @@ try {
   await page.click('#btn-mic');
   await sleep(1000);
 
-  let r = await survey('quick', { wrong: { 25: 37, 49: 50 } });
+  let r = await survey('quick', { wrong: { 1: 40, 25: 37, 49: 50 } });
   const allA = [1, 13, 25, 37, 49, 61, 73, 85];
   check(JSON.stringify(r.seq) === JSON.stringify(allA), `all A: asks for A0–A7 (${r.secs.toFixed(0)} s)`);
   check(r.end.mode === 'lock' && /done/.test(r.end.msg), `all A: ends by itself: "${r.end.msg}"`);
+  check(/C4/.test(r.hints[1] || ''), `C4 struck for A0 is noticed: "${r.hints[1]}"`);
   check(/A3/.test(r.hints[25] || ''), `A3 struck for A2 is noticed: "${r.hints[25]}"`);
   check(/B♭4/.test(r.hints[49] || ''), `B♭4 struck for A4 is noticed: "${r.hints[49]}"`);
   await sleep(3000); // autosave
