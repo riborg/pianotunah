@@ -78,4 +78,4 @@ Tests, releases and code layout: [DEVELOP.md](DEVELOP.md).
 
 ## License
 
-Public domain ([CC0 1.0](LICENSE)). Written with AI assistance; use it for anything, no attribution needed.
+Public domain ([CC0 1.0](LICENSE)). Written with [Claude](https://claude.ai) as co-programmer; use it for anything, no attribution needed.
