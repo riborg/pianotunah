@@ -26,7 +26,7 @@ export default {
   'tuner.nextTitle': 'Next key (→)',
   'tuner.refTitle': 'Change reference',
   'tuner.mode': 'Mode',
-  'tuner.level': 'Microphone level',
+  'tuner.level': 'Mic level',
   'mode.auto': 'Auto',
   'mode.autoTitle': 'Detect the key automatically (A)',
   'mode.lock': 'Lock',
@@ -52,7 +52,7 @@ export default {
   'status.low': 'Too low, raise',
 
   'beats.label': 'Beats around the target, ±30 cents',
-  'strobe.title': 'Strobe per partial: the measured one and two octaves up. Still = in tune, moving right = too high.',
+  'strobe.label': 'Strobe per partial: still = in tune, right = too high',
   'beat.none': 'Beatless',
   'beat.rate': '{n} beats/s',
 

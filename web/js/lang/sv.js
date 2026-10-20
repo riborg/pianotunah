@@ -52,7 +52,7 @@ export default {
   'status.low': 'För lågt, dra upp',
 
   'beats.label': 'Svävningar runt målet, ±30 cent',
-  'strobe.title': 'Strobe per deltons: den uppmätta och två oktaver upp. Stilla = rent, rör sig åt höger = för högt.',
+  'strobe.label': 'Strobe per deltons: stilla = rent, åt höger = för högt',
   'beat.none': 'Svävningsfritt',
   'beat.rate': '{n} svävningar/s',
 

@@ -283,7 +283,7 @@ select:disabled { opacity: 0.55; }
 .meter, .strobe, .spectro, .beatstrip, .chart { display: block; width: 100%; }
 .strobe, .spectro, .beatstrip { border-radius: 6px; }
 .spectro, .beatstrip { background: var(--sunk); }
-.beats { display: flex; flex-direction: column; gap: 6px; }
+.beats, .strobe-box { display: flex; flex-direction: column; gap: 6px; }
 .beats-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .beat-rate { font: 600 14px var(--f-mono); font-variant-numeric: tabular-nums; }
 .mini-label { font-size: 12px; color: var(--muted); }
@@ -292,7 +292,8 @@ select:disabled { opacity: 0.55; }
 .tone-pick { display: flex; align-items: center; gap: 8px; }
 .tone-pick .seg { padding: 4px 10px; }
 #btn-tone[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.level { margin-left: auto; width: 90px; height: 6px; border-radius: 3px; background: var(--sunk); overflow: hidden; }
+.level-box { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.level { width: 90px; height: 6px; border-radius: 3px; background: var(--sunk); overflow: hidden; }
 .level-bar { height: 100%; width: 0; background: var(--accent); transition: width 80ms linear; }
 
 /* Survey */

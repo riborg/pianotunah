@@ -102,7 +102,10 @@
     <div class="targetline measured" id="measured"></div>
 
     <canvas id="meter" class="meter" height="64" aria-hidden="true"></canvas>
-    <canvas id="strobe" class="strobe" height="66" aria-hidden="true" title="Strobe per partial: the measured one and two octaves up. Still = in tune, moving right = too high." data-i18n-title="strobe.title"></canvas>
+    <div class="strobe-box">
+      <span class="mini-label" data-i18n="strobe.label">Strobe per partial: still = in tune, right = too high</span>
+      <canvas id="strobe" class="strobe" height="66" aria-hidden="true"></canvas>
+    </div>
 
     <div class="beats">
       <div class="beats-head">
@@ -123,7 +126,10 @@
         </div>
       </div>
       <button id="btn-tone" class="btn ghost" type="button" title="Play target tone (T)" data-i18n-title="tone.playTitle"></button>
-      <div class="level" title="Microphone level" data-i18n-title="tuner.level"><div class="level-bar" id="level-bar"></div></div>
+      <div class="level-box">
+        <span class="mini-label" data-i18n="tuner.level">Mic level</span>
+        <div class="level"><div class="level-bar" id="level-bar"></div></div>
+      </div>
     </div>
   </section>
 </main>
