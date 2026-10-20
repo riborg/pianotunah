@@ -1149,6 +1149,12 @@ function bindEvents() {
     setTheme(order[(order.indexOf(currentTheme()) + 1) % order.length]);
   });
   on('message-close', 'click', show('message', false));
+  // Back to the start without reloading, which would stop the microphone.
+  on('brand', 'click', (e) => {
+    e.preventDefault();
+    if (!$('drawer').hidden) closeDrawer();
+    window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  });
   on('btn-settings', 'click', () => ($('drawer').hidden ? openDrawer() : closeDrawer()));
   on('drawer-close', 'click', closeDrawer);
   on('drawer-backdrop', 'click', closeDrawer);
