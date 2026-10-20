@@ -1339,7 +1339,7 @@ function bindEvents() {
     if (document.visibilityState === 'hidden') saver.flush();
     else if (mic.running) {
       mic.resume();
-      if (!state.wakeLock) requestWakeLock();
+      if (!state.wakeLock || state.wakeLock.released) requestWakeLock(); // released by the browser when the page was hidden
     }
   });
   // Last chance to save when the tab closes.
