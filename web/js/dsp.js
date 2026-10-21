@@ -204,9 +204,11 @@ export class Analyzer {
     if (!best) return { key: 0, score: -Infinity, margin: 0 };
     // One step at a time (octave, twelfth), repeated, so two octaves down
     // becomes two octave steps. Own partials = those not shared with the
-    // winner. The thresholds are above noise peaks (~10 dB).
+    // winner. The two strongest of them count, since one partial can be
+    // nearly silent (strike point, unisons cancelling). The thresholds are
+    // above noise peaks (~10 dB).
     const sounds = (c, own) => {
-      const p = own.map((n) => this.partialProm(targets, c, n)).filter((x) => x !== null);
+      const p = own.map((n) => this.partialProm(targets, c, n)).filter((x) => x !== null).sort((a, b) => b - a).slice(0, 2);
       return p.length >= 1 && Math.min(...p) >= 15 && p.reduce((a, x) => a + x, 0) / p.length >= 20;
     };
     for (let moved = true; moved; ) {
