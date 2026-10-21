@@ -692,7 +692,7 @@ function measureCurrent(A) {
   if (state.readings.length > 7) state.readings.shift();
   const last = state.readings.slice(-5);
   const cs = last.map((r) => r.c);
-  const sure = state.mode !== 'auto' || state.autoFrames >= 6;
+  const sure = state.mode !== 'auto' || state.autoFrames >= 3;
   state.stable = !ref && sure && last.length >= 4 && Math.max(...cs) - Math.min(...cs) < (k > 70 ? 1.5 : 0.8);
   state.signal = true;
 
