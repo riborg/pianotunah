@@ -36,6 +36,7 @@ const state = {
   timer: 0,
   level: -100,
   prevLevel: -100,
+  levels: [], // levels of the latest frames, for attack detection
   noise: -70,
   signal: false,
   readings: [], // latest readings for the current key: { c, hz }
@@ -627,6 +628,8 @@ function analyseFrame() {
   const lvl = rmsDb(buf);
   state.prevLevel = state.level;
   state.level = lvl;
+  state.levels.push(lvl);
+  if (state.levels.length > 4) state.levels.shift();
   // Noise floor: follows quickly down, slowly up, and hardly at all while a
   // note is heard, so a long decay is not mistaken for noise.
   const up = state.signal ? 0.02 : 0.15;
@@ -647,14 +650,18 @@ function analyseFrame() {
 }
 
 // Switch key when the same candidate wins two frames in a row by at least 3 dB
-// over its neighbours; as a note dies out, noise peaks win by less. Count how
-// long the current key has been a clear winner; only then does auto mode save.
+// over its neighbours; as a note dies out, noise peaks win by less. Right
+// after an attack (6 dB up within four frames), one frame with a 10 dB lead
+// is enough. Count how long the current key has been a clear winner; only
+// then does auto mode save.
 function followDetectedKey(d) {
   state.autoFrames = d.score > 8 && d.margin >= 6 && d.key === state.key ? state.autoFrames + 1 : 0;
   if (d.score <= 8) return;
   state.candCount = d.key === state.cand ? state.candCount + 1 : 1;
   state.cand = d.key;
-  if (state.candCount >= 2 && d.margin >= 3 && d.key !== state.key) selectKey(d.key, false);
+  const attack = state.level - Math.min(...state.levels) > 6;
+  const frames = attack && d.margin >= 10 ? 1 : 2;
+  if (state.candCount >= frames && d.margin >= 3 && d.key !== state.key) selectKey(d.key, false);
 }
 
 function idle() {
