@@ -105,6 +105,19 @@ test('B♭0 with a strong 5th partial is not taken for D3', () => {
   assert.equal(noteName(A.detectKey(T).key), 'B♭0');
 });
 
+test('a key far from its target is found where it was last measured', () => {
+  // A4 60 cents flat sounds where A♭4 is 40 cents sharp.
+  const A = analyse(tone(49, -60));
+  assert.equal(noteName(A.detectKey(T).key), 'A♭4');
+  const heard = new Float64Array(89).fill(NaN);
+  heard[49] = -58;
+  const d = A.detectKey(T, 0, 88, heard);
+  assert.equal(noteName(d.key), 'A4');
+  assert.equal(d.shift, -58);
+  // Back near its target, the key is found there again.
+  assert.equal(noteName(analyse(tone(49, -5)).detectKey(T, 0, 88, heard).key), 'A4');
+});
+
 test('partial measured to a hundredth of a cent', () => {
   for (const [k, n, det] of [[49, 1, 3], [13, 6, -7.5], [25, 4, 1.2], [76, 1, -2]]) {
     const target = partialFreq(T.freq[k], T.B[k], n);

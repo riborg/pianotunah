@@ -55,6 +55,7 @@ const state = {
   cand: 0, // candidate key in auto mode and frames in a row
   candCount: 0,
   autoFrames: 0, // frames in a row the current key has been a clear winner
+  shift: 0, // auto mode: cents from the target where the current key was heard
   bReadings: [],
   measureB: null, // { k, until } during manual B measurement
   map: null, // survey of the current key, see mapping.newKeyState
@@ -88,6 +89,7 @@ const keyRec = (k) => state.tuning.keys[k];
 const devOf = (k, hz, n) => (hz && n ? centsBetween(hz, partialFreq(state.T.freq[k], state.T.B[k], n)) : NaN);
 const curDev = (k) => devOf(k, keyRec(k)?.hz, keyRec(k)?.n);
 const beforeDev = (k) => devOf(k, keyRec(k)?.bhz, keyRec(k)?.bn);
+const heardDevs = () => Float64Array.from({ length: KEY_COUNT + 1 }, (_, k) => curDev(k));
 
 // Overpull: tune past the target by a share of how far off the key started.
 function goal(k) {
@@ -682,11 +684,14 @@ function analyseFrame() {
   const A = state.analyzer;
   A.load(buf);
   if (state.mode === 'auto') {
-    const d = A.detectKey(state.T, state.key, top());
+    // Keys measured in this pass are also looked for where they were heard,
+    // so a key far from its target is not taken for its neighbour.
+    const d = A.detectKey(state.T, state.key, top(), heardDevs());
     followDetectedKey(d);
     // Only the current key's own sound gives a reading, not noise between
     // notes or a note halfway between two keys.
     if (d.key !== state.key || d.margin < 2) return idle();
+    state.shift = d.shift;
   } else if (state.map) state.map.heard = A.detectKey(state.T, state.key, top());
   measureCurrent(A);
 }
@@ -718,8 +723,10 @@ function measureCurrent(A) {
   const T = state.T;
   const n = partialOf(k);
   const target = partialFreq(T.freq[k], T.B[k], n);
-  // Locked key: wide window so that even a badly flat piano is found.
-  const m = A.measure(target, state.mode === 'auto' ? 50 : 150, 8);
+  // Auto: around where detection heard the key. Locked key: wide window so
+  // that even a badly flat piano is found.
+  const auto = state.mode === 'auto';
+  const m = A.measure(target * 2 ** ((auto ? state.shift : 0) / 1200), auto ? 50 : 150, 8);
   if (!m) {
     // A key far away has no partial near the target, but detection still hears it.
     if (state.map && !refPlaying()) trackWrongKey(mapping.wrongKey(state.map.heard, k, NaN, NaN, state.run.done));
@@ -734,7 +741,7 @@ function measureCurrent(A) {
   if (state.readings.length > 7) state.readings.shift();
   const last = state.readings.slice(-5);
   const cs = last.map((r) => r.c);
-  const sure = state.mode !== 'auto' || state.autoFrames >= 3;
+  const sure = !auto || state.autoFrames >= 3;
   state.stable = !ref && sure && last.length >= 4 && Math.max(...cs) - Math.min(...cs) < (k > 70 ? 1.5 : 0.8);
   state.signal = true;
 

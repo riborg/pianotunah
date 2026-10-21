@@ -300,6 +300,7 @@ export default {
 <p><strong>Octave type p:q:</strong> partial p of the lower note and partial q of the upper note are made beatless. 2:1 gives the narrowest octave, then 4:2, 6:3, 8:4.</p>
 <h3>Measuring</h3>
 <p>In the bass, partial 6, 4 or 2 is measured: the fundamental is weak and laptop microphones pick up little below 100 Hz. An external USB microphone 20–40 cm above the strings helps; choose it under App.</p>
+<p><strong>Auto and Lock:</strong> Auto finds the key from the sound. Keys measured in this pass are also recognised where they sound, even far from the target. An unmeasured key halfway between two notes: click it on the keyboard to lock it.</p>
 <p><strong>Overpull:</strong> when raising the pitch, strings already tuned go flat as the load increases. With 25%, a note that was at −20 cents is tuned to +5. Under Tuning the app suggests an overpull once the middle of the piano is measured.</p>
 <p><strong>Strobe:</strong> one band per partial, marked on the left: the measured one and the two octaves above it. Still = in tune, moving right = too high. If the top band stands still but the others drift, the string's inharmonicity differs from the model; measure B for the key under <em>Partials vs target</em>.</p>
 <p><strong>Sine tone:</strong> choose Sine under <em>Reference tone</em> and click a key. Tune until the beats disappear.</p>

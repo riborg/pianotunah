@@ -176,38 +176,35 @@ export class Analyzer {
   // partials show in the spectrum. Then a subharmonic check: the note an octave
   // (or twelfth) below the winner has all the winner's partials, so it is
   // chosen if its own partials are heard too.
-  // margin = the winner's lead over its semitone neighbours (dB).
-  detectKey(targets, prevKey = 0, top = KEY_COUNT) {
+  // heard: optional cents per key where the key was last measured. A key is
+  // then also looked for there, so one far from its target is still found.
+  // margin = the winner's lead over its semitone neighbours (dB); shift = the
+  // winner's centre (0 or heard) in cents.
+  detectKey(targets, prevKey = 0, top = KEY_COUNT, heard = null) {
     const scores = new Float64Array(KEY_COUNT + 1).fill(-Infinity);
+    const shifts = new Float64Array(KEY_COUNT + 1);
     let best = 0;
     let bestScore = -Infinity;
     for (let k = 1; k <= top; k++) {
-      let sum = 0;
-      let count = 0;
-      for (let n = 1; n <= 8; n++) {
-        const p = this.partialProm(targets, k, n);
-        if (p === null) {
-          if (partialFreq(targets.freq[k], targets.B[k], n) > 9000) break;
-          continue;
-        }
-        sum += p;
-        count++;
+      scores[k] = this.keyScore(targets, k, 0);
+      const h = heard?.[k];
+      if (Math.abs(h) >= 10) {
+        const sh = this.keyScore(targets, k, h);
+        if (sh > scores[k]) [scores[k], shifts[k]] = [sh, h];
       }
-      if (!count) continue;
-      scores[k] = sum / Math.max(count, 2);
       const s = scores[k] + (k === prevKey ? 2 : 0);
       if (s > bestScore) {
         bestScore = s;
         best = k;
       }
     }
-    if (!best) return { key: 0, score: -Infinity, margin: 0 };
+    if (!best) return { key: 0, score: -Infinity, margin: 0, shift: 0 };
     // One step at a time (octave, twelfth, two octaves and a third), repeated,
     // so two octaves down becomes two octave steps. The third step is for the
-    // bass, where partial 5 can be the strongest. Own partials = those not shared with the
-    // winner. The two strongest of them count, since one partial can be
-    // nearly silent (strike point, unisons cancelling). The thresholds are
-    // above noise peaks (~10 dB).
+    // bass, where partial 5 can be the strongest. Own partials = those not
+    // shared with the winner. The two strongest of them count, since one
+    // partial can be nearly silent (strike point, unisons cancelling). The
+    // thresholds are above noise peaks (~10 dB).
     const sounds = (c, own) => {
       const p = own.map((n) => this.partialProm(targets, c, n)).filter((x) => x !== null).sort((a, b) => b - a).slice(0, 2);
       return p.length >= 1 && Math.min(...p) >= 15 && p.reduce((a, x) => a + x, 0) / p.length >= 20;
@@ -225,16 +222,37 @@ export class Analyzer {
     const neigh = [best - 2, best - 1, best + 1, best + 2]
       .filter((k) => k >= 1 && k <= top)
       .map((k) => scores[k]);
-    return { key: best, score: scores[best], margin: scores[best] - Math.max(...neigh) };
+    return { key: best, score: scores[best], margin: scores[best] - Math.max(...neigh), shift: shifts[best] };
+  }
+
+  // Mean height of key k's first 8 partials, shifted by cents. A peak loses
+  // up to 8 dB the further it is from where the partial should be, so a key
+  // that sounds where it is expected beats a neighbour 40 cents off.
+  keyScore(targets, k, cents) {
+    let sum = 0;
+    let count = 0;
+    for (let n = 1; n <= 8; n++) {
+      const p = this.partialProm(targets, k, n, cents, 8);
+      if (p === null) {
+        if (partialFreq(targets.freq[k], targets.B[k], n) > 9000) break;
+        continue;
+      }
+      sum += p;
+      count++;
+    }
+    return count ? sum / Math.max(count, 2) : -Infinity;
   }
 
   // The partial's height above the noise floor (dB, at least 0), or null if it
-  // is outside the measured range (below 50 Hz or above 9 kHz).
-  partialProm(targets, k, n) {
-    const fn = partialFreq(targets.freq[k], targets.B[k], n);
+  // is outside the measured range (below 50 Hz or above 9 kHz). cents shifts
+  // the partial; penalty (dB) is subtracted at the edge of the ±45 cent window.
+  partialProm(targets, k, n, cents = 0, penalty = 0) {
+    const fn = partialFreq(targets.freq[k], targets.B[k], n) * 2 ** (cents / 1200);
     if (fn < 50 || fn > Math.min(9000, this.sr * 0.45)) return null;
     const pk = this.peakNear(fn, 45);
-    return pk ? Math.max(0, pk.prom) : 0;
+    if (!pk) return 0;
+    const off = Math.min(1, Math.abs(1200 * Math.log2(pk.freq / fn)) / 45);
+    return Math.max(0, pk.prom - penalty * off * off);
   }
 
   // Estimate B from up to 16 partials. Searches upwards and refines the model
