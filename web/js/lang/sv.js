@@ -78,6 +78,7 @@ export default {
   'mic.namesHint': 'Starta mikrofonen en gång så listas ingångarna med namn.',
   'mic.inUse': 'Används: {name}',
   'mic.missing': 'Den valda mikrofonen är inte ansluten; använder systemets standard.',
+  'unison.hint': 'Tonen svävar, så värdet hoppar. Dämpa alla strängar utom en med filtremsa eller kil.',
   'rec.start': 'Spela in',
   'rec.stop': 'Stoppa och spara ({t})',
   'rec.chipTitle': 'Stoppa inspelningen och spara den',

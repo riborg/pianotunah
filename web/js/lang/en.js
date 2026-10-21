@@ -78,6 +78,7 @@ export default {
   'mic.namesHint': 'Start the microphone once to list the inputs by name.',
   'mic.inUse': 'In use: {name}',
   'mic.missing': 'The chosen microphone is not connected; using the system default.',
+  'unison.hint': 'The note beats, so the reading jumps. Mute all strings but one with a felt strip or wedge.',
   'rec.start': 'Record',
   'rec.stop': 'Stop and save ({t})',
   'rec.chipTitle': 'Stop the recording and save it',

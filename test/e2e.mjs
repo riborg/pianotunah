@@ -12,8 +12,9 @@ const settings = { ...DEFAULT_SETTINGS };
 const T = computeTargets(settings);
 
 // Tone: key k, detune in cents, with inharmonicity and a soft decay.
+// unison: a second string that many cents above, at the same strength.
 // Chrome loops the file, so every loop is a new attack.
-function wav(path, k, detune, secs = 3) {
+function wav(path, k, detune, unison = 0, secs = 3) {
   const sr = 48000;
   const n = sr * secs;
   const f1 = T.freq[k] * 2 ** (detune / 1200);
@@ -26,6 +27,7 @@ function wav(path, k, detune, secs = 3) {
       const f = partialFreq(f1, B, p);
       if (f > sr / 2.2) break;
       x += Math.sin(2 * Math.PI * f * t + p) / p;
+      if (unison) x += Math.sin(2 * Math.PI * f * 2 ** (unison / 1200) * t + 2 * p) / p;
     }
     pcm[i] = Math.round(x * 0.25 * Math.exp(-t * 0.6) * Math.min(1, t * 200) * 32767);
   }
@@ -41,9 +43,9 @@ function wav(path, k, detune, secs = 3) {
 const api = (path, init) => fetch(base + '/api/tunings' + path, init);
 const id = 'e2e-' + Date.now().toString(36);
 
-async function run({ key, detune, theme = 'light', shot, seed, record }) {
-  const file = `/tmp/tone-${key}.wav`;
-  wav(file, key, detune);
+async function run({ key, detune, unison = 0, theme = 'light', shot, seed, record }) {
+  const file = `/tmp/tone-${key}-${unison}.wav`;
+  wav(file, key, detune, unison);
   const tuning = {
     id, name: seed?.name || 'E2E-test', rev: 0, updatedAt: new Date().toISOString(),
     settings: { ...settings, ...(seed?.settings || {}) }, keys: seed?.keys || {}, inharmonicity: {}, partials: {}, history: [],
@@ -75,6 +77,7 @@ async function run({ key, detune, theme = 'light', shot, seed, record }) {
     const res = {
       note: await read('#note-name'), cents: await read('#cents-num'),
       pill: await read('#status-pill'), beat: await read('#beat-rate'), measured: await read('#measured'), errors,
+      unisonHint: await page.$eval('#unison-hint', (el) => !el.hidden),
     };
     if (record) {
       // Record 1.5 s (the button is in the closed drawer) and read the WAV file.
@@ -108,6 +111,7 @@ async function run({ key, detune, theme = 'light', shot, seed, record }) {
 }
 
 const cases = [
+  { key: 49, detune: 0, unison: 15 }, // A4 with two strings 15 cents apart: the beat hint shows
   { key: 49, detune: 3, record: true }, // A4, +3 cents, and a recording
   { key: 25, detune: -12 }, // A2, −12 cents (measured on partial 4)
 ];
@@ -119,14 +123,16 @@ for (const c of cases) {
   const n = defaultPartial(c.key);
   const want = partialFreq(T.freq[c.key] * 2 ** (c.detune / 1200), T.B[c.key], n);
   const hz = parseFloat(r.measured.match(/([\d.,]+) Hz/)?.[1].replace(',', '.'));
-  const pass = Math.abs(cents - c.detune) < 0.6 && Math.abs(1200 * Math.log2(hz / want)) < 0.6 && r.errors.length === 0;
+  const pass = c.unison
+    ? r.unisonHint && r.errors.length === 0
+    : Math.abs(cents - c.detune) < 0.6 && Math.abs(1200 * Math.log2(hz / want)) < 0.6 && !r.unisonHint && r.errors.length === 0;
   ok &&= pass;
   if (r.rec) {
     const recOk = r.rec.format === 3 && r.rec.secs > 1.2 && r.rec.secs < 1.8 && r.rec.rms > 0.01;
     ok &&= recOk;
     console.log(`${recOk ? 'OK  ' : 'FAIL'} recording: ${r.rec.secs.toFixed(2)} s at ${r.rec.sr} Hz, rms ${r.rec.rms.toFixed(3)} | ${r.rec.name}`);
   }
-  console.log(`${pass ? 'OK  ' : 'FAIL'} key ${c.key} ${c.detune} cents → ${r.note} ${r.cents} | ${r.measured} (${want.toFixed(2)} Hz) | ${r.pill} | ${r.beat}${r.errors.length ? ' | ' + r.errors.join('; ') : ''}`);
+  console.log(`${pass ? 'OK  ' : 'FAIL'} key ${c.key} ${c.detune} cents${c.unison ? ` + string at ${c.unison}` : ''} → ${r.note} ${r.cents} | ${r.measured} (${want.toFixed(2)} Hz) | ${r.pill} | ${r.beat}${r.unisonHint ? ' | beat hint' : ''}${r.errors.length ? ' | ' + r.errors.join('; ') : ''}`);
 }
 
 if (shots) {

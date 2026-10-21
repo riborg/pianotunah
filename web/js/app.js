@@ -56,6 +56,9 @@ const state = {
   candCount: 0,
   autoFrames: 0, // frames in a row the current key has been a clear winner
   shift: 0, // auto mode: cents from the target where the current key was heard
+  unison: [], // readings for the beat check, see trackBeating
+  unisonSkip: 0,
+  beating: false,
   bReadings: [],
   measureB: null, // { k, until } during manual B measurement
   map: null, // survey of the current key, see mapping.newKeyState
@@ -536,6 +539,7 @@ function chartHover(e) {
 
 function resetReadings() {
   Object.assign(state, { readings: [], spec: [], beatHz: NaN, display: NaN, measHz: NaN, stable: false, partialDevs: [], strobe: [], strobeReadings: [[], []], bReadings: [], autoFrames: 0 });
+  resetBeating();
 }
 
 function selectKey(k, manual = true) {
@@ -669,6 +673,7 @@ function analyseFrame() {
   state.level = lvl;
   state.levels.push(lvl);
   if (state.levels.length > 4) state.levels.shift();
+  if (lvl - Math.min(...state.levels) > 12) Object.assign(state, { unison: [], unisonSkip: 0 }); // a new attack
   // Noise floor: follows quickly down, slowly up, and hardly at all while a
   // note is heard, so a long decay is not mistaken for noise.
   const up = state.signal ? 0.02 : 0.15;
@@ -738,6 +743,7 @@ function measureCurrent(A) {
   if (!ref && state.refTainted) state.readings = []; // drop readings of the reference tone
   state.refTainted = ref;
   state.readings.push({ c: raw, hz: m.freq });
+  if (!ref) trackBeating(k, raw, m.prom);
   if (state.readings.length > 7) state.readings.shift();
   const last = state.readings.slice(-5);
   const cs = last.map((r) => r.c);
@@ -783,6 +789,37 @@ function measureCurrent(A) {
   if (state.map && !ref) collectMapping(A, k, m.freq, f1, raw);
   if (state.measureB && performance.now() > state.measureB.until) finishMeasureB();
   updateReadout();
+}
+
+// Unisons out of tune make the reading swing with the beat. Readings from
+// 0.5 s after the attack, while the note is clearly heard and not being
+// damped, are fitted with a line so that a slow glide does not count. A swing
+// around it of more than 3 cents (4 in the treble) means the note beats; the
+// hint stays until a later note on the key is clean.
+function trackBeating(k, c, prom) {
+  if (prom < 25 || state.level < Math.max(...state.levels) - 12) return;
+  if (state.unisonSkip < 6) return void state.unisonSkip++;
+  const w = state.unison;
+  w.push(c);
+  if (w.length > 10) w.shift();
+  if (w.length < 8) return;
+  const n = w.length;
+  const mx = (n - 1) / 2;
+  const my = w.reduce((a, b) => a + b, 0) / n;
+  let sxy = 0;
+  let sxx = 0;
+  w.forEach((y, i) => {
+    sxy += (i - mx) * (y - my);
+    sxx += (i - mx) ** 2;
+  });
+  const res = w.map((y, i) => y - my - (sxy / sxx) * (i - mx)).sort((a, b) => a - b);
+  const swing = res[n - 2] - res[1];
+  if (swing > (k > 70 ? 4 : 3)) state.beating = true;
+  else if (w.length === 10 && swing < 1.5) state.beating = false;
+}
+
+function resetBeating() {
+  Object.assign(state, { unison: [], unisonSkip: 0, beating: false });
 }
 
 function recordKey(k, n, hz) {
@@ -994,6 +1031,9 @@ function updateReadout() {
   const hz = mic.running && Number.isFinite(state.measHz) ? fmtHz(state.measHz) : '–';
   $('measured').textContent = tr(n > 1 ? 'measured.partial' : 'measured', { n, hz });
   $('measured').dataset.live = state.signal ? '1' : '0';
+  const hint = $('unison-hint');
+  hint.hidden = !(mic.running && state.beating);
+  if (!hint.hidden) hint.textContent = tr('unison.hint');
   $('level-bar').style.width = `${Math.max(0, Math.min(100, (state.level + 80) * 1.4))}%`;
   renderPartials();
 }

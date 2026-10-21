@@ -15,6 +15,7 @@ Piano tuner in the browser. Listens through the computer's microphone, computes 
 - Temperaments: equal, Werckmeister III, Kirnberger III, Vallotti, Young II, ¼- and ⅙-comma meantone.
 - Reference A4 380–480 Hz, or set from the piano's current pitch. Overpull for pitch raises, with a recommended amount when the piano is flat.
 - Strobe, beat spectrogram and reference tone (piano or sine).
+- A hint when a note beats, so the reading jumps: the unisons are out of tune and need muting.
 - Deviation per key under the keyboard, with the tuning curve and a table below it.
 - Upright or grand, size in cm, 85 or 88 keys.
 - Tunings are saved on the server with a history per pass. Export and import as JSON.
