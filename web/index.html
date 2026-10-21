@@ -25,6 +25,7 @@
     <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
     <span data-i18n="top.settings">Settings</span>
   </button>
+  <button id="btn-rec-stop" class="btn danger" type="button" hidden></button>
   <button id="btn-mic" class="btn primary" type="button">Start microphone</button>
 </header>
 
@@ -308,6 +309,10 @@
     <h3><label for="set-mic" data-i18n="app.mic">Microphone</label></h3>
     <select id="set-mic"></select>
     <p class="desc" id="mic-desc"></p>
+
+    <h3 data-i18n="app.rec">Recording</h3>
+    <button id="btn-rec" class="btn" type="button">Record</button>
+    <p class="desc" id="rec-desc"></p>
 
     <h3><label for="set-lang" data-i18n="app.lang">Language</label></h3>
     <select id="set-lang">

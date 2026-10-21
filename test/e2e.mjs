@@ -41,7 +41,7 @@ function wav(path, k, detune, secs = 3) {
 const api = (path, init) => fetch(base + '/api/tunings' + path, init);
 const id = 'e2e-' + Date.now().toString(36);
 
-async function run({ key, detune, theme = 'light', shot, seed }) {
+async function run({ key, detune, theme = 'light', shot, seed, record }) {
   const file = `/tmp/tone-${key}.wav`;
   wav(file, key, detune);
   const tuning = {
@@ -62,7 +62,12 @@ async function run({ key, detune, theme = 'light', shot, seed }) {
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
     await page.setViewport({ width: 1360, height: 1400, deviceScaleFactor: shot ? 2 : 1 });
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: theme }]);
-    await page.evaluateOnNewDocument((tid) => localStorage.setItem('pianotunah.lastTuning', tid), id);
+    await page.evaluateOnNewDocument((tid) => {
+      localStorage.setItem('pianotunah.lastTuning', tid);
+      // Keep downloaded files for the recording check.
+      const create = URL.createObjectURL;
+      URL.createObjectURL = (b) => ((window.lastBlob = b), create(b));
+    }, id);
     await page.goto(base + '/', { waitUntil: 'networkidle0' });
     await page.click('#btn-mic');
     await new Promise((r) => setTimeout(r, shot ? 9000 : 4000));
@@ -71,6 +76,19 @@ async function run({ key, detune, theme = 'light', shot, seed }) {
       note: await read('#note-name'), cents: await read('#cents-num'),
       pill: await read('#status-pill'), beat: await read('#beat-rate'), measured: await read('#measured'), errors,
     };
+    if (record) {
+      // Record 1.5 s (the button is in the closed drawer) and read the WAV file.
+      await page.$eval('#btn-rec', (b) => b.click());
+      await new Promise((r) => setTimeout(r, 1500));
+      await page.click('#btn-rec-stop');
+      res.rec = await page.evaluate(async () => {
+        const v = new DataView(await window.lastBlob.arrayBuffer());
+        const n = v.getUint32(40, true) / 4;
+        let s = 0;
+        for (let i = 0; i < n; i++) s += v.getFloat32(44 + i * 4, true) ** 2;
+        return { format: v.getUint16(20, true), sr: v.getUint32(24, true), secs: n / v.getUint32(24, true), rms: Math.sqrt(s / n), name: document.getElementById('message-text').textContent };
+      });
+    }
     if (shot) {
       mkdirSync(shots, { recursive: true });
       // The whole page, without the empty viewport below it.
@@ -90,7 +108,7 @@ async function run({ key, detune, theme = 'light', shot, seed }) {
 }
 
 const cases = [
-  { key: 49, detune: 3 }, // A4, +3 centss
+  { key: 49, detune: 3, record: true }, // A4, +3 cents, and a recording
   { key: 25, detune: -12 }, // A2, −12 cents (measured on partial 4)
 ];
 let ok = true;
@@ -103,6 +121,11 @@ for (const c of cases) {
   const hz = parseFloat(r.measured.match(/([\d.,]+) Hz/)?.[1].replace(',', '.'));
   const pass = Math.abs(cents - c.detune) < 0.6 && Math.abs(1200 * Math.log2(hz / want)) < 0.6 && r.errors.length === 0;
   ok &&= pass;
+  if (r.rec) {
+    const recOk = r.rec.format === 3 && r.rec.secs > 1.2 && r.rec.secs < 1.8 && r.rec.rms > 0.01;
+    ok &&= recOk;
+    console.log(`${recOk ? 'OK  ' : 'FAIL'} recording: ${r.rec.secs.toFixed(2)} s at ${r.rec.sr} Hz, rms ${r.rec.rms.toFixed(3)} | ${r.rec.name}`);
+  }
   console.log(`${pass ? 'OK  ' : 'FAIL'} key ${c.key} ${c.detune} cents → ${r.note} ${r.cents} | ${r.measured} (${want.toFixed(2)} Hz) | ${r.pill} | ${r.beat}${r.errors.length ? ' | ' + r.errors.join('; ') : ''}`);
 }
 

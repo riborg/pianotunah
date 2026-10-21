@@ -21,6 +21,7 @@ const FRAME_MS = 90; // analysis interval
 const SPEC_COLS = 100; // spectrogram history, ≈ 9 s
 const SPEC_BINS = 48;
 const SPEC_CENTS = 30;
+const REC_MAX_S = 120;
 const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab', curve: 'pianotunah.curve', partials: 'pianotunah.partials', mic: 'pianotunah.mic' };
 
 const mic = new Mic();
@@ -63,6 +64,7 @@ const state = {
   refUntil: 0, // reference tone audible in the microphone until this time
   refTainted: false,
   wakeLock: null,
+  recTimer: 0,
   strobePhase: [0, 0, 0],
   lastAnim: 0,
   colors: {},
@@ -587,6 +589,7 @@ async function startMic() {
 }
 
 function stopMic() {
+  if (mic.recording) finishRecording();
   clearInterval(state.timer);
   mic.stop();
   state.signal = false;
@@ -610,6 +613,40 @@ async function renderMicList() {
 function renderMicButton() {
   $('btn-mic').textContent = tr(mic.running ? 'mic.stop' : 'mic.start');
   $('btn-mic').classList.toggle('primary', !mic.running);
+  renderRecButton();
+}
+
+async function toggleRecording() {
+  if (mic.recording) return finishRecording();
+  try {
+    await mic.startRecording();
+  } catch (e) {
+    message(tr('rec.failed', { err: e.message }), 'error');
+    return;
+  }
+  state.recTimer = setInterval(() => (mic.recordedSeconds >= REC_MAX_S ? finishRecording() : renderRecButton()), 250);
+  renderRecButton();
+}
+
+function finishRecording() {
+  clearInterval(state.recTimer);
+  const p = (x) => String(x).padStart(2, '0');
+  const d = new Date();
+  const name = `pianotunah-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.wav`;
+  download(mic.stopRecording(), name);
+  message(tr('rec.saved', { name }), 'ok');
+  renderRecButton();
+}
+
+function renderRecButton() {
+  const s = mic.recordedSeconds;
+  const t = `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  const b = $('btn-rec');
+  b.textContent = tr(mic.recording ? 'rec.stop' : 'rec.start', { t });
+  b.disabled = !mic.running;
+  b.classList.toggle('danger', mic.recording);
+  $('rec-desc').textContent = mic.running ? tr('rec.desc', { max: REC_MAX_S / 60 }) : tr('rec.needMic');
+  Object.assign($('btn-rec-stop'), { hidden: !mic.recording, textContent: `● ${t}`, title: tr('rec.chipTitle') });
 }
 
 async function requestWakeLock() {
@@ -1039,9 +1076,14 @@ function newPass() {
 }
 
 function exportTuning() {
+  const blob = new Blob([JSON.stringify(state.tuning, null, 2)], { type: 'application/json' });
+  download(blob, (state.tuning.name || tr('name.file')).replace(/[^\p{L}\p{N}_-]+/gu, '_') + '.json');
+}
+
+function download(blob, name) {
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([JSON.stringify(state.tuning, null, 2)], { type: 'application/json' }));
-  a.download = (state.tuning.name || tr('name.file')).replace(/[^\p{L}\p{N}_-]+/gu, '_') + '.json';
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
   document.body.append(a);
   a.click();
   a.remove();
@@ -1172,6 +1214,8 @@ function bindEvents() {
   on('btn-ref-chip', 'click', () => openDrawer('tuning'));
   onAll('[data-tab]', (b) => showTab(b.dataset.tab));
   on('btn-mic', 'click', () => (mic.running ? stopMic() : startMic()));
+  on('btn-rec', 'click', toggleRecording);
+  on('btn-rec-stop', 'click', finishRecording);
 
   // Tuner
   on('btn-prev', 'click', () => selectKey(state.key - 1));

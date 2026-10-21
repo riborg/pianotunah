@@ -53,7 +53,7 @@ UI strings are in `web/js/lang/en.js` and `sv.js`. Static markup uses `data-i18n
 | `web/js/draw.js` | canvas drawing |
 | `web/js/mapping.js` | survey plans and completion criteria |
 | `web/js/saver.js` | save queue with revision check |
-| `web/js/mic.js`, `tone.js` | microphone and reference tones |
+| `web/js/mic.js`, `recorder.js`, `tone.js` | microphone, recording (AudioWorklet) and reference tones |
 | `web/js/i18n.js`, `lang/` | UI strings |
 | `web/js/app.js` | state, DOM and events |
 | `test/` | unit and end-to-end tests |

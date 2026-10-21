@@ -18,6 +18,7 @@ Piano tuner in the browser. Listens through the computer's microphone, computes 
 - Deviation per key under the keyboard, with the tuning curve and a table below it.
 - Upright or grand, size in cm, 85 or 88 keys.
 - Tunings are saved on the server with a history per pass. Export and import as JSON.
+- Recording of the microphone input as WAV, for reporting problems with the key detection.
 - English and Swedish UI.
 
 ## Theory

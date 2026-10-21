@@ -78,6 +78,13 @@ export default {
   'mic.namesHint': 'Start the microphone once to list the inputs by name.',
   'mic.inUse': 'In use: {name}',
   'mic.missing': 'The chosen microphone is not connected; using the system default.',
+  'rec.start': 'Record',
+  'rec.stop': 'Stop and save ({t})',
+  'rec.chipTitle': 'Stop the recording and save it',
+  'rec.desc': 'Saves what the microphone hears, unprocessed, as a WAV file: about 11 MB per minute, at most {max} minutes.',
+  'rec.needMic': 'Start the microphone to record.',
+  'rec.saved': 'Recording saved: {name}',
+  'rec.failed': 'Could not record: {err}',
 
   'map.title': 'Survey',
   'map.scope': 'Scope',
@@ -273,6 +280,7 @@ export default {
   'theme.aria': 'Color mode: {desc}',
 
   'app.mic': 'Microphone',
+  'app.rec': 'Recording',
   'app.lang': 'Language',
   'app.theme': 'Color mode',
   'app.about': 'About',

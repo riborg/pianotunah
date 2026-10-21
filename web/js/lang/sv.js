@@ -78,6 +78,13 @@ export default {
   'mic.namesHint': 'Starta mikrofonen en gång så listas ingångarna med namn.',
   'mic.inUse': 'Används: {name}',
   'mic.missing': 'Den valda mikrofonen är inte ansluten; använder systemets standard.',
+  'rec.start': 'Spela in',
+  'rec.stop': 'Stoppa och spara ({t})',
+  'rec.chipTitle': 'Stoppa inspelningen och spara den',
+  'rec.desc': 'Sparar det mikrofonen hör, obearbetat, som WAV-fil: cirka 11 MB per minut, högst {max} minuter.',
+  'rec.needMic': 'Starta mikrofonen för att spela in.',
+  'rec.saved': 'Inspelningen sparad: {name}',
+  'rec.failed': 'Kunde inte spela in: {err}',
 
   'map.title': 'Kartläggning',
   'map.scope': 'Omfattning',
@@ -273,6 +280,7 @@ export default {
   'theme.aria': 'Färgläge: {desc}',
 
   'app.mic': 'Mikrofon',
+  'app.rec': 'Inspelning',
   'app.lang': 'Språk',
   'app.theme': 'Färgläge',
   'app.about': 'Om',

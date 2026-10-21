@@ -6,6 +6,7 @@ import {
   migrateSettings, recommendedOverpull, DEFAULT_SETTINGS,
 } from '../web/js/theory.js';
 import { Analyzer } from '../web/js/dsp.js';
+import { wavBlob } from '../web/js/mic.js';
 import { newRun, nextPending, handled, wrongKey } from '../web/js/mapping.js';
 
 const SR = 48000;
@@ -136,4 +137,14 @@ test('survey: wrong key is recognised, a flat piano is not', () => {
   assert.equal(wrongKey(clear(49), 49, 0, 0), 0);
   // A2 still ringing when A3 is struck.
   assert.equal(wrongKey(clear(25), 37, 0, 0, new Set([25])), 0);
+});
+
+test('recording: mono 32-bit float WAV', async () => {
+  const v = new DataView(await wavBlob([new Float32Array([0.5, -0.25]), new Float32Array([1])], 44100).arrayBuffer());
+  const str = (o) => String.fromCharCode(...[0, 1, 2, 3].map((i) => v.getUint8(o + i)));
+  assert.deepEqual([str(0), str(8), str(12), str(36)], ['RIFF', 'WAVE', 'fmt ', 'data']);
+  assert.equal(v.getUint32(4, true), v.byteLength - 8);
+  assert.deepEqual([v.getUint16(20, true), v.getUint16(22, true), v.getUint32(24, true), v.getUint16(34, true)], [3, 1, 44100, 32]);
+  assert.equal(v.getUint32(40, true), 12);
+  assert.deepEqual([0, 1, 2].map((i) => v.getFloat32(44 + i * 4, true)), [0.5, -0.25, 1]);
 });
