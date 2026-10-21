@@ -643,14 +643,15 @@ function analyseFrame() {
   measureCurrent(A);
 }
 
-// Switch key when the same candidate wins two frames in a row. Count how long
-// the current key has been a clear winner; only then does auto mode save.
+// Switch key when the same candidate wins two frames in a row by at least 3 dB
+// over its neighbours; as a note dies out, noise peaks win by less. Count how
+// long the current key has been a clear winner; only then does auto mode save.
 function followDetectedKey(d) {
   state.autoFrames = d.score > 8 && d.margin >= 6 && d.key === state.key ? state.autoFrames + 1 : 0;
   if (d.score <= 8) return;
   state.candCount = d.key === state.cand ? state.candCount + 1 : 1;
   state.cand = d.key;
-  if (state.candCount >= 2 && d.key !== state.key) selectKey(d.key, false);
+  if (state.candCount >= 2 && d.margin >= 3 && d.key !== state.key) selectKey(d.key, false);
 }
 
 function idle() {
