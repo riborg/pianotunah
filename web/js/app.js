@@ -681,8 +681,13 @@ function analyseFrame() {
 
   const A = state.analyzer;
   A.load(buf);
-  if (state.mode === 'auto') followDetectedKey(A.detectKey(state.T, state.key, top()));
-  else if (state.map) state.map.heard = A.detectKey(state.T, state.key, top());
+  if (state.mode === 'auto') {
+    const d = A.detectKey(state.T, state.key, top());
+    followDetectedKey(d);
+    // Only the current key's own sound gives a reading, not noise between
+    // notes or a note halfway between two keys.
+    if (d.key !== state.key || d.margin < 2) return idle();
+  } else if (state.map) state.map.heard = A.detectKey(state.T, state.key, top());
   measureCurrent(A);
 }
 
