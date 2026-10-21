@@ -627,14 +627,17 @@ function analyseFrame() {
   const lvl = rmsDb(buf);
   state.prevLevel = state.level;
   state.level = lvl;
-  // Noise floor: follows quickly down, slowly up.
-  state.noise = lvl < state.noise ? lvl : state.noise + Math.min(0.15, (lvl - state.noise) * 0.01);
+  // Noise floor: follows quickly down, slowly up, and hardly at all while a
+  // note is heard, so a long decay is not mistaken for noise.
+  const up = state.signal ? 0.02 : 0.15;
+  state.noise = lvl < state.noise ? lvl : state.noise + Math.min(up, (lvl - state.noise) * 0.01);
   // The survey waits for an attack so the previous key's decay is not measured.
   if (state.map?.waitAttack) {
     if (lvl - state.prevLevel <= 6) return idle();
     state.map.waitAttack = false;
   }
-  if (lvl < Math.max(state.noise + 10, -72)) return idle();
+  // A note starts 10 dB above the noise and is followed down to 5 dB.
+  if (lvl < Math.max(state.noise + (state.signal ? 5 : 10), -72)) return idle();
 
   const A = state.analyzer;
   A.load(buf);
