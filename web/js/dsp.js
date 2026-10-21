@@ -202,8 +202,9 @@ export class Analyzer {
       }
     }
     if (!best) return { key: 0, score: -Infinity, margin: 0 };
-    // One step at a time (octave, twelfth), repeated, so two octaves down
-    // becomes two octave steps. Own partials = those not shared with the
+    // One step at a time (octave, twelfth, two octaves and a third), repeated,
+    // so two octaves down becomes two octave steps. The third step is for the
+    // bass, where partial 5 can be the strongest. Own partials = those not shared with the
     // winner. The two strongest of them count, since one partial can be
     // nearly silent (strike point, unisons cancelling). The thresholds are
     // above noise peaks (~10 dB).
@@ -213,7 +214,7 @@ export class Analyzer {
     };
     for (let moved = true; moved; ) {
       moved = false;
-      for (const [shift, own] of [[12, [3, 5, 7]], [19, [2, 4, 5]]]) {
+      for (const [shift, own] of [[12, [3, 5, 7]], [19, [2, 4, 5]], [28, [2, 3, 4]]]) {
         if (best - shift >= 1 && sounds(best - shift, own)) {
           best -= shift;
           moved = true;

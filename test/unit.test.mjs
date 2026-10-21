@@ -79,6 +79,32 @@ test('key detection on all 88 keys, two piano sizes, in tune and 20 cents flat',
   }
 });
 
+test('B♭0 with a strong 5th partial is not taken for D3', () => {
+  // Peaks (Hz, amplitude) of B♭0 recorded with a laptop microphone, where
+  // detection picked D3, the key 28 semitones up.
+  const peaks = [
+    [84.72, 0.0048], [113.38, 0.0061], [141.59, 0.0062], [171.19, 0.0015], [200.06, 0.00083],
+    [230.4, 0.00061], [260.12, 0.00058], [290.83, 0.0017], [321.41, 0.0021], [352.63, 0.0057],
+    [384.16, 0.0021], [416.63, 0.00062], [449.45, 0.0022], [482.87, 0.00039], [517.07, 0.00015],
+    [550.53, 0.00027], [586.02, 0.0015], [621.2, 0.0018], [658.2, 0.0004], [694.64, 0.0013],
+    [737.03, 0.00036], [800.93, 0.00015], [809.39, 0.00012], [833.6, 0.00017], [865.89, 0.00015],
+    [889.36, 0.00013], [899.36, 0.00027], [931.1, 0.00025], [972.54, 0.00049], [1015.1, 0.00044],
+    [1033.25, 0.00026], [1058.33, 0.00023], [1102.12, 0.00034], [1147.54, 0.00028], [1192.89, 8.9e-05],
+    [1244.48, 4.6e-05], [1279.09, 6.6e-05], [1286.27, 7.9e-05], [1334.49, 3.2e-05], [1353.75, 6.2e-05],
+    [1383.18, 0.00013], [1433.78, 9.1e-05], [1485.37, 2.2e-05], [1547.12, 1.6e-05], [1590.2, 1.3e-05],
+    [1698.11, 1.3e-05],
+  ];
+  const sr = 44100;
+  const buf = new Float32Array(N);
+  peaks.forEach(([f, a], j) => {
+    for (let i = 0; i < N; i++) buf[i] += a * Math.sin((2 * Math.PI * f * i) / sr + j);
+  });
+  for (let i = 0; i < N; i++) buf[i] += noise() * 0.16;
+  const A = new Analyzer(sr);
+  A.load(buf);
+  assert.equal(noteName(A.detectKey(T).key), 'B♭0');
+});
+
 test('partial measured to a hundredth of a cent', () => {
   for (const [k, n, det] of [[49, 1, 3], [13, 6, -7.5], [25, 4, 1.2], [76, 1, -2]]) {
     const target = partialFreq(T.freq[k], T.B[k], n);
