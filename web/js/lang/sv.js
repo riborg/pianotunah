@@ -107,7 +107,7 @@ export default {
   'map.b': 'Inharmonicitet {p}/{n}',
   'map.doneQuick': 'Kartläggningen av alla A är klar: inharmonicitet för {b} av {n} toner. Tangenterna däremellan interpoleras. Se Referens A4 under Stämning för hur pianot ligger.',
   'map.skipped': ' Överhoppade: {keys}.',
-  'map.bOutliers': ' B för {keys} avviker från grannarna och används inte; mät om med Mät B under Deltoner mot mål.',
+  'map.bOutliers': ' B för {keys} avviker från grannarna och används inte; mät om med Mät inharmonicitet (B) under Deltoner mot mål.',
   'map.skippedMany': ' {n} tangenter överhoppade.',
   'map.doneFull': 'Kartläggningen är klar: {n} tangenter mätta, inharmonicitet för {b}. Se Referens A4 under Stämning för hur pianot ligger.',
 
@@ -245,7 +245,8 @@ export default {
   'measure.pick': 'Mät delton',
   'measure.lower': 'Lägre delton',
   'measure.higher': 'Högre delton',
-  'measure.bButton': 'Mät B',
+  'measure.bButton': 'Mät inharmonicitet (B)',
+  'measure.bTitle': 'B: hur mycket strängens övertoner ligger över hela multipler av grundtonen, på grund av styvheten. Stretchen räknas ut från den. Tryck, och slå sedan an tangenten kraftigt.',
   'measure.bval': 'Inharmonicitet B = {b} ({src})',
   'b.measured': 'uppmätt',
   'b.model': 'modell',
@@ -307,7 +308,7 @@ export default {
 <p>I basen mäts delton 6, 4 eller 2: grundtonen är svag och laptopmikrofoner hör dåligt under 100 Hz. En extern USB-mikrofon 20–40 cm ovanför strängarna hjälper; välj den under App.</p>
 <p><strong>Auto och Lås:</strong> Auto hittar tangenten ur ljudet. Tangenter som mätts i omgången känns igen där de låter, även långt från målet. En omätt tangent mitt emellan två toner: klicka på den på klaviaturen så låses den.</p>
 <p><strong>Överdrag:</strong> vid uppdragning sjunker redan stämda strängar när belastningen ökar. Med 25 % stäms en ton som låg −20 cent till +5. Under Stämning föreslår appen ett överdrag när mitten av pianot är mätt.</p>
-<p><strong>Strobe:</strong> en ring per deltons bakom visaren, numrerad i högra änden: innerst den uppmätta, sedan de två oktaverna ovanför. Stilla = rent, snurrar medurs = för högt. <em>Strobe som band</em> visar samma sak och rör sig åt höger när det är för högt. Står den inre ringen still men de andra snurrar, avviker strängens inharmonicitet från modellen; mät B för tangenten under <em>Deltoner mot mål</em>.</p>
+<p><strong>Strobe:</strong> en ring per deltons bakom visaren, numrerad i högra änden: innerst den uppmätta, sedan de två oktaverna ovanför. Stilla = rent, snurrar medurs = för högt. <em>Strobe som band</em> visar samma sak och rör sig åt höger när det är för högt. Står den inre ringen still men de andra snurrar, avviker strängens inharmonicitet från modellen; mät dess inharmonicitet under <em>Deltoner mot mål</em>.</p>
 <p><strong>Sinuston:</strong> välj Sinus under <em>Referenston</em> och klicka på en tangent. Stäm tills svävningarna försvinner.</p>
 <p><strong>Temperatur:</strong> hur kvinterna fördelas inom oktaven. Liksvävande är standard för piano; de historiska under Stämning är för tidig musik.</p>
 <p class="keys-hint">Tangentbord: ← → byter tangent, L låser, A auto, T spelar eller stoppar målton, S öppnar inställningar.</p>`,
