@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   computeTargets, temperamentOffsets, partialFreq, centsBetween, noteName,
-  migrateSettings, recommendedOverpull, DEFAULT_SETTINGS,
+  migrateSettings, recommendedOverpull, octaveStretch, DEFAULT_SETTINGS,
 } from '../web/js/theory.js';
 import { Analyzer } from '../web/js/dsp.js';
 import { wavBlob } from '../web/js/mic.js';
@@ -55,6 +55,18 @@ test('stretch: bass lower, treble higher, more for smaller pianos', () => {
   const grand = computeTargets({ ...DEFAULT_SETTINGS, pianoKind: 'grand', sizeCm: 274 });
   assert.ok(small.cents[1] < grand.cents[1] && grand.cents[1] < 0);
   assert.ok(small.cents[88] > grand.cents[88] && grand.cents[88] > 0);
+});
+
+// B measured on a 120 cm upright (Jehle): with 4:2 octaves all the way up,
+// A7 came out at +57 cents.
+test('stretch: treble octaves move to 2:1 by C8 and rise smoothly', () => {
+  const measured = { 1: 5.62e-4, 13: 2.26e-4, 25: 1.87e-4, 37: 3.28e-4, 49: 7.9e-4, 61: 2.41e-3, 73: 4.85e-3, 85: 9.96e-3 };
+  const t = computeTargets(DEFAULT_SETTINGS, measured);
+  const S = t.stretch;
+  assert.ok(Math.abs(S[88] - S[76] - octaveStretch(t.B[76], t.B[88], '2:1')) < 1e-9);
+  assert.ok(Math.abs(S[64] - S[52] - octaveStretch(t.B[52], t.B[64], '4:2')) < 1e-9);
+  for (let k = 50; k <= 88; k++) assert.ok(S[k] > S[k - 1], `stretch rises at key ${k}`);
+  assert.ok(S[85] > 25 && S[85] < 40, `A7 at ${S[85].toFixed(1)} cents`);
 });
 
 test('old instrument choices are migrated', () => {

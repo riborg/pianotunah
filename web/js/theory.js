@@ -233,6 +233,13 @@ export const DEFAULT_SETTINGS = {
 // octaves are built up and down, one at a time, with the chosen octave type.
 const T_LOW = A4 - 12;
 
+// Above C6 the higher partials of the upper note are weak and die quickly,
+// and with the treble's large B a wide octave type adds up fast (a 4:2 octave
+// A6–A7 was 35 cents wide on a 120 cm upright). The octaves move to 2:1 over
+// C6–C8, blended rather than switched so the curve has no step.
+const TOP_FROM = 64; // C6
+const topShare = (k) => Math.min(1, Math.max(0, (k - TOP_FROM) / 24));
+
 export function computeTargets(settings, measuredB = {}) {
   const s = { ...DEFAULT_SETTINGS, ...settings };
   const B = bCurve(instrumentOf(s), measuredB);
@@ -253,7 +260,10 @@ export function computeTargets(settings, measuredB = {}) {
     extraTreble += p.extraTreble || 0;
     S[T_LOW] = -octaveStretch(B[T_LOW], B[A4], p.mid);
     for (let k = T_LOW + 1; k < A4; k++) S[k] = (S[T_LOW] * (A4 - k)) / 12;
-    for (let k = A4 + 1; k <= KEY_COUNT; k++) S[k] = S[k - 12] + octaveStretch(B[k - 12], B[k], p.treble);
+    for (let k = A4 + 1; k <= KEY_COUNT; k++) {
+      const w = topShare(k);
+      S[k] = S[k - 12] + (1 - w) * octaveStretch(B[k - 12], B[k], p.treble) + w * octaveStretch(B[k - 12], B[k], '2:1');
+    }
     for (let k = T_LOW - 1; k >= 1; k--) S[k] = S[k + 12] - octaveStretch(B[k], B[k + 12], p.bass);
   }
   for (let k = 1; k <= KEY_COUNT; k++) {

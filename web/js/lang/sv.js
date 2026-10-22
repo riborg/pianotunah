@@ -301,7 +301,7 @@ export default {
 <h3>Varför stretch?</h3>
 <p>Strängar är styva, så övertonerna ligger något över heltalsmultipler: f<sub>n</sub> = n·f₀·√(1 + B·n²). B, inharmoniciteten, är störst i diskanten och i korta bassträngar.</p>
 <p>Rena oktaver kräver att den övre tonens grundton matchar den undre tonens andra (fjärde, sjätte) delton. Därför stäms diskanten högre och basen lägre, typiskt 20–40 cent i ändarna.</p>
-<p><strong>Oktavtyp p:q:</strong> delton p i den undre tonen och q i den övre görs svävningsfria. 2:1 ger smalast oktav, sedan 4:2, 6:3, 8:4.</p>
+<p><strong>Oktavtyp p:q:</strong> delton p i den undre tonen och q i den övre görs svävningsfria. 2:1 ger smalast oktav, sedan 4:2, 6:3, 8:4. Ovanför C6 går diskantens oktaver över till 2:1 fram till C8, eftersom den övre tonens högre deltoner är svaga där.</p>
 <h3>Mätningen</h3>
 <p>I basen mäts delton 6, 4 eller 2: grundtonen är svag och laptopmikrofoner hör dåligt under 100 Hz. En extern USB-mikrofon 20–40 cm ovanför strängarna hjälper; välj den under App.</p>
 <p><strong>Auto och Lås:</strong> Auto hittar tangenten ur ljudet. Tangenter som mätts i omgången känns igen där de låter, även långt från målet. En omätt tangent mitt emellan två toner: klicka på den på klaviaturen så låses den.</p>

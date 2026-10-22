@@ -301,7 +301,7 @@ export default {
 <h3>Why stretch?</h3>
 <p>Strings are stiff, so the overtones lie slightly above integer multiples: f<sub>n</sub> = n·f₀·√(1 + B·n²). B, the inharmonicity, is largest in the treble and in short bass strings.</p>
 <p>Beatless octaves require the upper note's fundamental to match the lower note's second (fourth, sixth) partial. So the treble is tuned sharp and the bass flat, typically 20–40 cents at the ends.</p>
-<p><strong>Octave type p:q:</strong> partial p of the lower note and partial q of the upper note are made beatless. 2:1 gives the narrowest octave, then 4:2, 6:3, 8:4.</p>
+<p><strong>Octave type p:q:</strong> partial p of the lower note and partial q of the upper note are made beatless. 2:1 gives the narrowest octave, then 4:2, 6:3, 8:4. Above C6 the treble octaves move to 2:1 by C8, as the upper note's higher partials are weak there.</p>
 <h3>Measuring</h3>
 <p>In the bass, partial 6, 4 or 2 is measured: the fundamental is weak and laptop microphones pick up little below 100 Hz. An external USB microphone 20–40 cm above the strings helps; choose it under App.</p>
 <p><strong>Auto and Lock:</strong> Auto finds the key from the sound. Keys measured in this pass are also recognised where they sound, even far from the target. An unmeasured key halfway between two notes: click it on the keyboard to lock it.</p>
