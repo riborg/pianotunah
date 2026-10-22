@@ -62,6 +62,9 @@ const state = {
   beating: false,
   bReadings: [],
   bBad: new Set(), // keys whose measured B is left out, see bOutliers
+  attacks: 0, // attacks heard, see jumpConfirmed
+  inAttack: false,
+  jump: null, // { k, hz, attack } a reading far from the last one, waiting for a new attack
   diag: { frames: 0, readings: 0, idle: {}, savedKey: 0, savedAt: 0 }, // counts for the debug log, see diagStatus
   measureB: null, // { k, until } during manual B measurement
   map: null, // survey of the current key, see mapping.newKeyState
@@ -697,7 +700,10 @@ function analyseFrame() {
   state.level = lvl;
   state.levels.push(lvl);
   if (state.levels.length > 4) state.levels.shift();
-  if (lvl - Math.min(...state.levels) > 12) Object.assign(state, { unison: [], unisonSkip: 0 }); // a new attack
+  const attack = lvl - Math.min(...state.levels) > 12;
+  if (attack && !state.inAttack) state.attacks++; // once per attack, though it shows for a few frames
+  state.inAttack = attack;
+  if (attack) Object.assign(state, { unison: [], unisonSkip: 0 }); // a new attack
   // Noise floor: follows quickly down, slowly up, and hardly at all while a
   // note is heard, so a long decay is not mistaken for noise.
   const up = state.signal ? 0.02 : 0.15;
@@ -807,7 +813,10 @@ function measureCurrent(A) {
   });
 
   // Save the value that is shown. During a survey, collectMapping saves instead.
-  if (state.stable && !state.map) recordKey(k, n, median(last.map((r) => r.hz)));
+  if (state.stable && !state.map) {
+    const hz = median(last.map((r) => r.hz));
+    if (jumpConfirmed(k, n, hz)) recordKey(k, n, hz);
+  }
 
   const f1 = T.freq[k] * 2 ** (raw / 1200);
   if (!ref && state.measureB?.k === k) {
@@ -848,6 +857,32 @@ function trackBeating(k, c, prom) {
 
 function resetBeating() {
   Object.assign(state, { unison: [], unisonSkip: 0, beating: false });
+}
+
+// A reading more than 50 cents from the key's last one is saved only when a
+// new attack gives it again (within 10 cents). Another note still ringing or
+// a neighbour struck by mistake was saved as A4 at −94 cents. Tuning moves
+// the reading in smaller steps between strikes, so it is not held up.
+const JUMP = 50;
+function jumpConfirmed(k, n, hz) {
+  const rec = state.tuning.keys[k];
+  if (!rec?.hz || rec.n !== n || Math.abs(centsBetween(hz, rec.hz)) <= JUMP) {
+    state.jump = null;
+    return true;
+  }
+  const j = state.jump;
+  const same = j && j.k === k && Math.abs(centsBetween(hz, j.hz)) < 10;
+  if (same && state.attacks > j.attack) {
+    state.jump = null;
+    return true;
+  }
+  if (!same) {
+    state.jump = { k, hz, attack: state.attacks };
+    const c = fmtC(centsBetween(hz, rec.hz), 0);
+    diag(`not saved: ${kName(k)} ${c} cents from its last reading, waiting for a new attack`);
+    message(tr('msg.jump', { name: kName(k), c }), 'warn', 5000);
+  }
+  return false;
 }
 
 function recordKey(k, n, hz) {
