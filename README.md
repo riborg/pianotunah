@@ -68,6 +68,7 @@ The image is built `FROM scratch` (~7 MB) for amd64 and arm64: a static Go binar
 |------------|---------|-|
 | `ADDR`     | `:8080` | listen address |
 | `DATA_DIR` | `/data` | saved tunings (JSON) |
+| `DEBUG`    | unset   | set (e.g. `1`): the page sends what it does to the container log, for `docker compose logs -f` |
 
 ### Reverse proxy
 

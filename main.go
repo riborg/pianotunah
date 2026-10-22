@@ -283,6 +283,38 @@ func (s *store) del(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// Lines from the page's diagnostics (diag.js), only with DEBUG set. id
+// tells apart pages open at the same time.
+func clientLog(w http.ResponseWriter, r *http.Request) {
+	var msg struct {
+		ID    string   `json:"id"`
+		Lines []string `json:"lines"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 64<<10)).Decode(&msg); err != nil || !idPattern.MatchString(msg.ID) {
+		http.Error(w, "invalid log", http.StatusBadRequest)
+		return
+	}
+	clean := func(s string) string {
+		s = strings.Map(func(c rune) rune {
+			if c < 32 || c == 127 {
+				return ' '
+			}
+			return c
+		}, s)
+		if r := []rune(s); len(r) > 400 {
+			s = string(r[:400]) + "…"
+		}
+		return s
+	}
+	for i, line := range msg.Lines {
+		if i == 100 {
+			break
+		}
+		log.Printf("page %s: %s", clean(msg.ID), clean(line))
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func writeJSON(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(v)
@@ -315,6 +347,7 @@ func env(key, def string) string {
 
 func main() {
 	addr := env("ADDR", ":8080")
+	debug := env("DEBUG", "") != ""
 
 	// `pianotunah healthcheck` is used by Docker (the scratch image has no curl).
 	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
@@ -338,7 +371,12 @@ func main() {
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) { io.WriteString(w, "ok") })
-	mux.HandleFunc("GET /api/version", func(w http.ResponseWriter, _ *http.Request) { writeJSON(w, map[string]string{"version": version}) })
+	mux.HandleFunc("GET /api/version", func(w http.ResponseWriter, _ *http.Request) {
+		writeJSON(w, map[string]any{"version": version, "debug": debug})
+	})
+	if debug {
+		mux.HandleFunc("POST /api/log", clientLog)
+	}
 	mux.HandleFunc("GET /api/tunings", s.list)
 	mux.HandleFunc("GET /api/tunings/{id}", s.get)
 	mux.HandleFunc("PUT /api/tunings/{id}", s.put)
@@ -359,6 +397,9 @@ func main() {
 	defer stop()
 	go func() {
 		log.Printf("Piano Tunah %s listening on %s, data in %s", version, addr, s.dir)
+		if debug {
+			log.Print("DEBUG is set: pages log what they do")
+		}
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatal(err)
 		}

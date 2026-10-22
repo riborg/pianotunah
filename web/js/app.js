@@ -12,6 +12,7 @@ import { tr, trNodes, lang, locale, setLang, translateDom } from './i18n.js';
 import { Mic } from './mic.js';
 import { TonePlayer } from './tone.js';
 import { Saver } from './saver.js';
+import { enableDiag, diagOn, diag } from './diag.js';
 import { readColors, drawDial, drawSpectro, drawBeat, drawChart } from './draw.js';
 import * as mapping from './mapping.js';
 
@@ -61,6 +62,7 @@ const state = {
   beating: false,
   bReadings: [],
   bBad: new Set(), // keys whose measured B is left out, see bOutliers
+  diag: { frames: 0, readings: 0, idle: {}, savedKey: 0, savedAt: 0 }, // counts for the debug log, see diagStatus
   measureB: null, // { k, until } during manual B measurement
   map: null, // survey of the current key, see mapping.newKeyState
   run: null, // the survey as a whole, see mapping.newRun
@@ -361,7 +363,10 @@ function renderKeyInfo() {
   );
   $('partial-val').textContent = n;
   $('bval').textContent = tr('measure.bval', { b: fmtB(T.B[k]), src: bSource(k) });
-  if (tones.sineOn) tones.setSine(sineFreq());
+  if (tones.sineOn) {
+    diag(`sine ${kName(k)} partial ${n}, ${fmtHz(sineFreq())}`);
+    tones.setSine(sineFreq());
+  }
 }
 
 function renderKeyboard() {
@@ -532,6 +537,7 @@ function selectKey(k, manual = true) {
   k = Math.max(1, Math.min(top(), k));
   if (manual && state.mode === 'auto') setMode('lock');
   if (k === state.key) return;
+  diag(`key ${kName(k)} (${manual ? 'chosen' : state.mode})`);
   state.key = k;
   resetReadings();
   if (state.map) state.map = mapping.newKeyState();
@@ -543,6 +549,7 @@ function selectKey(k, manual = true) {
 }
 
 function setMode(m) {
+  if (m !== state.mode) diag(`mode ${m}`);
   state.mode = m;
   for (const id of ['auto', 'lock', 'map']) $('mode-' + id).setAttribute('aria-pressed', m === id);
   state.map = m === 'map' ? mapping.newKeyState() : null;
@@ -569,19 +576,47 @@ async function startMic() {
       await mic.start();
     }
   } catch (e) {
+    diag(`mic failed: ${e.name} ${e.message}`);
     const key = { insecure: 'mic.insecure', NotAllowedError: 'mic.denied' }[e.name];
     message(key ? tr(key) : tr('mic.failed', { err: e.message }), 'error', 0);
     return;
   }
   state.analyzer = new Analyzer(mic.sampleRate);
   state.noise = -70;
+  watchMic();
   state.timer = setInterval(processFrame, FRAME_MS);
   renderMicButton();
   renderMicList(); // names are known now
   requestWakeLock();
 }
 
+// Debug log: what the browser does with the microphone, so a stop shows why.
+function watchMic() {
+  const track = mic.stream.getAudioTracks()[0];
+  diag(`mic on: ${mic.label || 'default input'}, ${mic.sampleRate} Hz, audio ${mic.ctx.state}`);
+  mic.ctx.addEventListener('statechange', () => diag(`audio ${mic.ctx?.state}`));
+  for (const ev of ['mute', 'unmute', 'ended']) track?.addEventListener(ev, () => diag(`mic track ${ev}`));
+}
+
+// Every 5 s while the microphone runs: frames analysed, readings, and why the
+// other frames gave none.
+function diagStatus() {
+  const d = state.diag;
+  if (mic.running && diagOn()) {
+    const track = mic.stream?.getAudioTracks()[0];
+    const idle = Object.entries(d.idle).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(', ') || '–';
+    const gate = Math.max(state.noise + (state.signal ? 5 : 10), -72);
+    diag(
+      `status: ${d.frames} frames, ${d.readings} readings; idle: ${idle}; level ${state.level.toFixed(0)} dB, noise ${state.noise.toFixed(0)}, gate ${gate.toFixed(0)}; ` +
+        `${state.mode} ${kName(state.key)}; audio ${mic.ctx.state}, track ${track?.readyState}${track?.muted ? ' muted' : ''}, page ${document.visibilityState}` +
+        (refPlaying() ? ', reference tone' : ''),
+    );
+  }
+  Object.assign(d, { frames: 0, readings: 0, idle: {} });
+}
+
 function stopMic() {
+  diag('mic off');
   if (mic.recording) finishRecording();
   clearInterval(state.timer);
   mic.stop();
@@ -647,6 +682,7 @@ async function requestWakeLock() {
 }
 
 function processFrame() {
+  state.diag.frames++;
   state.frameCol = null;
   analyseFrame();
   state.spec.push(state.frameCol);
@@ -667,11 +703,11 @@ function analyseFrame() {
   state.noise = lvl < state.noise ? lvl : state.noise + Math.min(up, (lvl - state.noise) * 0.01);
   // The survey waits for an attack so the previous key's decay is not measured.
   if (state.map?.waitAttack) {
-    if (lvl - state.prevLevel <= 6) return idle();
+    if (lvl - state.prevLevel <= 6) return idle('waiting for attack');
     state.map.waitAttack = false;
   }
   // A note starts 10 dB above the noise and is followed down to 5 dB.
-  if (lvl < Math.max(state.noise + (state.signal ? 5 : 10), -72)) return idle();
+  if (lvl < Math.max(state.noise + (state.signal ? 5 : 10), -72)) return idle('quiet');
 
   const A = state.analyzer;
   A.load(buf);
@@ -682,7 +718,7 @@ function analyseFrame() {
     followDetectedKey(d);
     // Only the current key's own sound gives a reading, not noise between
     // notes or a note halfway between two keys.
-    if (d.key !== state.key || d.margin < 2) return idle();
+    if (d.key !== state.key || d.margin < 2) return idle(d.key !== state.key ? `hears ${kName(d.key)}` : 'unsure');
     state.shift = d.shift;
   } else if (state.map) state.map.heard = A.detectKey(state.T, state.key, top());
   measureCurrent(A);
@@ -703,7 +739,8 @@ function followDetectedKey(d) {
   if (state.candCount >= frames && d.margin >= 3 && d.key !== state.key) selectKey(d.key, false);
 }
 
-function idle() {
+function idle(why) {
+  state.diag.idle[why] = (state.diag.idle[why] || 0) + 1;
   state.signal = false;
   if (state.map && !state.map.waitAttack && state.map.pitch.length) state.map.lost = true;
   renderMapPanel();
@@ -722,7 +759,7 @@ function measureCurrent(A) {
   if (!m) {
     // A key far away has no partial near the target, but detection still hears it.
     if (state.map && !refPlaying()) trackWrongKey(mapping.wrongKey(state.map.heard, k, NaN, NaN, state.run.done));
-    return idle();
+    return idle('no partial');
   }
 
   const raw = centsBetween(m.freq, target);
@@ -737,6 +774,7 @@ function measureCurrent(A) {
   const sure = !auto || state.autoFrames >= 3;
   state.stable = !ref && sure && last.length >= 4 && Math.max(...cs) - Math.min(...cs) < (k > 70 ? 1.5 : 0.8);
   state.signal = true;
+  state.diag.readings++;
 
   const g = goal(k);
   state.display = median(cs) - g;
@@ -814,11 +852,16 @@ function recordKey(k, n, hz) {
   if (!rec.bhz) Object.assign(rec, { bhz: hz, bn: n }); // first measurement in the pass
   Object.assign(rec, { hz, n, at: Date.now() });
   state.tuning.keys[k] = rec;
+  if (k !== state.diag.savedKey || Date.now() - state.diag.savedAt > 2000) {
+    diag(`saved ${kName(k)} ${fmtC(centsBetween(hz, partialFreq(state.T.freq[k], state.T.B[k], n)))} cents`);
+    Object.assign(state.diag, { savedKey: k, savedAt: Date.now() });
+  }
   markDirty();
   renderKeyStatus();
 }
 
 function storeB(k, B) {
+  diag(`B ${kName(k)} = ${fmtB(B)}`);
   state.tuning.inharmonicity[k] = Number(B.toPrecision(4));
   markDirty();
   recompute();
@@ -960,18 +1003,21 @@ const goalF1 = (k) => state.T.freq[k] * 2 ** (goal(k) / 1200);
 const sineFreq = () => partialFreq(goalF1(state.key), state.T.B[state.key], partialOf(state.key));
 
 function playPiano() {
+  diag(`piano tone ${kName(state.key)}`);
   const ms = tones.pluck(goalF1(state.key), state.T.B[state.key]);
   state.refUntil = Math.max(state.refUntil, performance.now() + ms + 800); // + the analysis buffer
 }
 
 function startSine() {
   if (!tones.sineOn && mic.running) message(tr('msg.sineNoSave'), 'info', 4000);
+  diag(`sine ${kName(state.key)} partial ${partialOf(state.key)}, ${fmtHz(sineFreq())}`);
   tones.startSine(sineFreq());
   renderToneButton();
 }
 
 function stopSine() {
   if (!tones.sineOn) return;
+  diag('sine off');
   tones.stopSine();
   state.refUntil = performance.now() + 800;
   renderToneButton();
@@ -1409,7 +1455,12 @@ function bindEvents() {
       await startMic();
     }
   });
-  navigator.mediaDevices?.addEventListener?.('devicechange', renderMicList);
+  navigator.mediaDevices?.addEventListener?.('devicechange', () => {
+    diag('audio devices changed');
+    renderMicList();
+  });
+  window.addEventListener('error', (e) => diag(`error: ${e.message} (${e.filename?.split('/').pop()}:${e.lineno})`));
+  window.addEventListener('unhandledrejection', (e) => diag(`error: ${e.reason?.message || e.reason}`));
   on('curve-toggle', 'click', () => {
     const open = $('curve-row').hidden;
     setCurveOpen(open);
@@ -1447,6 +1498,7 @@ function bindEvents() {
   });
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', refreshColors);
   document.addEventListener('visibilitychange', () => {
+    diag(`page ${document.visibilityState}`);
     if (document.visibilityState === 'hidden') saver.flush();
     else if (mic.running) {
       mic.resume();
@@ -1500,7 +1552,12 @@ async function boot() {
   setToneMode(tone);
   fetch('api/version')
     .then((r) => r.json())
-    .then(({ version }) => {
+    .then(({ version, debug }) => {
+      if (debug) {
+        enableDiag();
+        diag(`page loaded: ${navigator.userAgent}`);
+        setInterval(diagStatus, 5000);
+      }
       $('app-version').textContent = version;
       if (/^v\d/.test(version)) $('app-version').href += '/tag/' + version;
     })
