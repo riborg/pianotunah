@@ -76,7 +76,7 @@ async function run({ key, detune, unison = 0, theme = 'light', shot, seed, recor
     const read = (sel) => page.$eval(sel, (el) => el.textContent.trim());
     const res = {
       note: await read('#note-name'), cents: await read('#cents-num'),
-      pill: await read('#status-pill'), beat: await read('#beat-rate'), measured: await read('#measured'), errors,
+      pill: await read('#status'), beat: await read('#beat-rate'), measured: await read('#measured'), errors,
       unisonHint: await page.$eval('#unison-hint', (el) => !el.hidden),
     };
     if (record) {

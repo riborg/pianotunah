@@ -32,12 +32,6 @@
 <main class="layout">
   <section class="tuner card" aria-label="Tuner" data-i18n-aria-label="tuner.label">
     <div class="tuner-head">
-      <button id="btn-prev" class="btn icon" type="button" aria-label="Previous key" title="Previous key (←)" data-i18n-aria-label="tuner.prev" data-i18n-title="tuner.prevTitle">‹</button>
-      <div class="note">
-        <div class="note-name" id="note-name">A4</div>
-        <div class="note-sub" id="note-sub"></div>
-      </div>
-      <button id="btn-next" class="btn icon" type="button" aria-label="Next key" title="Next key (→)" data-i18n-aria-label="tuner.next" data-i18n-title="tuner.nextTitle">›</button>
       <button id="btn-ref-chip" class="ref-chip" type="button" title="Change reference" data-i18n-title="tuner.refTitle"></button>
       <div class="modes" role="group" aria-label="Mode" data-i18n-aria-label="tuner.mode">
         <button id="mode-auto" class="seg" type="button" aria-pressed="true" title="Detect the key automatically (A)" data-i18n="mode.auto" data-i18n-title="mode.autoTitle">Auto</button>
@@ -69,15 +63,19 @@
       </div>
     </div>
 
-    <div class="readout">
-      <div class="cents" id="cents"><span id="cents-num">–</span><span class="unit" data-i18n="unit.cents">cents</span></div>
-      <div class="status-pill" id="status-pill" data-s="idle"></div>
+    <div class="dial">
+      <canvas id="dial" data-fluid aria-hidden="true"></canvas>
+      <button id="btn-prev" class="btn icon nav prev" type="button" aria-label="Previous key" title="Previous key (←)" data-i18n-aria-label="tuner.prev" data-i18n-title="tuner.prevTitle">‹</button>
+      <div class="hub" id="hub" data-s="idle">
+        <div class="cents" id="cents"><span id="cents-num">–</span><span class="unit" data-i18n="unit.cents">cents</span></div>
+        <div class="note-name" id="note-name">A4</div>
+      </div>
+      <button id="btn-next" class="btn icon nav next" type="button" aria-label="Next key" title="Next key (→)" data-i18n-aria-label="tuner.next" data-i18n-title="tuner.nextTitle">›</button>
     </div>
-    <div class="targetline" id="targetline"></div>
-    <div class="targetline measured" id="measured"></div>
+    <p class="status" id="status" data-s="idle"></p>
+    <p class="keyline"><span id="note-sub"></span><span id="targetline"></span><span id="measured"></span></p>
     <p class="unison-hint" id="unison-hint" role="status" hidden></p>
 
-    <canvas id="meter" class="meter" height="64" aria-hidden="true"></canvas>
     <div class="strobe-box">
       <span class="mini-label" data-i18n="strobe.label">Strobe per partial: still = in tune, right = too high</span>
       <canvas id="strobe" class="strobe" height="66" aria-hidden="true"></canvas>

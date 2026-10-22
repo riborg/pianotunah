@@ -10,13 +10,15 @@ export function fitCanvas(c) {
   const dpr = window.devicePixelRatio || 1;
   const w = c.clientWidth;
   // Logical height is read once: c.height is rewritten with dpr below and must
-  // not be read back, or the canvas grows every frame on HiDPI screens.
-  c.dataset.h ||= c.getAttribute('height');
-  const h = Number(c.dataset.h);
+  // not be read back, or the canvas grows every frame on HiDPI screens. A
+  // canvas marked data-fluid takes its height from CSS instead.
+  const fluid = 'fluid' in c.dataset;
+  if (!fluid) c.dataset.h ||= c.getAttribute('height');
+  const h = fluid ? c.clientHeight : Number(c.dataset.h);
   if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
     c.width = Math.round(w * dpr);
     c.height = Math.round(h * dpr);
-    c.style.height = h + 'px';
+    if (!fluid) c.style.height = h + 'px';
   }
   const ctx = c.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -57,39 +59,117 @@ export function scaleRgb(c, tol, C) {
 
 export const scaleColor = (c, tol, C) => `rgb(${scaleRgb(c, tol, C).join(' ')})`;
 
-// Needle ±50 cents on a compressed scale so the centre gets the most room.
-export function drawMeter(canvas, { display, signal, tol }, C) {
+// Dial: a half circle with the needle over a ±50 cent scale, compressed so
+// the centre gets the most room, and strobe rings behind it. Proportions are
+// of the canvas width; the note hub is HTML, placed by .dial in style.css
+// (DIAL.cy, DIAL.hub). Rings as on a mechanical strobe: one per band
+// (bands: [{ p, c }], innermost first), still = in tune, clockwise = too high,
+// a ring an octave up turns twice as fast. Each ring is a whole circle clipped
+// to the upper half, so it never runs empty. A ring without a reading is grey
+// and still. phases (three angles) is updated.
+const DIAL = { cy: 0.54, hub: 0.15, rings: [[0.185, 0.25], [0.26, 0.325], [0.335, 0.39]], segs: [10, 14, 18], r: 0.41, max: (80 * Math.PI) / 180 };
+
+export function drawDial(canvas, { display, signal, bands, live, tol }, C, dt, phases) {
   const { ctx, w } = fitCanvas(canvas);
-  const xOf = (c) => w / 2 + Math.sign(c) * Math.sqrt(Math.min(Math.abs(c), 50) / 50) * (w / 2 - 14);
-  ctx.fillStyle = C.good;
-  ctx.globalAlpha = 0.18;
-  ctx.fillRect(xOf(-tol), 8, xOf(tol) - xOf(-tol), 34);
-  ctx.globalAlpha = 1;
-  ctx.font = `11px ${MONO}`;
-  ctx.textAlign = 'center';
-  for (const t of [-50, -20, -10, -5, -2, -1, 0, 1, 2, 5, 10, 20, 50]) {
-    const x = xOf(t);
-    ctx.strokeStyle = t === 0 ? C.ink : C.muted;
-    ctx.lineWidth = t === 0 ? 2 : 1;
-    ctx.beginPath();
-    ctx.moveTo(x, t === 0 ? 6 : 16);
-    ctx.lineTo(x, 42);
-    ctx.stroke();
-    if (Math.abs(t) !== 1 || w > 500) {
-      ctx.fillStyle = C.muted;
-      ctx.fillText(signed(t), x, 58);
-    }
-  }
-  if (!Number.isFinite(display)) return;
-  const x = xOf(display);
-  ctx.globalAlpha = signal ? 1 : 0.35;
-  ctx.fillStyle = scaleColor(display, tol, C);
+  const cx = w / 2;
+  const cy = w * DIAL.cy;
+  const R = w * DIAL.r;
+  const still = reducedMotion();
+  // Angle from straight up, and the canvas angle for it.
+  const ang = (c) => Math.sign(c) * Math.sqrt(Math.min(Math.abs(c), 50) / 50) * DIAL.max;
+  const ca = (a) => -Math.PI / 2 + a;
+  const at = (a, r) => [cx + r * Math.sin(a), cy - r * Math.cos(a)];
+
+  ctx.save();
   ctx.beginPath();
-  ctx.moveTo(x, 42);
-  ctx.lineTo(x - 7, 12);
-  ctx.lineTo(x + 7, 12);
-  ctx.closePath();
+  ctx.rect(0, 0, w, cy);
+  ctx.clip();
+  DIAL.rings.forEach(([f0, f1], i) => {
+    const r0 = w * f0;
+    const r1 = w * f1;
+    const band = bands[i];
+    const on = live && Number.isFinite(band?.c);
+    ctx.fillStyle = C.stripe2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r1, 0, 2 * Math.PI);
+    ctx.arc(cx, cy, r0, 2 * Math.PI, 0, true);
+    ctx.fill();
+    if (on && !still) phases[i] = (phases[i] + Math.max(-30, Math.min(30, band.c)) * 0.045 * 2 ** i * dt) % (2 * Math.PI);
+    const step = Math.PI / DIAL.segs[i];
+    ctx.fillStyle = on ? scaleColor(band.c, tol, C) : C.faint;
+    for (let j = 0; j < 2 * DIAL.segs[i]; j++) {
+      const s = phases[i] + j * step;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r1, s, s + step / 2);
+      ctx.arc(cx, cy, r0, s + step / 2, s, true);
+      ctx.fill();
+    }
+  });
+  ctx.restore();
+
+  // Partial number at the right end of each ring.
+  ctx.font = `600 ${Math.max(10, w * 0.022)}px ${MONO}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  DIAL.rings.forEach(([f0, f1], i) => {
+    if (!bands[i]) return;
+    const [x, y] = at((84 * Math.PI) / 180, (w * (f0 + f1)) / 2);
+    ctx.fillStyle = C.surface;
+    ctx.beginPath();
+    ctx.arc(x, y - 2, Math.max(8, w * 0.018), 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.fillStyle = C.muted;
+    ctx.fillText(bands[i].p, x, y - 1.5);
+  });
+
+  // Tolerance and scale.
+  ctx.fillStyle = C.good;
+  ctx.globalAlpha = 0.22;
+  ctx.beginPath();
+  ctx.arc(cx, cy, R + w * 0.04, ca(ang(-tol)), ca(ang(tol)));
+  ctx.arc(cx, cy, R, ca(ang(tol)), ca(ang(-tol)), true);
   ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = C.muted;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, ca(-DIAL.max), ca(DIAL.max));
+  ctx.stroke();
+  const tick = (t, len, color, width = 1) => {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.moveTo(...at(ang(t), R));
+    ctx.lineTo(...at(ang(t), R + len));
+    ctx.stroke();
+  };
+  for (const t of [3, 4, 6, 7, 8, 9, 15, 25, 30, 35, 40, 45]) {
+    tick(t, w * 0.014, C.faint);
+    tick(-t, w * 0.014, C.faint);
+  }
+  ctx.font = `${Math.max(10, Math.min(12, w * 0.022))}px ${MONO}`;
+  ctx.fillStyle = C.muted;
+  for (const t of [-50, -20, -10, -5, -2, -1, 0, 1, 2, 5, 10, 20, 50]) {
+    if (t === 0) tick(t, w * 0.045, C.ink, 2);
+    else tick(t, w * 0.026, C.muted);
+    if (Math.abs(t) !== 1 || w > 450) ctx.fillText(signed(t), ...at(ang(t), R + w * 0.065));
+  }
+
+  // Needle, with a halo in the card color so it reads over the rings.
+  if (!Number.isFinite(display)) return;
+  const a = ang(display);
+  const from = at(a, w * DIAL.hub + 4);
+  const to = at(a, R + w * 0.03);
+  ctx.lineCap = 'round';
+  ctx.globalAlpha = signal ? 1 : 0.35;
+  for (const [color, width] of [[C.surface, Math.max(6, w * 0.013)], [scaleColor(display, tol, C), Math.max(3, w * 0.006)]]) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.moveTo(...from);
+    ctx.lineTo(...to);
+    ctx.stroke();
+  }
   ctx.globalAlpha = 1;
 }
 

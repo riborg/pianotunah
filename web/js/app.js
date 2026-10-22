@@ -12,7 +12,7 @@ import { tr, lang, locale, setLang, translateDom } from './i18n.js';
 import { Mic } from './mic.js';
 import { TonePlayer } from './tone.js';
 import { Saver } from './saver.js';
-import { readColors, drawMeter, drawStrobe, drawSpectro, drawBeat, drawChart, drawDeviations } from './draw.js';
+import { readColors, drawDial, drawStrobe, drawSpectro, drawBeat, drawChart, drawDeviations } from './draw.js';
 import * as mapping from './mapping.js';
 
 const $ = (id) => document.getElementById(id);
@@ -70,6 +70,7 @@ const state = {
   wakeLock: null,
   recTimer: 0,
   strobePhase: [0, 0, 0],
+  ringPhase: [0, 0, 0],
   lastAnim: 0,
   colors: {},
   chartGeo: null,
@@ -1014,7 +1015,6 @@ function renderToneButton() {
 // Readout and animation
 
 function updateReadout() {
-  const pill = $('status-pill');
   let text;
   let s = 'idle';
   if (!mic.running) text = tr('status.start');
@@ -1023,8 +1023,8 @@ function updateReadout() {
     s = statusClass(state.display);
     text = tr(refPlaying() ? 'status.ref' : s === 'good' ? 'status.good' : state.display > 0 ? 'status.high' : 'status.low');
   }
-  pill.dataset.s = s;
-  pill.textContent = text;
+  $('status').dataset.s = $('hub').dataset.s = s;
+  $('status').textContent = text;
   $('cents-num').textContent = mic.running ? fmtC(state.display) : '–';
   $('cents').dataset.live = state.signal ? '1' : '0';
   const n = partialOf(state.key);
@@ -1066,7 +1066,7 @@ function animate(t) {
     const C = state.colors;
     const tol = tolerance();
     const live = state.signal && Number.isFinite(state.display);
-    drawMeter($('meter'), { display: state.display, signal: state.signal, tol }, C);
+    drawDial($('dial'), { display: state.display, signal: state.signal, bands: state.strobe, live, tol }, C, dt, state.ringPhase);
     drawStrobe($('strobe'), { bands: state.strobe, live, tol }, C, dt, state.strobePhase);
     drawSpectro($('spectro'), state.spec, { capacity: SPEC_COLS, bins: SPEC_BINS, cents: SPEC_CENTS, tol }, C);
     const beatLive = live && Number.isFinite(state.beatHz);

@@ -256,28 +256,51 @@ select:disabled { opacity: 0.55; }
 
 /* Tuner */
 .tuner { display: flex; flex-direction: column; gap: 14px; }
-.tuner-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.tuner-head .modes { margin-left: auto; }
-.note { min-width: 120px; text-align: center; }
-.note-name { font: 600 52px/1 var(--f-display); letter-spacing: -0.01em; }
-.note-sub { font: 12px/1.4 var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.tuner-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .ref-chip { border: 1px solid var(--line); background: var(--sunk); color: var(--muted); border-radius: 99px; padding: 4px 12px; font: 13px var(--f-mono); cursor: pointer; }
 .ref-chip:hover { color: var(--ink); border-color: var(--muted); }
 
-.readout { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; }
-.cents { white-space: nowrap; font: 600 64px/1 var(--f-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+/* Dial: canvas with scale, needle and strobe rings (drawDial), and the note
+   hub on top. The hub's centre (54cqw) and size (30cqw) follow DIAL in draw.js. */
+.dial { position: relative; width: 100%; max-width: 560px; margin: 0 auto; aspect-ratio: 1 / 0.7; container-type: inline-size; }
+.dial canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hub {
+  position: absolute;
+  left: 50%;
+  top: 54cqw;
+  width: 30cqw;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--sunk);
+  border: 2px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6cqw;
+}
+.hub[data-s="good"] { border-color: var(--good); }
+.cents { white-space: nowrap; font: 600 clamp(15px, 5.4cqw, 26px)/1 var(--f-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 .cents[data-live="0"] { color: var(--muted); }
-.cents .unit { font: 500 15px var(--f-body); letter-spacing: 0; margin-left: 8px; color: var(--muted); }
-.status-pill { padding: 6px 14px; border-radius: 99px; font-weight: 600; background: var(--sunk); color: var(--muted); }
-.status-pill[data-s="good"] { background: var(--good); color: var(--surface); }
-.status-pill[data-s="warn"] { background: var(--warn); color: var(--surface); }
-.status-pill[data-s="bad"] { background: var(--bad); color: var(--surface); }
-.targetline { font: 13px var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; margin-top: -6px; }
-.targetline.measured { color: var(--ink); margin-top: -14px; }
-.targetline.measured[data-live="0"] { color: var(--muted); }
-.unison-hint { margin: 2px 0 0; font-size: 13px; color: var(--warn); }
+.cents .unit { font: 500 clamp(10px, 2.2cqw, 12px) var(--f-body); letter-spacing: 0; margin-left: 3px; color: var(--muted); }
+.hub[data-s="good"] .cents { color: var(--good); }
+.hub[data-s="warn"] .cents { color: var(--warn); }
+.hub[data-s="bad"] .cents { color: var(--bad); }
+.note-name { font: 600 clamp(30px, 11cqw, 54px)/1 var(--f-display); letter-spacing: -0.01em; }
+.nav { position: absolute; top: 63cqw; transform: translate(-50%, -50%); width: 40px; height: 40px; padding: 0; border-radius: 50%; }
+.nav.prev { left: calc(50% - 31cqw); }
+.nav.next { left: calc(50% + 31cqw); }
 
-.meter, .strobe, .spectro, .beatstrip, .chart { display: block; width: 100%; }
+.status { margin: -6px 0 0; text-align: center; font-size: 17px; font-weight: 600; color: var(--muted); }
+.status[data-s="good"] { color: var(--good); }
+.status[data-s="warn"] { color: var(--warn); }
+.status[data-s="bad"] { color: var(--bad); }
+.keyline { margin: -8px 0 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 0 14px; font: 13px var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+#measured[data-live="1"] { color: var(--ink); }
+.unison-hint { margin: 0; text-align: center; font-size: 13px; color: var(--warn); }
+
+.strobe, .spectro, .beatstrip, .chart { display: block; width: 100%; }
 .strobe, .spectro, .beatstrip { border-radius: 6px; }
 .spectro, .beatstrip { background: var(--sunk); }
 .beats, .strobe-box { display: flex; flex-direction: column; gap: 6px; }
@@ -528,11 +551,8 @@ details > .form { margin-top: 10px; }
 .keys-hint { font-size: 12px; color: var(--muted); }
 
 @media (max-width: 520px) {
-  .note-name { font-size: 40px; }
-  .cents { font-size: 48px; }
-  .tuner-head .note { flex: 1 1 calc(100% - 120px); }
   .tuner-head .ref-chip { margin-inline: auto; }
-  .tuner-head .modes { margin-left: 0; width: 100%; }
+  .tuner-head .modes { width: 100%; }
   .tone-pick { width: 100%; }
   .tone-pick .mini-label { white-space: nowrap; }
   .tone-pick .modes { flex: 1; }
@@ -546,10 +566,7 @@ details > .form { margin-top: 10px; }
 @media (max-height: 560px) {
   .top { position: static; padding-block: 8px; }
   .tuner { gap: 8px; }
-  .note-name { font-size: 40px; }
-  .cents { font-size: 48px; }
-  .targetline { margin-top: -2px; }
-  .targetline.measured { margin-top: -8px; }
+  .dial { max-width: 320px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .key.flash, .drawer { animation: none; }
