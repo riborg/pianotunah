@@ -424,22 +424,20 @@ body.drawer-open { overflow: hidden; }
 .ln { width: 16px; height: 2px; background: var(--accent); display: inline-block; }
 .dot-b { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; }
 
-.kb-scroll { overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
-/* Keyboard and curve scroll together and share the x axis. */
-.kb-track { min-width: 780px; }
-.chart-wrap.mini { margin-top: 6px; }
+/* All keys fit the width; the curve below shares the x axis. */
+.chart-wrap.mini { margin-top: -4px; }
 .kb-frame {
   position: relative;
-  padding: 34px 10px 12px;
+  padding: 32px 10px 8px;
   border-radius: 10px;
   background: linear-gradient(var(--case-top), var(--case));
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -2px 6px rgb(0 0 0 / 0.35);
 }
 /* The felt strip above the keys on a real piano. */
 .kb-felt { height: 7px; margin: 0 -2px; border-radius: 2px; background: linear-gradient(var(--felt-hi), var(--felt)); box-shadow: 0 1px 2px rgb(0 0 0 / 0.5); position: relative; z-index: 3; }
-.keyboard { position: relative; display: flex; height: 172px; user-select: none; }
+.keyboard { position: relative; display: flex; height: clamp(72px, 10vw, 124px); user-select: none; }
 /* Deviation strip in the case below the keys, same x axis as the keyboard. */
-.devstrip { display: block; width: 100%; margin-top: 8px; }
+.devstrip { display: block; width: 100%; margin-top: 6px; }
 .bar-sw { width: 4px; height: 12px; border-radius: 1px; background: linear-gradient(var(--bad), var(--good) 50%, var(--warn)); display: inline-block; }
 .key { cursor: pointer; padding: 0; border: 0; font: inherit; }
 .key.white {
@@ -468,7 +466,9 @@ body.drawer-open { overflow: hidden; }
   z-index: 2;
   transition: height 120ms ease, box-shadow 120ms ease;
 }
-.klabel { font: 10px var(--f-mono); color: var(--key-label); margin-bottom: 10px; position: relative; z-index: 1; }
+.klabel { font: 10px var(--f-mono); color: var(--key-label); margin-bottom: 8px; position: relative; z-index: 1; }
+/* Too narrow for labels; the flag names the current key. */
+@media (max-width: 620px) { .klabel { display: none; } }
 
 /* Measured inharmonicity: small dot at the top. */
 .key.has-b::after { content: ""; position: absolute; top: 8px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--accent); opacity: 0.8; }

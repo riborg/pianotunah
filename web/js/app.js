@@ -264,7 +264,6 @@ function buildKeyboard(n) {
     keys.push(b);
   }
   kb.replaceChildren(...keys);
-  renderKeyboard.scrolledTo = 0;
 }
 
 function applyKeyCount() {
@@ -384,14 +383,6 @@ function renderKeyboard() {
   marker.style.left = `calc(10px + (100% - 20px) * ${Number(curEl.dataset.cx) / 100})`;
   marker.dataset.s = statusClass(statusDev(cur));
   $('kb-marker-name').textContent = kName(cur);
-  // Scroll the current key into view on narrow screens, but only when it
-  // changes, so the user can scroll freely between measurements.
-  const sc = $('kb-scroll');
-  if (cur !== renderKeyboard.scrolledTo && sc.scrollWidth > sc.clientWidth) {
-    renderKeyboard.scrolledTo = cur;
-    const x = (Number(curEl.dataset.cx) / 100) * sc.scrollWidth - sc.clientWidth / 2;
-    sc.scrollTo({ left: x, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-  }
 }
 
 // The strip under the keyboard: measured deviation from target per key.
@@ -475,7 +466,7 @@ function renderChart() {
   // The keyboard's key positions are the x axis.
   const xs = [0, ...[...$('keyboard').children].map((el) => el.dataset.cx / 100)];
   const c = $('minichart');
-  state.chartGeo = c.clientWidth ? drawChart(c, { top: top(), target: T.cents, points, ticks, current: state.key, xs, labelX: $('kb-scroll').scrollLeft }, state.colors) : null;
+  state.chartGeo = c.clientWidth ? drawChart(c, { top: top(), target: T.cents, points, ticks, current: state.key, xs }, state.colors) : null;
 }
 
 function setCurveOpen(open) {
@@ -529,10 +520,8 @@ function chartHover(e) {
       return row;
     }),
   );
-  // Keep the tooltip within the visible part; the curve scrolls with the keyboard.
-  const sc = $('kb-scroll');
-  const [x0, x1] = [sc.scrollLeft, sc.scrollLeft + sc.clientWidth];
-  tip.style.left = Math.min(Math.max(geo.xOf(k) + 12, x0 + 4), x1 - tip.offsetWidth - 4) + 'px';
+  // Keep the tooltip within the curve.
+  tip.style.left = Math.max(4, Math.min(geo.xOf(k) + 12, $('minichart').clientWidth - tip.offsetWidth - 4)) + 'px';
   tip.style.top = Math.max(4, geo.yOf(T.cents[k]) - tip.offsetHeight - 10) + 'px';
 }
 
@@ -1419,8 +1408,6 @@ function bindEvents() {
     }
   });
   navigator.mediaDevices?.addEventListener?.('devicechange', renderMicList);
-  let scrollRaf = 0;
-  on('kb-scroll', 'scroll', () => (scrollRaf ||= requestAnimationFrame(() => { scrollRaf = 0; renderChart(); })));
   on('curve-toggle', 'click', () => {
     const open = $('curve-row').hidden;
     setCurveOpen(open);

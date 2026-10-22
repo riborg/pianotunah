@@ -348,9 +348,8 @@ export function drawDeviations(canvas, { bars, current, barW, tol }, C) {
 // With xs (key centres as fractions of the keyboard width, indexed by key)
 // the chart lines up with the keyboard: same 10 px inset as the keyboard
 // case, no axis margins, y labels inside the plot and C guides instead of
-// x labels. labelX keeps the y labels at the visible left edge when the
-// keyboard is scrolled.
-export function drawChart(canvas, { top, target, points, ticks, current, xs, labelX = 0 }, C) {
+// x labels.
+export function drawChart(canvas, { top, target, points, ticks, current, xs }, C) {
   const { ctx, w, h } = fitCanvas(canvas);
   const pad = xs ? { l: 10, r: 10, t: 8, b: 8 } : { l: 44, r: 12, t: 12, b: 28 };
 
@@ -438,8 +437,8 @@ export function drawChart(canvas, { top, target, points, ticks, current, xs, lab
     ctx.fillStyle = C.muted;
     for (let c = yMin; c <= yMax; c += step) {
       if (c === yMin) continue; // no room below the bottom line
-      ctx.strokeText(signed(c), labelX + pad.l + 2, yOf(c) + 11);
-      ctx.fillText(signed(c), labelX + pad.l + 2, yOf(c) + 11);
+      ctx.strokeText(signed(c), pad.l + 2, yOf(c) + 11);
+      ctx.fillText(signed(c), pad.l + 2, yOf(c) + 11);
     }
   }
 
