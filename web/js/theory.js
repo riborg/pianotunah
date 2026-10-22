@@ -247,10 +247,35 @@ const topShare = (k) => share((k - TOP_FROM) / 24);
 // cents between 4:2 and 6:3) would land on a single semitone and repeat down
 // every octave of the chain.
 
+// B jumps at the breaks (wound to plain strings, plate struts) and varies by
+// some ten percent between neighbours as measured. With every octave matched
+// exactly, that carries down the chain as steps of up to 8 cents between
+// neighbouring keys (E5–E6 on a 120 cm upright, where B nearly doubles at E5).
+// A triangular average over ±3 keys spreads it out; at a break the octaves
+// then lie between the chosen type and a narrower one. The temperament octave
+// is kept as laid.
+const SMOOTH = 3;
+function smoothCurve(S) {
+  const out = Float64Array.from(S);
+  for (let k = 1; k <= KEY_COUNT; k++) {
+    if (k >= T_LOW && k <= A4) continue;
+    const r = Math.min(SMOOTH, k - 1, KEY_COUNT - k);
+    let sum = 0;
+    let n = 0;
+    for (let j = -r; j <= r; j++) {
+      const w = SMOOTH + 1 - Math.abs(j);
+      sum += w * S[k + j];
+      n += w;
+    }
+    out[k] = sum / n;
+  }
+  return out;
+}
+
 export function computeTargets(settings, measuredB = {}) {
   const s = { ...DEFAULT_SETTINGS, ...settings };
   const B = bCurve(instrumentOf(s), measuredB);
-  const S = new Float64Array(KEY_COUNT + 1);
+  let S = new Float64Array(KEY_COUNT + 1);
   let extraTreble = Number(s.extraTreble) || 0;
   const extraBass = Number(s.extraBass) || 0;
 
@@ -278,6 +303,7 @@ export function computeTargets(settings, measuredB = {}) {
       const v = share((T_LOW - k) / 12);
       S[k] = S[k + 12] - width(k, k + 12, [[p.mid, 1 - v], [p.bass, v]]);
     }
+    S = smoothCurve(S);
   }
   for (let k = 1; k <= KEY_COUNT; k++) {
     if (k > A4) S[k] += extraTreble * ((k - A4) / (KEY_COUNT - A4)) ** 2;

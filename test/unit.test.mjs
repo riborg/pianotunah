@@ -63,8 +63,8 @@ test('stretch: treble octaves move to 2:1 by C8 and rise smoothly', () => {
   const measured = { 1: 5.62e-4, 13: 2.26e-4, 25: 1.87e-4, 37: 3.28e-4, 49: 7.9e-4, 61: 2.41e-3, 73: 4.85e-3, 85: 9.96e-3 };
   const t = computeTargets(DEFAULT_SETTINGS, measured);
   const S = t.stretch;
-  assert.ok(Math.abs(S[88] - S[76] - octaveStretch(t.B[76], t.B[88], '2:1')) < 1e-9);
-  assert.ok(Math.abs(S[64] - S[52] - octaveStretch(t.B[52], t.B[64], '4:2')) < 1e-9);
+  assert.ok(Math.abs(S[88] - S[76] - octaveStretch(t.B[76], t.B[88], '2:1')) < 0.5);
+  assert.ok(Math.abs(S[64] - S[52] - octaveStretch(t.B[52], t.B[64], '4:2')) < 0.5);
   for (let k = 50; k <= 88; k++) assert.ok(S[k] > S[k - 1], `stretch rises at key ${k}`);
   assert.ok(S[85] > 25 && S[85] < 40, `A7 at ${S[85].toFixed(1)} cents`);
 });
@@ -76,6 +76,19 @@ test('stretch: no step where the octave type changes', () => {
   for (let k = 3; k <= 87; k++) {
     const irregular = S[k] - S[k - 1] - (S[k - 1] - S[k - 2] + S[k + 1] - S[k]) / 2;
     assert.ok(Math.abs(irregular) < 0.2, `semitone up to key ${k} is off by ${irregular.toFixed(2)} cents`);
+  }
+});
+
+test('stretch: breaks in B do not make steps between neighbouring keys', () => {
+  // B from the model on every key, ×2.4 from E3 (wound to plain strings) and
+  // ×1.8 from E5, as measured on a 120 cm upright.
+  const model = computeTargets(DEFAULT_SETTINGS).B;
+  const measured = {};
+  for (let k = 1; k <= 88; k++) measured[k] = model[k] * (k >= 56 ? 2.4 * 1.8 : k >= 32 ? 2.4 : 1);
+  const S = computeTargets(DEFAULT_SETTINGS, measured).stretch;
+  for (let k = 3; k <= 87; k++) {
+    const irregular = S[k] - S[k - 1] - (S[k - 1] - S[k - 2] + S[k + 1] - S[k]) / 2;
+    assert.ok(Math.abs(irregular) < 1, `semitone up to key ${k} is off by ${irregular.toFixed(2)} cents`);
   }
 });
 
