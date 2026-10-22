@@ -48,7 +48,7 @@ async function run({ key, detune, unison = 0, theme = 'light', shot, seed, recor
   wav(file, key, detune, unison);
   const tuning = {
     id, name: seed?.name || 'E2E-test', rev: 0, updatedAt: new Date().toISOString(),
-    settings: { ...settings, ...(seed?.settings || {}) }, keys: seed?.keys || {}, inharmonicity: {}, partials: {}, history: [],
+    settings: { ...settings, ...(seed?.settings || {}) }, keys: seed?.keys || {}, inharmonicity: seed?.inharmonicity || {}, partials: {}, history: [],
   };
   await api('/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(tuning) });
   const browser = await puppeteer.launch({
@@ -143,7 +143,9 @@ if (shots) {
     const hz = partialFreq(T.freq[k], T.B[k], 1) * 2 ** (d / 1200);
     keys[k] = { n: 1, hz, bn: 1, bhz: hz * 2 ** (-14 / 1200), at: Date.now() };
   }
-  const seed = { name: 'Jehle 115 cm', settings: { pianoKind: 'upright', sizeCm: 115, keyCount: 85 }, keys };
+  // B measured on the A keys, as after a survey, so the curve hint does not show.
+  const inharmonicity = Object.fromEntries([13, 25, 37, 49, 61, 73].map((k) => [k, Number(T.B[k].toPrecision(4))]));
+  const seed = { name: 'Jehle 115 cm', settings: { pianoKind: 'upright', sizeCm: 115, keyCount: 85 }, keys, inharmonicity };
   for (const theme of ['light', 'dark']) await run({ key: 40, detune: 2.3, theme, shot: `screenshot-${theme}.png`, seed });
   console.log(`Screenshots in ${shots}`);
 }

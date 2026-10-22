@@ -142,6 +142,10 @@
     <div class="chart-wrap mini" id="curve-row">
       <canvas id="minichart" class="chart" height="100" role="img" aria-label="Target curve in cents per key" data-i18n-aria-label="curve.label"></canvas>
       <div class="tooltip" id="minitip" hidden></div>
+      <div class="curve-hint" id="curve-hint" hidden>
+        <span data-i18n="curve.hint">The curve is estimated from the size of the piano.</span>
+        <button id="btn-curve-map" class="btn primary" type="button" data-i18n="curve.hintMap">Survey all A</button>
+      </div>
     </div>
     <div class="legend">
       <button id="curve-toggle" class="fold" type="button" aria-controls="curve-row" aria-expanded="true" data-i18n="tab.curve">Curve</button>

@@ -252,6 +252,8 @@ export default {
 
   'curve.target': 'Mål relativt liksvävande',
   'curve.label': 'Målkurva i cent per tangent',
+  'curve.hint': 'Kurvan är uppskattad från pianots storlek.',
+  'curve.hintMap': 'Kartlägg alla A',
   'curve.table': 'Visa som tabell',
   'table.key': 'Tangent',
   'table.note': 'Ton',

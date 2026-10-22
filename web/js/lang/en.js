@@ -252,6 +252,8 @@ export default {
 
   'curve.target': 'Target relative to equal temperament',
   'curve.label': 'Target curve in cents per key',
+  'curve.hint': 'The curve is estimated from the size of the piano.',
+  'curve.hintMap': 'Survey all A',
   'curve.table': 'Show as table',
   'table.key': 'Key',
   'table.note': 'Note',

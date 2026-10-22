@@ -467,6 +467,12 @@ function renderChart() {
   const xs = [0, ...[...$('keyboard').children].map((el) => el.dataset.cx / 100)];
   const c = $('minichart');
   state.chartGeo = c.clientWidth ? drawChart(c, { top: top(), target: T.cents, points, ticks, current: state.key, xs }, state.colors) : null;
+  renderCurveHint();
+}
+
+// Until some inharmonicity is measured, the curve comes from the model.
+function renderCurveHint() {
+  $('curve-hint').hidden = state.mode === 'map' || Object.keys(state.tuning.inharmonicity).length > 0;
 }
 
 function setCurveOpen(open) {
@@ -557,6 +563,7 @@ function setMode(m) {
   if (m === 'map') selectKey(nextPending(0), false);
   renderKeyboard();
   renderMapPanel();
+  renderCurveHint();
 }
 
 // ---------------------------------------------------------------------------
@@ -1266,10 +1273,15 @@ function bindEvents() {
   on('btn-next', 'click', () => selectKey(state.key + 1));
   on('mode-auto', 'click', () => setMode('auto'));
   on('mode-lock', 'click', () => setMode('lock'));
-  on('mode-map', 'click', () => {
+  const startSurvey = () => {
     if (state.mode === 'map') return;
     setMode('map');
     if (!mic.running) startMic();
+  };
+  on('mode-map', 'click', startSurvey);
+  on('btn-curve-map', 'click', () => {
+    setMapPlan('quick');
+    startSurvey();
   });
   on('map-skip', 'click', skipMapping);
   on('map-redo', 'click', () => {
