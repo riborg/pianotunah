@@ -4,7 +4,7 @@ Piano tuner in the browser. Listens through the computer's microphone, computes 
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png">
-  <img alt="Piano Tunah: dial with strobe rings, keyboard, deviation and tuning curve" src="docs/screenshot-light.png">
+  <img alt="Piano Tunah: dial with strobe rings, tuning curve and keyboard" src="docs/screenshot-light.png">
 </picture>
 
 ## Features
@@ -16,7 +16,7 @@ Piano tuner in the browser. Listens through the computer's microphone, computes 
 - Reference A4 380–480 Hz, or set from the piano's current pitch. Overpull for pitch raises, with a recommended amount when the piano is flat.
 - Dial with needle and strobe rings; strobe bands, beat spectrogram and reference tone (piano or sine).
 - A hint when a note beats, so the reading jumps: the unisons are out of tune and need muting.
-- Deviation per key under the keyboard, with the tuning curve and a table below it.
+- Tuning curve above the keyboard with each measured key, colored by its deviation from target, and a table.
 - Upright or grand, size in cm, 85 or 88 keys.
 - Tunings are saved on the server with a history per pass. Export and import as JSON.
 - Recording of the microphone input as WAV, for reporting problems with the key detection.

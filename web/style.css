@@ -18,7 +18,6 @@
   --ebony: #1b1d1f;
   --scale-yellow: #c9a400;
   --scale-orange: #df7a16;
-  --case: #2a1f1b;
   --ivory-gap: #b9b3a3;
   --ivory-hover: #fff9e8;
   --ebony-hi: #3a3d42;
@@ -53,7 +52,6 @@
     --ebony: #050607;
     --scale-yellow: #f2d04a;
     --scale-orange: #f39a3d;
-    --case: #120d0b;
     --ivory-gap: #8a8678;
     --ivory-hover: #e6e2d6;
     --ebony-hi: #2a2d31;
@@ -81,7 +79,6 @@
   --ebony: #050607;
   --scale-yellow: #f2d04a;
   --scale-orange: #f39a3d;
-  --case: #120d0b;
   --ivory-gap: #8a8678;
   --ivory-hover: #e6e2d6;
   --ebony-hi: #2a2d31;
@@ -405,18 +402,20 @@ body.drawer-open { overflow: hidden; }
 .ln { width: 16px; height: 2px; background: var(--accent); display: inline-block; }
 .dot-b { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; }
 
-/* All keys fit the width; the curve below shares the x axis. */
-.chart-wrap.mini { margin-top: -4px; }
-.kb-frame {
+/* The curve above the keys shares their x axis: both are inset 6 px
+   (drawChart in draw.js). All keys fit the width. */
+.kb-frame { position: relative; padding-top: 30px; }
+.chart-wrap.mini { margin-bottom: 4px; }
+.keyboard {
   position: relative;
-  padding: 30px 8px 6px;
-  border-radius: 8px;
-  background: var(--case);
+  display: flex;
+  height: clamp(40px, 5vw, 64px);
+  margin-inline: 6px;
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 0 0 1px var(--ivory-gap);
+  overflow: hidden;
+  user-select: none;
 }
-.keyboard { position: relative; display: flex; height: clamp(44px, 6vw, 72px); user-select: none; }
-/* Deviation strip in the case below the keys, same x axis as the keyboard. */
-.devstrip { display: block; width: 100%; margin-top: 6px; }
-.bar-sw { width: 4px; height: 12px; border-radius: 1px; background: linear-gradient(var(--bad), var(--good) 50%, var(--warn)); display: inline-block; }
 /* Flat keys: the keyboard is a map of the piano, not a picture of one. */
 .key { cursor: pointer; padding: 0; border: 0; font: inherit; }
 .key.white {

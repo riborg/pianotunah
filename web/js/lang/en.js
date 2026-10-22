@@ -12,12 +12,10 @@ export default {
   'msg.close': 'Close message',
 
   'kb.label': 'Keyboard',
-  'kb.strip': 'Deviation from target per key',
   'legend.good': 'Within tolerance',
   'legend.warn': 'Close',
   'legend.bad': 'Outside',
   'legend.b': 'Measured B',
-  'legend.dev': 'Deviation ±{n} cents',
 
   'tuner.label': 'Tuner',
   'tuner.prev': 'Previous key',

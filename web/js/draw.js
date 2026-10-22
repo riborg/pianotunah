@@ -311,47 +311,16 @@ export function drawBeat(canvas, { beatHz, display, live, tol }, C, dt, phase) {
   return phase;
 }
 
-// Deviation per key as bars around the target (zero line), drawn on the
-// piano case's dark background in both color modes. bars: [{ x: 0..1, d: cents }].
-// The scale is ±5, 10, 20 or 30 cents after the largest deviation; larger are
-// clipped. Returns the scale.
-export function drawDeviations(canvas, { bars, current, barW, tol }, C) {
-  const { ctx, w, h } = fitCanvas(canvas);
-  const max = Math.max(0, ...bars.map((b) => Math.abs(b.d)));
-  const range = [5, 10, 20, 30].find((r) => max <= r) ?? 30;
-  const mid = h / 2;
-  const yOf = (d) => mid - (Math.max(-range, Math.min(range, d)) / range) * (mid - 3);
-  ctx.fillStyle = C.good;
-  ctx.globalAlpha = 0.16;
-  ctx.fillRect(0, yOf(tol), w, yOf(-tol) - yOf(tol));
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = 'rgb(255 255 255 / 0.22)';
-  ctx.fillRect(0, mid - 0.5, w, 1);
-  if (current != null) {
-    ctx.fillStyle = C.accent;
-    ctx.globalAlpha = 0.5;
-    ctx.fillRect(current * w - 1, 0, 2, h);
-    ctx.globalAlpha = 1;
-  }
-  const bw = Math.max(2, barW * w);
-  for (const { x, d } of bars) {
-    const y = yOf(d);
-    ctx.fillStyle = scaleColor(d, tol, C);
-    ctx.fillRect(x * w - bw / 2, Math.min(y, mid), bw, Math.max(1.5, Math.abs(y - mid)));
-  }
-  return range;
-}
-
 // Tuning curve: target per key (cents vs equal temperament) and measured
 // positions. points: [{ k, c, status }]. ticks: [{ k, label }]. Returns the
 // geometry so the caller can map pointer positions to keys.
 // With xs (key centres as fractions of the keyboard width, indexed by key)
-// the chart lines up with the keyboard: same 10 px inset as the keyboard
-// case, no axis margins, y labels inside the plot and C guides instead of
-// x labels.
+// the chart lines up with the keyboard below it: same 6 px inset as the keys
+// (.keyboard in style.css), no axis margins, y labels inside the plot and C
+// guides instead of x labels.
 export function drawChart(canvas, { top, target, points, ticks, current, xs }, C) {
   const { ctx, w, h } = fitCanvas(canvas);
-  const pad = xs ? { l: 10, r: 10, t: 8, b: 8 } : { l: 44, r: 12, t: 12, b: 28 };
+  const pad = xs ? { l: 6, r: 6, t: 8, b: 6 } : { l: 44, r: 12, t: 12, b: 28 };
 
   const vals = [...target.slice(1, top + 1), ...points.map((p) => p.c)];
   const lo = Math.min(-10, ...vals);

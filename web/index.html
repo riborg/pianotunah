@@ -135,16 +135,15 @@
   <section class="card keys-card" aria-label="Keyboard" data-i18n-aria-label="kb.label">
     <div class="kb-frame">
       <div class="kb-marker" id="kb-marker"><span id="kb-marker-name">A4</span></div>
-      <div class="keyboard" id="keyboard"></div>
-      <canvas id="devstrip" class="devstrip" height="44" role="img" aria-label="Deviation from target per key" data-i18n-aria-label="kb.strip"></canvas>
-    </div>
-    <div class="chart-wrap mini" id="curve-row">
-      <canvas id="minichart" class="chart" height="100" role="img" aria-label="Target curve in cents per key" data-i18n-aria-label="curve.label"></canvas>
-      <div class="tooltip" id="minitip" hidden></div>
-      <div class="curve-hint" id="curve-hint" hidden>
-        <span data-i18n="curve.hint">The curve is estimated from the size of the piano.</span>
-        <button id="btn-curve-map" class="btn primary" type="button" data-i18n="curve.hintMap">Survey all A</button>
+      <div class="chart-wrap mini" id="curve-row">
+        <canvas id="minichart" class="chart" height="96" role="img" aria-label="Target curve in cents per key" data-i18n-aria-label="curve.label"></canvas>
+        <div class="tooltip" id="minitip" hidden></div>
       </div>
+      <div class="keyboard" id="keyboard"></div>
+    </div>
+    <div class="curve-hint" id="curve-hint" hidden>
+      <span data-i18n="curve.hint">The curve is estimated from the size of the piano.</span>
+      <button id="btn-curve-map" class="btn primary" type="button" data-i18n="curve.hintMap">Survey all A</button>
     </div>
     <div class="legend">
       <button id="curve-toggle" class="fold" type="button" aria-controls="curve-row" aria-expanded="true" data-i18n="tab.curve">Curve</button>
@@ -152,7 +151,6 @@
       <span class="lg"><i class="sw s-warn"></i><span data-i18n="legend.warn">Close</span></span>
       <span class="lg"><i class="sw s-bad"></i><span data-i18n="legend.bad">Outside</span></span>
       <span class="lg"><i class="dot-b"></i><span data-i18n="legend.b">Measured B</span></span>
-      <span class="lg"><i class="bar-sw"></i><span id="dev-legend"></span></span>
       <span class="lg lg-curve"><i class="ln"></i><span data-i18n="curve.target">Target vs equal temperament</span></span>
     </div>
     <details id="table-details" class="table-details">

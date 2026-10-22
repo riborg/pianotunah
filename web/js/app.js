@@ -12,7 +12,7 @@ import { tr, trNodes, lang, locale, setLang, translateDom } from './i18n.js';
 import { Mic } from './mic.js';
 import { TonePlayer } from './tone.js';
 import { Saver } from './saver.js';
-import { readColors, drawDial, drawStrobe, drawSpectro, drawBeat, drawChart, drawDeviations } from './draw.js';
+import { readColors, drawDial, drawStrobe, drawSpectro, drawBeat, drawChart } from './draw.js';
 import * as mapping from './mapping.js';
 
 const $ = (id) => document.getElementById(id);
@@ -381,24 +381,10 @@ function renderKeyboard() {
     el.title = label;
   }
   const curEl = $('keyboard').children[cur - 1];
-  renderDeviations(curEl);
   const marker = $('kb-marker');
-  marker.style.left = `calc(10px + (100% - 20px) * ${Number(curEl.dataset.cx) / 100})`;
+  marker.style.left = `calc(6px + (100% - 12px) * ${Number(curEl.dataset.cx) / 100})`;
   marker.dataset.s = statusClass(statusDev(cur));
   $('kb-marker-name').textContent = kName(cur);
-}
-
-// The strip under the keyboard: measured deviation from target per key.
-function renderDeviations(curEl) {
-  const keys = [...$('keyboard').children];
-  const whites = keys.filter((el) => el.classList.contains('white')).length;
-  const bars = [];
-  for (const el of keys) {
-    const d = statusDev(Number(el.dataset.k));
-    if (Number.isFinite(d)) bars.push({ x: el.dataset.cx / 100, d });
-  }
-  const range = drawDeviations($('devstrip'), { bars, current: curEl.dataset.cx / 100, barW: 0.55 / whites, tol: tolerance() }, state.colors);
-  $('dev-legend').textContent = tr('legend.dev', { n: range });
 }
 
 function renderPass() {
@@ -475,7 +461,7 @@ function renderChart() {
 
 // Until some inharmonicity is measured, the curve comes from the model.
 function renderCurveHint() {
-  $('curve-hint').hidden = state.mode === 'map' || Object.keys(state.tuning.inharmonicity).length > 0;
+  $('curve-hint').hidden = $('curve-row').hidden || state.mode === 'map' || Object.keys(state.tuning.inharmonicity).length > 0;
 }
 
 function setCurveOpen(open) {
@@ -483,6 +469,7 @@ function setCurveOpen(open) {
   document.querySelector('.lg-curve').hidden = !open;
   $('curve-toggle').setAttribute('aria-expanded', open);
   if (open) renderChart(); // not drawn while folded
+  else renderCurveHint();
 }
 
 // Folds under the dial: strobe bands, beats and partials. Not drawn while closed.

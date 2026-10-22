@@ -12,12 +12,10 @@ export default {
   'msg.close': 'Stäng meddelandet',
 
   'kb.label': 'Klaviatur',
-  'kb.strip': 'Avvikelse mot målet per tangent',
   'legend.good': 'Inom tolerans',
   'legend.warn': 'Nära',
   'legend.bad': 'Utanför',
   'legend.b': 'Uppmätt B',
-  'legend.dev': 'Avvikelse ±{n} cent',
 
   'tuner.label': 'Stämapparat',
   'tuner.prev': 'Föregående tangent',
