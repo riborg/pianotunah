@@ -247,16 +247,12 @@ select:disabled { opacity: 0.55; }
 .message[data-kind="warn"] { border-left-color: var(--warn); }
 .message[data-kind="error"] { border-left-color: var(--bad); }
 
-/* Layout: keyboard and tuner in one column, everything else in the settings drawer. */
+/* Layout: tuner and keyboard in one column, everything else in the settings
+   drawer. The tuner comes first so it is visible without scrolling. */
 .layout { display: flex; flex-direction: column; gap: var(--gap); max-width: 1100px; margin: var(--gap) auto 0; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; min-width: 0; }
 .keys-card { display: flex; flex-direction: column; gap: 10px; }
 .keys-card .legend { justify-content: center; }
-/* Phones and landscape: the readout first, so it is visible without scrolling
-   while tuning. Keys are still reached with ‹ › and auto mode. */
-@media (max-width: 620px), (max-height: 560px) {
-  .tuner { order: -1; }
-}
 
 /* Tuner */
 .tuner { display: flex; flex-direction: column; gap: 14px; }

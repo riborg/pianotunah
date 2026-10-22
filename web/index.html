@@ -30,36 +30,6 @@
 </header>
 
 <main class="layout">
-  <section class="card keys-card" aria-label="Keyboard" data-i18n-aria-label="kb.label">
-    <div class="kb-scroll" id="kb-scroll">
-      <div class="kb-track">
-        <div class="kb-frame">
-          <div class="kb-marker" id="kb-marker"><span id="kb-marker-name">A4</span></div>
-          <div class="kb-felt" aria-hidden="true"></div>
-          <div class="keyboard" id="keyboard"></div>
-          <canvas id="devstrip" class="devstrip" height="52" role="img" aria-label="Deviation from target per key" data-i18n-aria-label="kb.strip"></canvas>
-        </div>
-        <div class="chart-wrap mini" id="curve-row">
-          <canvas id="minichart" class="chart" height="100" role="img" aria-label="Target curve in cents per key" data-i18n-aria-label="curve.label"></canvas>
-          <div class="tooltip" id="minitip" hidden></div>
-        </div>
-      </div>
-    </div>
-    <div class="legend">
-      <button id="curve-toggle" class="fold" type="button" aria-controls="curve-row" aria-expanded="true" data-i18n="tab.curve">Curve</button>
-      <span class="lg"><i class="sw s-good"></i><span data-i18n="legend.good">Within tolerance</span></span>
-      <span class="lg"><i class="sw s-warn"></i><span data-i18n="legend.warn">Close</span></span>
-      <span class="lg"><i class="sw s-bad"></i><span data-i18n="legend.bad">Outside</span></span>
-      <span class="lg"><i class="dot-b"></i><span data-i18n="legend.b">Measured inharmonicity</span></span>
-      <span class="lg"><i class="bar-sw"></i><span id="dev-legend"></span></span>
-      <span class="lg lg-curve"><i class="ln"></i><span data-i18n="curve.target">Target relative to equal temperament</span></span>
-    </div>
-    <details id="table-details" class="table-details">
-      <summary data-i18n="curve.table">Show as table</summary>
-      <div class="table-wrap"><table class="ktable" id="ktable"></table></div>
-    </details>
-  </section>
-
   <section class="tuner card" aria-label="Tuner" data-i18n-aria-label="tuner.label">
     <div class="tuner-head">
       <button id="btn-prev" class="btn icon" type="button" aria-label="Previous key" title="Previous key (←)" data-i18n-aria-label="tuner.prev" data-i18n-title="tuner.prevTitle">‹</button>
@@ -157,6 +127,36 @@
         <div class="level"><div class="level-bar" id="level-bar"></div></div>
       </div>
     </div>
+  </section>
+
+  <section class="card keys-card" aria-label="Keyboard" data-i18n-aria-label="kb.label">
+    <div class="kb-scroll" id="kb-scroll">
+      <div class="kb-track">
+        <div class="kb-frame">
+          <div class="kb-marker" id="kb-marker"><span id="kb-marker-name">A4</span></div>
+          <div class="kb-felt" aria-hidden="true"></div>
+          <div class="keyboard" id="keyboard"></div>
+          <canvas id="devstrip" class="devstrip" height="52" role="img" aria-label="Deviation from target per key" data-i18n-aria-label="kb.strip"></canvas>
+        </div>
+        <div class="chart-wrap mini" id="curve-row">
+          <canvas id="minichart" class="chart" height="100" role="img" aria-label="Target curve in cents per key" data-i18n-aria-label="curve.label"></canvas>
+          <div class="tooltip" id="minitip" hidden></div>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <button id="curve-toggle" class="fold" type="button" aria-controls="curve-row" aria-expanded="true" data-i18n="tab.curve">Curve</button>
+      <span class="lg"><i class="sw s-good"></i><span data-i18n="legend.good">Within tolerance</span></span>
+      <span class="lg"><i class="sw s-warn"></i><span data-i18n="legend.warn">Close</span></span>
+      <span class="lg"><i class="sw s-bad"></i><span data-i18n="legend.bad">Outside</span></span>
+      <span class="lg"><i class="dot-b"></i><span data-i18n="legend.b">Measured inharmonicity</span></span>
+      <span class="lg"><i class="bar-sw"></i><span id="dev-legend"></span></span>
+      <span class="lg lg-curve"><i class="ln"></i><span data-i18n="curve.target">Target relative to equal temperament</span></span>
+    </div>
+    <details id="table-details" class="table-details">
+      <summary data-i18n="curve.table">Show as table</summary>
+      <div class="table-wrap"><table class="ktable" id="ktable"></table></div>
+    </details>
   </section>
 </main>
 
