@@ -32,11 +32,28 @@
 <main class="layout">
   <section class="tuner card" aria-label="Tuner" data-i18n-aria-label="tuner.label">
     <div class="tuner-head">
-      <button id="btn-ref-chip" class="ref-chip" type="button" title="Change reference" data-i18n-title="tuner.refTitle"></button>
-      <div class="modes" role="group" aria-label="Mode" data-i18n-aria-label="tuner.mode">
-        <button id="mode-auto" class="seg" type="button" aria-pressed="true" title="Detect the key automatically (A)" data-i18n="mode.auto" data-i18n-title="mode.autoTitle">Auto</button>
-        <button id="mode-lock" class="seg" type="button" aria-pressed="false" title="Lock on the selected key (L)" data-i18n="mode.lock" data-i18n-title="mode.lockTitle">Lock</button>
-        <button id="mode-map" class="seg" type="button" aria-pressed="false" title="Measure the piano note by note before tuning" data-i18n="mode.map" data-i18n-title="mode.mapTitle">Survey</button>
+      <div class="head-left">
+        <button id="btn-ref-chip" class="ref-chip" type="button" title="Change reference" data-i18n-title="tuner.refTitle"></button>
+        <div class="level-box">
+          <span class="mini-label" data-i18n="tuner.level">Mic level</span>
+          <div class="level"><div class="level-bar" id="level-bar"></div></div>
+        </div>
+      </div>
+      <div class="head-right">
+        <div class="tone-pick">
+          <span class="mini-label" id="tone-lbl" data-i18n="tone.label">Reference tone</span>
+          <div class="modes" role="group" aria-labelledby="tone-lbl">
+            <button class="seg" type="button" data-tone="off" aria-pressed="true" data-i18n="tone.off">Off</button>
+            <button class="seg" type="button" data-tone="piano" aria-pressed="false" title="Short piano-like tone" data-i18n="tone.piano" data-i18n-title="tone.pianoTitle">Piano</button>
+            <button class="seg" type="button" data-tone="sine" aria-pressed="false" title="Pure, sustained sine tone at the target frequency" data-i18n="tone.sine" data-i18n-title="tone.sineTitle">Sine</button>
+          </div>
+        </div>
+        <button id="btn-tone" class="btn ghost" type="button" title="Play target tone (T)" data-i18n-title="tone.playTitle"></button>
+        <div class="modes mode-pick" role="group" aria-label="Mode" data-i18n-aria-label="tuner.mode">
+          <button id="mode-auto" class="seg" type="button" aria-pressed="true" title="Detect the key automatically (A)" data-i18n="mode.auto" data-i18n-title="mode.autoTitle">Auto</button>
+          <button id="mode-lock" class="seg" type="button" aria-pressed="false" title="Lock on the selected key (L)" data-i18n="mode.lock" data-i18n-title="mode.lockTitle">Lock</button>
+          <button id="mode-map" class="seg" type="button" aria-pressed="false" title="Measure the piano note by note before tuning" data-i18n="mode.map" data-i18n-title="mode.mapTitle">Survey</button>
+        </div>
       </div>
     </div>
 
@@ -131,22 +148,6 @@
             <button id="btn-measure-b" class="btn ghost" type="button" title="B: how far the string's overtones lie above whole multiples of the fundamental" data-i18n="measure.bButton" data-i18n-title="measure.bTitle">Measure inharmonicity (B)</button>
           </div>
         </div>
-      </div>
-    </div>
-
-    <div class="tuner-foot">
-      <div class="tone-pick">
-        <span class="mini-label" id="tone-lbl" data-i18n="tone.label">Reference tone</span>
-        <div class="modes" role="group" aria-labelledby="tone-lbl">
-          <button class="seg" type="button" data-tone="off" aria-pressed="true" data-i18n="tone.off">Off</button>
-          <button class="seg" type="button" data-tone="piano" aria-pressed="false" title="Short piano-like tone" data-i18n="tone.piano" data-i18n-title="tone.pianoTitle">Piano</button>
-          <button class="seg" type="button" data-tone="sine" aria-pressed="false" title="Pure, sustained sine tone at the target frequency" data-i18n="tone.sine" data-i18n-title="tone.sineTitle">Sine</button>
-        </div>
-      </div>
-      <button id="btn-tone" class="btn ghost" type="button" title="Play target tone (T)" data-i18n-title="tone.playTitle"></button>
-      <div class="level-box">
-        <span class="mini-label" data-i18n="tuner.level">Mic level</span>
-        <div class="level"><div class="level-bar" id="level-bar"></div></div>
       </div>
     </div>
   </section>
