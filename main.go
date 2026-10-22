@@ -368,6 +368,7 @@ func main() {
 
 	// Not in Go's built-in table, and the image has no /etc/mime.types.
 	mime.AddExtensionType(".woff2", "font/woff2")
+	mime.AddExtensionType(".webmanifest", "application/manifest+json")
 
 	web, err := fs.Sub(webFS, "web")
 	if err != nil {

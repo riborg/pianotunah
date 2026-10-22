@@ -62,6 +62,7 @@ const state = {
   beating: false,
   bReadings: [],
   bBad: new Set(), // keys whose measured B is left out, see bOutliers
+  version: '', // the server's version when the page loaded, see checkVersion
   attacks: 0, // attacks heard, see jumpConfirmed
   inAttack: false,
   jump: null, // { k, hz, attack } a reading far from the last one, waiting for a new attack
@@ -130,9 +131,13 @@ function midBefore() {
 // cause goes away.
 
 let msgTimer = 0;
-function message(text, kind = 'info', ms = 6000, tag = '') {
+// action: { label, run } shows a button in the message.
+function message(text, kind = 'info', ms = 6000, tag = '', action = null) {
   const el = $('message');
   $('message-text').textContent = text;
+  const btn = $('message-action');
+  btn.hidden = !action;
+  if (action) Object.assign(btn, { textContent: action.label, onclick: action.run });
   Object.assign(el.dataset, { kind, tag });
   el.hidden = false;
   clearTimeout(msgTimer);
@@ -625,6 +630,20 @@ function diagStatus() {
     );
   }
   Object.assign(d, { frames: 0, readings: 0, idle: {} });
+}
+
+// An installed app has no reload button and can stay open for days, so it
+// says when the server runs a newer version: when shown again and every 30 min.
+function checkVersion() {
+  if (!state.version) return;
+  fetch('api/version')
+    .then((r) => r.json())
+    .then(({ version }) => {
+      if (version === state.version) return;
+      diag(`new version ${version} (running ${state.version})`);
+      message(tr('msg.update', { v: version }), 'info', 0, 'update', { label: tr('msg.reload'), run: () => location.reload() });
+    })
+    .catch(() => {});
 }
 
 function stopMic() {
@@ -1550,6 +1569,7 @@ function bindEvents() {
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', refreshColors);
   document.addEventListener('visibilitychange', () => {
     diag(`page ${document.visibilityState}`);
+    if (document.visibilityState === 'visible') checkVersion();
     if (document.visibilityState === 'hidden') saver.flush();
     else if (mic.running) {
       mic.resume();
@@ -1604,11 +1624,13 @@ async function boot() {
   fetch('api/version')
     .then((r) => r.json())
     .then(({ version, debug }) => {
+      state.version = version;
       if (debug) {
         enableDiag();
         diag(`page loaded: ${navigator.userAgent}`);
         setInterval(diagStatus, 5000);
       }
+      setInterval(checkVersion, 30 * 60 * 1000);
       $('app-version').textContent = version;
       if (/^v\d/.test(version)) $('app-version').href += '/tag/' + version;
     })

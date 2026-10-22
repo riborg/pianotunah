@@ -77,6 +77,10 @@ Browsers only allow the microphone over https (or on `localhost`), so the app ru
 - **Traefik:** `cp examples/traefik/compose.override.yaml .`, then set the hostname and the Docker network Traefik is attached to. It removes the published port.
 - **Caddy:** `cp examples/caddy/compose.override.yaml .` publishes the port on localhost only; add [`examples/caddy/Caddyfile`](examples/caddy/Caddyfile) to Caddy's config. Caddy gets the certificate itself; a host that is not reachable from the internet needs the DNS challenge or `tls internal`. If Caddy runs in a container, put it on the same Docker network instead and use `reverse_proxy pianotunah:8080`.
 
+### Install as an app
+
+Over https the page can be installed as an app with its own window and icon: in Chrome or Edge with the install icon in the address bar, in Safari on a Mac with File → Add to Dock, and on an iPhone with Share → Add to Home Screen. Firefox cannot install web apps. An installed app has no reload button, so it says when the server runs a newer version and offers to reload.
+
 Tests, releases and code layout: [DEVELOP.md](DEVELOP.md).
 
 ## License

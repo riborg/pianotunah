@@ -8,6 +8,10 @@
 <link rel="icon" href="icons/icon-32.png" type="image/png" sizes="32x32">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Piano Tunah">
+<meta name="theme-color" content="#eceeed" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1213" media="(prefers-color-scheme: dark)">
 <link rel="stylesheet" href="style.css">
 <script src="js/theme.js"></script>
 <script type="module" src="js/app.js"></script>
@@ -157,6 +161,7 @@
 
 <div id="message" class="message" role="status" aria-live="polite" hidden>
   <span id="message-text"></span>
+  <button id="message-action" class="btn primary" type="button" hidden></button>
   <button id="message-close" class="btn ghost close" type="button" aria-label="Close message" data-i18n-aria-label="msg.close">×</button>
 </div>
 

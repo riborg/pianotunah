@@ -10,6 +10,8 @@ export default {
   'top.settingsTitle': 'Settings (S)',
   'drawer.close': 'Close settings',
   'msg.close': 'Close message',
+  'msg.update': 'Version {v} is available.',
+  'msg.reload': 'Reload',
 
   'kb.label': 'Keyboard',
   'legend.good': 'Within tolerance',

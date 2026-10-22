@@ -9,6 +9,8 @@ export default {
   'top.settings': 'Inställningar',
   'top.settingsTitle': 'Inställningar (S)',
   'drawer.close': 'Stäng inställningar',
+  'msg.update': 'Version {v} finns.',
+  'msg.reload': 'Ladda om',
   'msg.close': 'Stäng meddelandet',
 
   'kb.label': 'Klaviatur',
