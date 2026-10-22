@@ -276,7 +276,11 @@ select:disabled { opacity: 0.55; }
 /* Words in the body face, values in mono. */
 .keyline .v { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
 #measured[data-live="1"] { color: var(--ink); }
-.unison-hint { margin: 0; text-align: center; font-size: 13px; color: var(--warn); }
+/* The beat hint comes and goes; its room is kept so nothing below moves.
+   One line, two where it wraps on a narrow screen. */
+.hint-slot { font-size: 13px; line-height: 1.5; min-height: 1.5em; margin-top: -6px; }
+.unison-hint { margin: 0; text-align: center; color: var(--warn); text-wrap: balance; }
+@media (max-width: 620px) { .hint-slot { min-height: 3em; } }
 
 .spectro, .beatstrip, .chart { display: block; width: 100%; }
 .spectro, .beatstrip { border-radius: 6px; }
