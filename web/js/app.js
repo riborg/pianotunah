@@ -715,7 +715,9 @@ function analyseFrame() {
     // Keys measured in this pass are also looked for where they were heard,
     // so a key far from its target is not taken for its neighbour.
     const d = A.detectKey(state.T, state.key, top(), heardDevs());
-    followDetectedKey(d);
+    // The microphone hears the reference tone too; following it would move
+    // the key, and the sine with it, to whatever the speaker plays.
+    if (!refPlaying()) followDetectedKey(d);
     // Only the current key's own sound gives a reading, not noise between
     // notes or a note halfway between two keys.
     if (d.key !== state.key || d.margin < 2) return idle(d.key !== state.key ? `hears ${kName(d.key)}` : 'unsure');
