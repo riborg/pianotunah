@@ -58,5 +58,6 @@ UI strings are in `web/js/lang/en.js` and `sv.js`. Static markup uses `data-i18n
 | `web/js/app.js` | state, DOM and events |
 | `web/js/diag.js` | debug log to the server (`DEBUG=1`) |
 | `web/fonts/` | ♭ ♮ ♯ from Bravura Text, built by `tools/accidentals.py` |
+| `web/favicon.svg`, `web/icons/` | logo and app icons, built by `tools/icons.py` |
 | `test/` | unit and end-to-end tests |
 | `.github/workflows/` | CI, release, weekly vulnerability scan |

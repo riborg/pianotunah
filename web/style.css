@@ -128,7 +128,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   border-bottom: 1px solid var(--line);
 }
 .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; color: inherit; text-decoration: none; }
-.brand-mark { width: 34px; height: 24px; color: var(--accent); }
+.brand-mark { width: 32px; height: 32px; display: block; }
 .brand-name { font: italic 600 22px/1 var(--f-display); letter-spacing: 0.01em; }
 .tuning-bar { display: flex; align-items: center; gap: 6px; }
 .tuning-bar select { min-width: 220px; max-width: 360px; }
