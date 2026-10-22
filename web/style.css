@@ -275,7 +275,9 @@ select:disabled { opacity: 0.55; }
 .status[data-s="good"] { color: var(--good); }
 .status[data-s="warn"] { color: var(--warn); }
 .status[data-s="bad"] { color: var(--bad); }
-.keyline { margin: -8px 0 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 0 14px; font: 13px var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.keyline { margin: -8px 0 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 0 16px; font-size: 13px; color: var(--muted); }
+/* Words in the body face, values in mono. */
+.keyline .v { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
 #measured[data-live="1"] { color: var(--ink); }
 .unison-hint { margin: 0; text-align: center; font-size: 13px; color: var(--warn); }
 

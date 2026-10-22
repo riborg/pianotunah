@@ -8,7 +8,7 @@ import {
 import { Analyzer, rmsDb, median } from './dsp.js';
 import { listTunings, getTuning, saveTuning, deleteTuning, newTuning, normalize, duplicateTuning } from './store.js';
 import { num, short, fmtC, fmtHz, fmtB } from './format.js';
-import { tr, lang, locale, setLang, translateDom } from './i18n.js';
+import { tr, trNodes, lang, locale, setLang, translateDom } from './i18n.js';
 import { Mic } from './mic.js';
 import { TonePlayer } from './tone.js';
 import { Saver } from './saver.js';
@@ -352,11 +352,12 @@ function renderKeyInfo() {
   const n = partialOf(k);
   const g = goal(k);
   $('note-name').textContent = kName(k);
-  $('note-sub').textContent = tr('key.sub', { k, c: fmtC(T.cents[k]) });
-  $('targetline').textContent =
-    tr('target.fund', { hz: fmtHz(T.freq[k]) }) +
-    (n > 1 ? tr('target.partial', { n, hz: fmtHz(partialFreq(T.freq[k], T.B[k], n)) }) : '') +
-    (g ? tr('target.overpull', { c: fmtC(g) }) : '');
+  $('note-sub').replaceChildren(...trNodes('key.sub', { k, c: fmtC(T.cents[k]) }));
+  $('targetline').replaceChildren(
+    ...trNodes('target.fund', { hz: fmtHz(T.freq[k]) }),
+    ...(n > 1 ? trNodes('target.partial', { n, hz: fmtHz(partialFreq(T.freq[k], T.B[k], n)) }) : []),
+    ...(g ? trNodes('target.overpull', { c: fmtC(g) }) : []),
+  );
   $('partial-val').textContent = n;
   $('bval').textContent = tr('measure.bval', { b: fmtB(T.B[k]), src: bSource(k) });
   if (tones.sineOn) tones.setSine(sineFreq());
@@ -1026,7 +1027,7 @@ function updateReadout() {
   $('cents').dataset.live = state.signal ? '1' : '0';
   const n = partialOf(state.key);
   const hz = mic.running && Number.isFinite(state.measHz) ? fmtHz(state.measHz) : '–';
-  $('measured').textContent = tr(n > 1 ? 'measured.partial' : 'measured', { n, hz });
+  $('measured').replaceChildren(...trNodes(n > 1 ? 'measured.partial' : 'measured', { n, hz }));
   $('measured').dataset.live = state.signal ? '1' : '0';
   const hint = $('unison-hint');
   hint.hidden = !(mic.running && state.beating);

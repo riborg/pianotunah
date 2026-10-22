@@ -34,7 +34,7 @@ export default {
   'mode.map': 'Kartlägg',
   'mode.mapTitle': 'Mät pianot ton för ton innan du stämmer',
 
-  'key.sub': 'tangent {k} · mål {c} cent',
+  'key.sub': 'Tangent {k} · mål {c} cent',
   'key.label': '{name}, {dev}',
   'key.unmeasured': 'ej mätt',
   measured: 'Uppmätt {hz}',

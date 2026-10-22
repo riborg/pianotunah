@@ -28,6 +28,17 @@ export function tr(key, params) {
   return params ? s.replace(/\{(\w+)\}/g, (m, p) => (p in params ? params[p] : m)) : s;
 }
 
+// tr() as DOM nodes, each parameter in a <span class="v"> so values can be
+// set apart from the words around them.
+export function trNodes(key, params) {
+  const s = LANGS[cur][key] ?? en[key] ?? key;
+  return s.split(/(\{\w+\})/).filter(Boolean).map((part) => {
+    const p = part.match(/^\{(\w+)\}$/)?.[1];
+    if (!p || !(p in params)) return document.createTextNode(part);
+    return Object.assign(document.createElement('span'), { className: 'v', textContent: params[p] });
+  });
+}
+
 // Static markup. data-i18n-html is only used for markup from the language files.
 export function translateDom(root = document) {
   document.documentElement.lang = cur;

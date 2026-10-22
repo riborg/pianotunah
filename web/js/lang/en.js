@@ -34,7 +34,7 @@ export default {
   'mode.map': 'Survey',
   'mode.mapTitle': 'Measure the piano note by note before tuning',
 
-  'key.sub': 'key {k} · target {c} cents',
+  'key.sub': 'Key {k} · target {c} cents',
   'key.label': '{name}, {dev}',
   'key.unmeasured': 'not measured',
   measured: 'Measured {hz}',
