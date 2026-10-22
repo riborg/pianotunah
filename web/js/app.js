@@ -352,12 +352,20 @@ function renderRef() {
   $('ref-advice').textContent = text;
 }
 
+// The note in the hub: accidental raised and octave lowered (B♭₄), as in
+// chord symbols and scientific pitch notation.
+function renderNoteName(k) {
+  const [, letter, acc, oct] = kName(k).match(/^([A-G])(\D?)(\d)$/);
+  const span = (cls, text) => Object.assign(document.createElement('span'), { className: cls, textContent: text });
+  $('note-name').replaceChildren(letter, ...(acc ? [span('acc', acc)] : []), span('oct', oct));
+}
+
 function renderKeyInfo() {
   const k = state.key;
   const T = state.T;
   const n = partialOf(k);
   const g = goal(k);
-  $('note-name').textContent = kName(k);
+  renderNoteName(k);
   $('note-sub').replaceChildren(...trNodes('key.sub', { k, c: fmtC(T.cents[k]) }));
   $('targetline').replaceChildren(
     ...trNodes('target.fund', { hz: fmtHz(T.freq[k]) }),

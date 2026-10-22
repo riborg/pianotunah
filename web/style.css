@@ -272,6 +272,9 @@ select:disabled { opacity: 0.55; }
 .hub[data-s="warn"] .cents { color: var(--warn); }
 .hub[data-s="bad"] .cents { color: var(--bad); }
 .note-name { font: 600 clamp(30px, 11cqw, 54px)/1 var(--f-display); letter-spacing: -0.01em; }
+/* B♭₄: accidental raised to the top of the capital, octave lowered. */
+.note-name .acc { font-size: 0.6em; position: relative; top: -0.42em; margin-left: 0.02em; }
+.note-name .oct { font-size: 0.6em; position: relative; top: 0.18em; margin-left: 0.03em; }
 .nav { position: absolute; top: 63cqw; transform: translate(-50%, -50%); width: 40px; height: 40px; padding: 0; border-radius: 50%; }
 .nav.prev { left: calc(50% - 31cqw); }
 .nav.next { left: calc(50% + 31cqw); }
