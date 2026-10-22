@@ -82,3 +82,5 @@ Tests, releases and code layout: [DEVELOP.md](DEVELOP.md).
 ## License
 
 Public domain ([CC0 1.0](LICENSE)). Written with [Claude](https://claude.ai) as co-programmer; use it for anything, no attribution needed.
+
+The exception is `web/fonts/accidentals.woff2`, ♭ ♮ ♯ adapted from [Bravura Text](https://github.com/steinbergmedia/bravura) by Steinberg under the SIL Open Font License 1.1 ([web/fonts/OFL.txt](web/fonts/OFL.txt)).

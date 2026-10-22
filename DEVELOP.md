@@ -56,5 +56,7 @@ UI strings are in `web/js/lang/en.js` and `sv.js`. Static markup uses `data-i18n
 | `web/js/mic.js`, `recorder.js`, `tone.js` | microphone, recording (AudioWorklet) and reference tones |
 | `web/js/i18n.js`, `lang/` | UI strings |
 | `web/js/app.js` | state, DOM and events |
+| `web/js/diag.js` | debug log to the server (`DEBUG=1`) |
+| `web/fonts/` | ♭ ♮ ♯ from Bravura Text, built by `tools/accidentals.py` |
 | `test/` | unit and end-to-end tests |
 | `.github/workflows/` | CI, release, weekly vulnerability scan |
