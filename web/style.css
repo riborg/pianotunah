@@ -18,17 +18,10 @@
   --ebony: #1b1d1f;
   --scale-yellow: #c9a400;
   --scale-orange: #df7a16;
-  --accent-deep: #1d4064;
   --case: #2a1f1b;
-  --case-top: #3a2c26;
-  --felt: #7a1d22;
-  --felt-hi: #9b2a2f;
-  --ivory-shade: #d9d4c6;
-  --ivory-edge: #e6e0cf;
   --ivory-gap: #b9b3a3;
   --ivory-hover: #fff9e8;
   --ebony-hi: #3a3d42;
-  --ebony-edge: #000000;
   --key-label: #6d6a60;
   --key-current: #dcebf8;
   --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%235a6463' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -60,17 +53,10 @@
     --ebony: #050607;
     --scale-yellow: #f2d04a;
     --scale-orange: #f39a3d;
-    --accent-deep: #4a7aa8;
     --case: #120d0b;
-    --case-top: #1f1714;
-    --felt: #5e1519;
-    --felt-hi: #7a1f24;
-    --ivory-shade: #a9a497;
-    --ivory-edge: #b9b4a6;
     --ivory-gap: #8a8678;
     --ivory-hover: #e6e2d6;
     --ebony-hi: #2a2d31;
-    --ebony-edge: #000000;
     --key-label: #55534c;
     --key-current: #b9d3ec;
     --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%2393a09d' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -95,17 +81,10 @@
   --ebony: #050607;
   --scale-yellow: #f2d04a;
   --scale-orange: #f39a3d;
-  --accent-deep: #4a7aa8;
   --case: #120d0b;
-  --case-top: #1f1714;
-  --felt: #5e1519;
-  --felt-hi: #7a1f24;
-  --ivory-shade: #a9a497;
-  --ivory-edge: #b9b4a6;
   --ivory-gap: #8a8678;
   --ivory-hover: #e6e2d6;
   --ebony-hi: #2a2d31;
-  --ebony-edge: #000000;
   --key-label: #55534c;
   --key-current: #b9d3ec;
   --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%2393a09d' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -428,64 +407,52 @@ body.drawer-open { overflow: hidden; }
 .chart-wrap.mini { margin-top: -4px; }
 .kb-frame {
   position: relative;
-  padding: 32px 10px 8px;
-  border-radius: 10px;
-  background: linear-gradient(var(--case-top), var(--case));
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -2px 6px rgb(0 0 0 / 0.35);
+  padding: 30px 8px 6px;
+  border-radius: 8px;
+  background: var(--case);
 }
-/* The felt strip above the keys on a real piano. */
-.kb-felt { height: 7px; margin: 0 -2px; border-radius: 2px; background: linear-gradient(var(--felt-hi), var(--felt)); box-shadow: 0 1px 2px rgb(0 0 0 / 0.5); position: relative; z-index: 3; }
-.keyboard { position: relative; display: flex; height: clamp(72px, 10vw, 124px); user-select: none; }
+.keyboard { position: relative; display: flex; height: clamp(44px, 6vw, 72px); user-select: none; }
 /* Deviation strip in the case below the keys, same x axis as the keyboard. */
 .devstrip { display: block; width: 100%; margin-top: 6px; }
 .bar-sw { width: 4px; height: 12px; border-radius: 1px; background: linear-gradient(var(--bad), var(--good) 50%, var(--warn)); display: inline-block; }
+/* Flat keys: the keyboard is a map of the piano, not a picture of one. */
 .key { cursor: pointer; padding: 0; border: 0; font: inherit; }
 .key.white {
   flex: 1 1 0;
   position: relative;
-  background: linear-gradient(180deg, var(--ivory-shade) 0%, var(--ivory) 14%, var(--ivory) 88%, var(--ivory-edge) 100%);
+  background: var(--ivory);
   border-right: 1px solid var(--ivory-gap);
-  border-radius: 0 0 5px 5px;
-  box-shadow: inset 0 -5px 0 var(--ivory-edge), 0 2px 2px rgb(0 0 0 / 0.35);
+  border-radius: 0 0 2px 2px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   align-items: center;
-  transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
 }
-.key.white:hover { background: linear-gradient(180deg, var(--ivory-shade) 0%, var(--ivory-hover) 14%, var(--ivory-hover) 100%); }
+.key.white:last-child { border-right: 0; }
+.key.white:hover { background: var(--ivory-hover); }
 .key.black {
   position: absolute;
   top: 0;
   width: 1.15%;
-  height: 63%;
+  height: 60%;
   transform: translateX(-50%);
-  background: linear-gradient(90deg, var(--ebony) 0%, var(--ebony-hi) 45%, var(--ebony) 100%);
-  border-radius: 0 0 3px 3px;
-  box-shadow: inset 0 -6px 0 var(--ebony-edge), inset 0 -7px 0 rgb(255 255 255 / 0.12), 0 3px 4px rgb(0 0 0 / 0.55);
+  background: var(--ebony);
+  border-radius: 0 0 2px 2px;
   z-index: 2;
-  transition: height 120ms ease, box-shadow 120ms ease;
 }
-.klabel { font: 10px var(--f-mono); color: var(--key-label); margin-bottom: 8px; position: relative; z-index: 1; }
+.key.black:hover { background: var(--ebony-hi); }
+.klabel { font: 9px var(--f-mono); color: var(--key-label); margin-bottom: 3px; position: relative; z-index: 1; }
 /* Too narrow for labels; the flag names the current key. */
 @media (max-width: 620px) { .klabel { display: none; } }
 
 /* Measured inharmonicity: small dot at the top. */
-.key.has-b::after { content: ""; position: absolute; top: 8px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--accent); opacity: 0.8; }
+.key.has-b::after { content: ""; position: absolute; top: 4px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--accent); opacity: 0.8; }
 .key.black.has-b::after { background: var(--ivory); opacity: 0.6; }
 
-/* Current key: pressed and lit. */
-.key.white.current {
-  background: linear-gradient(180deg, var(--ivory-shade) 0%, var(--key-current) 16%, var(--key-current) 100%);
-  box-shadow: inset 0 -2px 0 var(--ivory-edge), inset 0 0 0 2px var(--accent), 0 1px 1px rgb(0 0 0 / 0.3);
-  transform: translateY(2px);
-}
+/* Current key: filled with the accent. */
+.key.white.current { background: var(--key-current); box-shadow: inset 0 0 0 2px var(--accent); }
 .key.white.current .klabel { color: var(--accent); font-weight: 700; }
-.key.black.current {
-  height: 61%;
-  background: linear-gradient(90deg, var(--accent-deep) 0%, var(--accent) 50%, var(--accent-deep) 100%);
-  box-shadow: inset 0 -3px 0 var(--accent-deep), 0 0 0 2px var(--accent), 0 0 14px var(--accent);
-}
+.key.black.current { background: var(--accent); }
 .key.flash { animation: flash 700ms ease-out; }
 @keyframes flash { from { filter: brightness(1.5) saturate(1.4); } to { filter: none; } }
 
@@ -589,7 +556,7 @@ details > .form { margin-top: 10px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .key.flash, .drawer { animation: none; }
-  .key, .kb-marker, .level-bar, .map-bar i { transition: none; }
+  .kb-marker, .level-bar, .map-bar i { transition: none; }
 }
 
 /* App */
