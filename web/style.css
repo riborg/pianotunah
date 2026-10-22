@@ -235,8 +235,9 @@ select:disabled { opacity: 0.55; }
    drawer. The tuner comes first so it is visible without scrolling. */
 .layout { display: flex; flex-direction: column; gap: var(--gap); max-width: 1100px; margin: var(--gap) auto 0; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; min-width: 0; }
-.keys-card { display: flex; flex-direction: column; gap: 10px; }
-.keys-card .legend { justify-content: center; }
+/* Curve and keys right under the dial, the folds below them. */
+.keys-block { display: flex; flex-direction: column; gap: 10px; }
+.keys-block .legend { justify-content: center; }
 
 /* Tuner */
 .tuner { display: flex; flex-direction: column; gap: 14px; }
@@ -530,7 +531,7 @@ body.drawer-open { overflow: hidden; }
 .tooltip span { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
 details { margin-top: 12px; }
 summary { cursor: pointer; color: var(--accent); font-size: 14px; }
-.keys-card .table-details { margin: 0; }
+.keys-block .table-details { margin: 0; }
 .table-details summary { text-align: center; font-size: 13px; }
 details > .form { margin-top: 10px; }
 /* Folds the curve under the keyboard. */

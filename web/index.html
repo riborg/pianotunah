@@ -76,6 +76,33 @@
     <p class="keyline"><span id="note-sub"></span><span id="targetline"></span><span id="measured"></span></p>
     <div class="hint-slot"><p class="unison-hint" id="unison-hint" role="status" hidden></p></div>
 
+    <div class="keys-block" role="group" aria-label="Keyboard" data-i18n-aria-label="kb.label">
+      <div class="kb-frame">
+        <div class="kb-marker" id="kb-marker"><span id="kb-marker-name">A4</span></div>
+        <div class="chart-wrap mini" id="curve-row">
+          <canvas id="minichart" class="chart" height="96" role="img" aria-label="Target curve in cents per key" data-i18n-aria-label="curve.label"></canvas>
+          <div class="tooltip" id="minitip" hidden></div>
+        </div>
+        <div class="keyboard" id="keyboard"></div>
+      </div>
+      <div class="curve-hint" id="curve-hint" hidden>
+        <span data-i18n="curve.hint">The curve is estimated from the size of the piano.</span>
+        <button id="btn-curve-map" class="btn primary" type="button" data-i18n="curve.hintMap">Survey all A</button>
+      </div>
+      <div class="legend">
+        <button id="curve-toggle" class="fold" type="button" aria-controls="curve-row" aria-expanded="true" data-i18n="tab.curve">Curve</button>
+        <span class="lg"><i class="sw s-good"></i><span data-i18n="legend.good">Within tolerance</span></span>
+        <span class="lg"><i class="sw s-warn"></i><span data-i18n="legend.warn">Close</span></span>
+        <span class="lg"><i class="sw s-bad"></i><span data-i18n="legend.bad">Outside</span></span>
+        <span class="lg"><i class="dot-b"></i><span data-i18n="legend.b">Measured B</span></span>
+        <span class="lg lg-curve"><i class="ln"></i><span data-i18n="curve.target">Target vs equal temperament</span></span>
+      </div>
+      <details id="table-details" class="table-details">
+        <summary data-i18n="curve.table">Show as table</summary>
+        <div class="table-wrap"><table class="ktable" id="ktable"></table></div>
+      </details>
+    </div>
+
     <div class="fold-box">
       <div class="fold-head">
         <button id="beats-toggle" class="fold" type="button" aria-controls="beats-row" aria-expanded="false" data-i18n="beats.label">Beats around the target, ±30 cents</button>
@@ -122,33 +149,6 @@
         <div class="level"><div class="level-bar" id="level-bar"></div></div>
       </div>
     </div>
-  </section>
-
-  <section class="card keys-card" aria-label="Keyboard" data-i18n-aria-label="kb.label">
-    <div class="kb-frame">
-      <div class="kb-marker" id="kb-marker"><span id="kb-marker-name">A4</span></div>
-      <div class="chart-wrap mini" id="curve-row">
-        <canvas id="minichart" class="chart" height="96" role="img" aria-label="Target curve in cents per key" data-i18n-aria-label="curve.label"></canvas>
-        <div class="tooltip" id="minitip" hidden></div>
-      </div>
-      <div class="keyboard" id="keyboard"></div>
-    </div>
-    <div class="curve-hint" id="curve-hint" hidden>
-      <span data-i18n="curve.hint">The curve is estimated from the size of the piano.</span>
-      <button id="btn-curve-map" class="btn primary" type="button" data-i18n="curve.hintMap">Survey all A</button>
-    </div>
-    <div class="legend">
-      <button id="curve-toggle" class="fold" type="button" aria-controls="curve-row" aria-expanded="true" data-i18n="tab.curve">Curve</button>
-      <span class="lg"><i class="sw s-good"></i><span data-i18n="legend.good">Within tolerance</span></span>
-      <span class="lg"><i class="sw s-warn"></i><span data-i18n="legend.warn">Close</span></span>
-      <span class="lg"><i class="sw s-bad"></i><span data-i18n="legend.bad">Outside</span></span>
-      <span class="lg"><i class="dot-b"></i><span data-i18n="legend.b">Measured B</span></span>
-      <span class="lg lg-curve"><i class="ln"></i><span data-i18n="curve.target">Target vs equal temperament</span></span>
-    </div>
-    <details id="table-details" class="table-details">
-      <summary data-i18n="curve.table">Show as table</summary>
-      <div class="table-wrap"><table class="ktable" id="ktable"></table></div>
-    </details>
   </section>
 </main>
 
