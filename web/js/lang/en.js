@@ -16,8 +16,8 @@ export default {
   'legend.good': 'Within tolerance',
   'legend.warn': 'Close',
   'legend.bad': 'Outside',
-  'legend.b': 'Measured inharmonicity',
-  'legend.dev': 'Deviation from target, ±{n} cents',
+  'legend.b': 'Measured B',
+  'legend.dev': 'Deviation ±{n} cents',
 
   'tuner.label': 'Tuner',
   'tuner.prev': 'Previous key',
@@ -250,7 +250,7 @@ export default {
   'b.measured': 'measured',
   'b.model': 'model',
 
-  'curve.target': 'Target relative to equal temperament',
+  'curve.target': 'Target vs equal temperament',
   'curve.label': 'Target curve in cents per key',
   'curve.hint': 'The curve is estimated from the size of the piano.',
   'curve.hintMap': 'Survey all A',

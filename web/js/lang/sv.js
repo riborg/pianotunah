@@ -16,8 +16,8 @@ export default {
   'legend.good': 'Inom tolerans',
   'legend.warn': 'Nära',
   'legend.bad': 'Utanför',
-  'legend.b': 'Uppmätt inharmonicitet',
-  'legend.dev': 'Avvikelse mot målet, ±{n} cent',
+  'legend.b': 'Uppmätt B',
+  'legend.dev': 'Avvikelse ±{n} cent',
 
   'tuner.label': 'Stämapparat',
   'tuner.prev': 'Föregående tangent',
@@ -250,7 +250,7 @@ export default {
   'b.measured': 'uppmätt',
   'b.model': 'modell',
 
-  'curve.target': 'Mål relativt liksvävande',
+  'curve.target': 'Mål mot liksvävande',
   'curve.label': 'Målkurva i cent per tangent',
   'curve.hint': 'Kurvan är uppskattad från pianots storlek.',
   'curve.hintMap': 'Kartlägg alla A',
