@@ -3,10 +3,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"embed"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"log"
@@ -17,6 +19,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -118,12 +121,13 @@ func (s *store) put(w http.ResponseWriter, r *http.Request) {
 	// Optimistic locking: the client sends the revision it started from. If
 	// someone else has saved since, answer 409 instead of overwriting.
 	base, _ := doc["rev"].(float64)
-	cur, err := s.rev(id)
+	cur, old, err := s.load(id)
 	if err != nil {
 		httpError(w, err, http.StatusInternalServerError)
 		return
 	}
 	if int64(base) != cur {
+		log.Printf("save %q refused: started from rev %d, rev %d is saved", doc["name"], int64(base), cur)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusConflict)
 		json.NewEncoder(w).Encode(map[string]int64{"rev": cur})
@@ -154,24 +158,113 @@ func (s *store) put(w http.ResponseWriter, r *http.Request) {
 		httpError(w, err, http.StatusInternalServerError)
 		return
 	}
+	log.Printf("save %q rev %d: %s", doc["name"], cur+1, changes(old, body))
 	writeJSON(w, map[string]int64{"rev": cur + 1})
 }
 
-// Saved revision for id, 0 if the tuning does not exist.
-func (s *store) rev(id string) (int64, error) {
+// Saved revision and document for id; 0 and nil if the tuning does not exist.
+func (s *store) load(id string) (int64, []byte, error) {
 	b, err := os.ReadFile(s.path(id))
 	if errors.Is(err, fs.ErrNotExist) {
-		return 0, nil
+		return 0, nil, nil
 	} else if err != nil {
-		return 0, err
+		return 0, nil, err
 	}
 	var d struct {
 		Rev int64 `json:"rev"`
 	}
 	if err := json.Unmarshal(b, &d); err != nil {
-		return 0, err
+		return 0, nil, err
 	}
-	return d.Rev, nil
+	return d.Rev, b, nil
+}
+
+// The parts of a tuning that the log reports on.
+type keyRec struct {
+	Hz float64 `json:"hz"`
+	N  int     `json:"n"`
+}
+
+type tuningDoc struct {
+	Name          string             `json:"name"`
+	Settings      json.RawMessage    `json:"settings"`
+	Notes         string             `json:"notes"`
+	Keys          map[string]keyRec  `json:"keys"`
+	Inharmonicity map[string]float64 `json:"inharmonicity"`
+	History       []json.RawMessage  `json:"history"`
+}
+
+var noteNames = []string{"C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"}
+
+// Key 1 = A0, as in theory.js.
+func noteName(key string) string {
+	k, err := strconv.Atoi(key)
+	if err != nil {
+		return key
+	}
+	return noteNames[(k+8)%12] + strconv.Itoa((k+8)/12)
+}
+
+func sortedKeys[V any](m map[string]V) []string {
+	ks := make([]string, 0, len(m))
+	for k := range m {
+		ks = append(ks, k)
+	}
+	sort.Slice(ks, func(i, j int) bool {
+		a, _ := strconv.Atoi(ks[i])
+		b, _ := strconv.Atoi(ks[j])
+		return a < b
+	})
+	return ks
+}
+
+// What a save changed: measured keys, B, settings, name, notes, passes.
+func changes(oldRaw, newRaw []byte) string {
+	if oldRaw == nil {
+		return "new tuning"
+	}
+	var a, b tuningDoc
+	if json.Unmarshal(oldRaw, &a) != nil || json.Unmarshal(newRaw, &b) != nil {
+		return "unreadable"
+	}
+	var out []string
+	for _, k := range sortedKeys(b.Keys) {
+		if r, ok := a.Keys[k]; ok && r == b.Keys[k] {
+			continue
+		}
+		s := fmt.Sprintf("%s %.2f Hz", noteName(k), b.Keys[k].Hz)
+		if b.Keys[k].N > 1 {
+			s += fmt.Sprintf(" (partial %d)", b.Keys[k].N)
+		}
+		out = append(out, s)
+	}
+	for _, k := range sortedKeys(b.Inharmonicity) {
+		if a.Inharmonicity[k] != b.Inharmonicity[k] {
+			out = append(out, fmt.Sprintf("%s B=%.3g", noteName(k), b.Inharmonicity[k]))
+		}
+	}
+	if len(b.Keys) < len(a.Keys) {
+		out = append(out, fmt.Sprintf("%d keys cleared", len(a.Keys)-len(b.Keys)))
+	}
+	if !bytes.Equal(a.Settings, b.Settings) {
+		out = append(out, "settings")
+	}
+	if a.Name != b.Name {
+		out = append(out, fmt.Sprintf("renamed from %q", a.Name))
+	}
+	if a.Notes != b.Notes {
+		out = append(out, "notes")
+	}
+	if len(b.History) > len(a.History) {
+		out = append(out, "new pass")
+	}
+	if len(out) == 0 {
+		return "no changes"
+	}
+	if len(out) > 8 {
+		out = append(out[:8], fmt.Sprintf("and %d more", len(out)-8))
+	}
+	return strings.Join(out, ", ")
 }
 
 func (s *store) del(w http.ResponseWriter, r *http.Request) {
@@ -186,6 +279,7 @@ func (s *store) del(w http.ResponseWriter, r *http.Request) {
 		httpError(w, err, http.StatusInternalServerError)
 		return
 	}
+	log.Printf("delete %s", id)
 	w.WriteHeader(http.StatusNoContent)
 }
 
