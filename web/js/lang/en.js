@@ -50,8 +50,6 @@ export default {
   'status.low': 'Too low, raise',
 
   'beats.label': 'Beats around the target, ±30 cents',
-  'strobe.bands': 'Strobe as bands',
-  'strobe.label': 'Strobe per partial: still = in tune, right = too high',
   'beat.none': 'Beatless',
   'beat.rate': '{n} beats/s',
 
@@ -308,7 +306,7 @@ export default {
 <p>In the bass, partial 6, 4 or 2 is measured: the fundamental is weak and laptop microphones pick up little below 100 Hz. An external USB microphone 20–40 cm above the strings helps; choose it under App.</p>
 <p><strong>Auto and Lock:</strong> Auto finds the key from the sound. Keys measured in this pass are also recognised where they sound, even far from the target. An unmeasured key halfway between two notes: click it on the keyboard to lock it.</p>
 <p><strong>Overpull:</strong> when raising the pitch, strings already tuned go flat as the load increases. With 25%, a note that was at −20 cents is tuned to +5. Under Tuning the app suggests an overpull once the middle of the piano is measured.</p>
-<p><strong>Strobe:</strong> one ring per partial behind the needle, numbered at the right end: innermost the measured one, then the two octaves above it. Still = in tune, turning clockwise = too high. <em>Strobe as bands</em> shows the same, moving right when too high. If the inner ring stands still but the others turn, the string's inharmonicity differs from the model; measure its inharmonicity under <em>Partials vs target</em>.</p>
+<p><strong>Strobe:</strong> one ring per partial behind the needle, numbered at the right end: innermost the measured one, then the two octaves above it. Still = in tune, turning clockwise = too high. If the inner ring stands still but the others turn, the string's inharmonicity differs from the model; measure its inharmonicity under <em>Partials vs target</em>.</p>
 <p><strong>Sine tone:</strong> choose Sine under <em>Reference tone</em> and click a key. Tune until the beats disappear.</p>
 <p><strong>Temperament:</strong> how the fifths are distributed within the octave. Equal temperament is the standard for pianos; the historical ones under Tuning are for early music.</p>
 <p class="keys-hint">Keyboard: ← → change key, L locks, A auto, T plays or stops the target tone, S opens settings.</p>`,

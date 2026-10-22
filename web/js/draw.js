@@ -173,38 +173,6 @@ export function drawDial(canvas, { display, signal, bands, live, tol }, C, dt, p
   ctx.globalAlpha = 1;
 }
 
-// Strobe: one band per partial, an octave apart (bands: [{ p, c }], top
-// first). As on a mechanical strobe, a band an octave up moves twice as fast
-// for the same deviation. Still = in tune, moving right = too high. A band
-// without a reading is grey and still. phases (three numbers) is updated.
-export function drawStrobe(canvas, { bands, live, tol }, C, dt, phases) {
-  const { ctx, w, h } = fitCanvas(canvas);
-  const still = reducedMotion();
-  const bandH = (h - 8) / 3;
-  const period = 28;
-  const labelW = 26;
-  ctx.font = `11px ${MONO}`;
-  ctx.textAlign = 'center';
-  for (let i = 0; i < 3; i++) {
-    const band = bands[i];
-    const on = live && Number.isFinite(band?.c);
-    const c = on ? Math.max(-30, Math.min(30, band.c)) : 0;
-    if (!still) phases[i] = (phases[i] + c * 9 * 2 ** i * dt) % (period * 2);
-    const y = 2 + i * (bandH + 2);
-    ctx.fillStyle = C.muted;
-    ctx.fillText(band ? band.p : '', labelW / 2, y + bandH / 2 + 4);
-    ctx.fillStyle = C.stripe2;
-    ctx.fillRect(labelW, y, w - labelW, bandH);
-    ctx.fillStyle = on ? scaleColor(band.c, tol, C) : C.faint;
-    const p = phases[i] / 2 ** i;
-    const per = period / 2 ** (i * 0.5);
-    for (let x = labelW - per * 2 + (((p % per) + per) % per); x < w; x += per) {
-      const x0 = Math.max(x, labelW);
-      if (x + per / 2 > x0) ctx.fillRect(x0, y, x + per / 2 - x0, bandH);
-    }
-  }
-}
-
 // Zoomed spectrogram around the target partial. cols: { col: dB per row,
 // c: deviation } or null (silence), oldest first. Brightness = level within
 // 12 dB of the column's peak, color = deviation at that moment.

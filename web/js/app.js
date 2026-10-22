@@ -12,7 +12,7 @@ import { tr, trNodes, lang, locale, setLang, translateDom } from './i18n.js';
 import { Mic } from './mic.js';
 import { TonePlayer } from './tone.js';
 import { Saver } from './saver.js';
-import { readColors, drawDial, drawStrobe, drawSpectro, drawBeat, drawChart } from './draw.js';
+import { readColors, drawDial, drawSpectro, drawBeat, drawChart } from './draw.js';
 import * as mapping from './mapping.js';
 
 const $ = (id) => document.getElementById(id);
@@ -22,7 +22,7 @@ const SPEC_COLS = 100; // spectrogram history, ≈ 9 s
 const SPEC_BINS = 48;
 const SPEC_CENTS = 30;
 const REC_MAX_S = 120;
-const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab', curve: 'pianotunah.curve', partials: 'pianotunah.partials', bands: 'pianotunah.bands', beats: 'pianotunah.beats', mic: 'pianotunah.mic' };
+const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab', curve: 'pianotunah.curve', partials: 'pianotunah.partials', beats: 'pianotunah.beats', mic: 'pianotunah.mic' };
 
 const mic = new Mic();
 const tones = new TonePlayer();
@@ -70,7 +70,6 @@ const state = {
   refTainted: false,
   wakeLock: null,
   recTimer: 0,
-  strobePhase: [0, 0, 0],
   ringPhase: [0, 0, 0],
   lastAnim: 0,
   colors: {},
@@ -472,7 +471,7 @@ function setCurveOpen(open) {
   else renderCurveHint();
 }
 
-// Folds under the dial: strobe bands, beats and partials. Not drawn while closed.
+// Folds under the dial: beats and partials. Not drawn while closed.
 function setFoldOpen(name, open) {
   $(name + '-row').hidden = !open;
   $(name + '-toggle').setAttribute('aria-expanded', open);
@@ -1056,7 +1055,6 @@ function animate(t) {
     const tol = tolerance();
     const live = state.signal && Number.isFinite(state.display);
     drawDial($('dial'), { display: state.display, signal: state.signal, bands: state.strobe, live, tol }, C, dt, state.ringPhase);
-    if (!$('bands-row').hidden) drawStrobe($('strobe'), { bands: state.strobe, live, tol }, C, dt, state.strobePhase);
     const beatLive = live && Number.isFinite(state.beatHz);
     if (!$('beats-row').hidden) {
       drawSpectro($('spectro'), state.spec, { capacity: SPEC_COLS, bins: SPEC_BINS, cents: SPEC_CENTS, tol }, C);
@@ -1417,7 +1415,7 @@ function bindEvents() {
     setCurveOpen(open);
     try { localStorage.setItem(LS.curve, open ? 'open' : 'closed'); } catch { /* optional */ }
   });
-  for (const name of ['bands', 'beats', 'partials']) {
+  for (const name of ['beats', 'partials']) {
     on(name + '-toggle', 'click', () => {
       const open = $(name + '-row').hidden;
       setFoldOpen(name, open);
@@ -1496,7 +1494,7 @@ async function boot() {
     plan = localStorage.getItem(LS.plan) === 'full' ? 'full' : 'quick';
     tone = localStorage.getItem(LS.tone) || 'off';
     if (localStorage.getItem(LS.curve) === 'closed') setCurveOpen(false);
-    for (const name of ['bands', 'beats', 'partials']) if (localStorage.getItem(LS[name]) === 'open') setFoldOpen(name, true);
+    for (const name of ['beats', 'partials']) if (localStorage.getItem(LS[name]) === 'open') setFoldOpen(name, true);
   } catch { /* optional */ }
   setMapPlan(plan);
   setToneMode(tone);

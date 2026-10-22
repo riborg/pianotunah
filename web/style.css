@@ -278,10 +278,10 @@ select:disabled { opacity: 0.55; }
 #measured[data-live="1"] { color: var(--ink); }
 .unison-hint { margin: 0; text-align: center; font-size: 13px; color: var(--warn); }
 
-.strobe, .spectro, .beatstrip, .chart { display: block; width: 100%; }
-.strobe, .spectro, .beatstrip { border-radius: 6px; }
+.spectro, .beatstrip, .chart { display: block; width: 100%; }
+.spectro, .beatstrip { border-radius: 6px; }
 .spectro, .beatstrip { background: var(--sunk); }
-/* Strobe bands, beats and partials: folded under the dial, closed by default. */
+/* Beats and partials: folded under the dial, closed by default. */
 .fold-box { display: flex; flex-direction: column; gap: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
 .fold-box + .fold-box { margin-top: -4px; }
 .fold-box .fold { align-self: flex-start; font-size: 14px; text-align: left; }
