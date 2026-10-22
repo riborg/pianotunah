@@ -69,6 +69,16 @@ test('stretch: treble octaves move to 2:1 by C8 and rise smoothly', () => {
   assert.ok(S[85] > 25 && S[85] < 40, `A7 at ${S[85].toFixed(1)} cents`);
 });
 
+test('stretch: no step where the octave type changes', () => {
+  // Normal: 4:2 in the middle, 6:3 in the bass. Each semitone should be close
+  // to its neighbours, also at A3, A2 and A1.
+  const S = computeTargets(DEFAULT_SETTINGS).stretch;
+  for (let k = 3; k <= 87; k++) {
+    const irregular = S[k] - S[k - 1] - (S[k - 1] - S[k - 2] + S[k + 1] - S[k]) / 2;
+    assert.ok(Math.abs(irregular) < 0.2, `semitone up to key ${k} is off by ${irregular.toFixed(2)} cents`);
+  }
+});
+
 test('old instrument choices are migrated', () => {
   assert.deepEqual(migrateSettings({ pianoType: 'old85' }), { pianoKind: 'upright', sizeCm: 120, keyCount: 85 });
 });

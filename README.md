@@ -38,7 +38,7 @@ Before the piano is measured, $B$ is guessed from the instrument's size. Measure
 
 $$\Delta = 1200 \log_2 \frac{g(B_1, p)}{g(B_2, q)}, \qquad g(B, n) = \sqrt{\frac{1 + B n^2}{1 + B}}$$
 
-The temperament octave A3–A4 is laid first. Then the octaves are built up and down one at a time. Above C6 the treble octaves are blended towards 2:1 by C8: there the upper note's higher partials are weak, and with the large $B$ a 4:2 octave can be over 30 cents wide.
+The temperament octave A3–A4 is laid first. Then the octaves are built up and down one at a time. Where the octave type changes, below A3 and above A4, it changes gradually over an octave so no single semitone takes the difference. Above C6 the treble octaves are blended towards 2:1 by C8: there the upper note's higher partials are weak, and with the large $B$ a 4:2 octave can be over 30 cents wide.
 
 **Temperament.** A temperament is given as the deviation from a pure fifth for each of the twelve fifths. The sum is always $-\mathrm{PC}$, the Pythagorean comma (≈ 23.46 cents).
 
