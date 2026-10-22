@@ -3,7 +3,7 @@
 
 import {
   KEY_COUNT, A4, TEMPERAMENTS, PIANO_KINDS, STRETCH_PRESETS, OCTAVE_TYPES, sizeClass,
-  computeTargets, recommendedOverpull, defaultPartial, partialFreq, centsBetween, noteName, pcName, pitchClass, isBlack,
+  computeTargets, bOutliers, recommendedOverpull, defaultPartial, partialFreq, centsBetween, noteName, pcName, pitchClass, isBlack,
 } from './theory.js';
 import { Analyzer, rmsDb, median } from './dsp.js';
 import { listTunings, getTuning, saveTuning, deleteTuning, newTuning, normalize, duplicateTuning } from './store.js';
@@ -60,6 +60,7 @@ const state = {
   unisonSkip: 0,
   beating: false,
   bReadings: [],
+  bBad: new Set(), // keys whose measured B is left out, see bOutliers
   measureB: null, // { k, until } during manual B measurement
   map: null, // survey of the current key, see mapping.newKeyState
   run: null, // the survey as a whole, see mapping.newRun
@@ -84,7 +85,7 @@ const kName = (k) => noteName(k);
 const tolerance = () => Number(S().tolerance) || 1;
 const top = () => (Number(S().keyCount) === 85 ? 85 : KEY_COUNT); // A7 on older pianos, otherwise C8
 const partialOf = (k) => state.tuning.partials[k] || defaultPartial(k);
-const bSource = (k) => tr(state.tuning.inharmonicity[k] ? 'b.measured' : 'b.model');
+const bSource = (k) => tr(!state.tuning.inharmonicity[k] ? 'b.model' : state.bBad.has(k) ? 'b.outlier' : 'b.measured');
 const fmtDate = (d) => d.toLocaleDateString(locale(), { dateStyle: 'medium' });
 
 // Measurements are stored as the frequency of the measured partial, so they
@@ -220,6 +221,7 @@ const option = (value, text) => Object.assign(document.createElement('option'), 
 
 function recompute() {
   state.T = computeTargets(S(), state.tuning.inharmonicity);
+  state.bBad = bOutliers(state.tuning.inharmonicity);
   renderKeyInfo();
   renderKeyboard();
   renderRef();
@@ -444,7 +446,7 @@ function renderTable() {
     const row = document.createElement('tr');
     const cells = [
       k, kName(k), fmtC(T.cents[k]), num(T.freq[k], 2),
-      fmtB(T.B[k]) + (state.tuning.inharmonicity[k] ? ' *' : ''), partialOf(k), fmtC(beforeDev(k)), fmtC(statusDev(k)),
+      fmtB(T.B[k]) + (state.bBad.has(k) ? ' ?' : state.tuning.inharmonicity[k] ? ' *' : ''), partialOf(k), fmtC(beforeDev(k)), fmtC(statusDev(k)),
     ];
     for (const c of cells) row.append(Object.assign(document.createElement('td'), { textContent: c }));
     row.lastChild.dataset.s = statusClass(statusDev(k));
@@ -843,7 +845,8 @@ function finishMeasureB() {
   if (state.bReadings.length >= 3) {
     const B = median(state.bReadings);
     storeB(k, B);
-    message(tr('msg.bMeasured', { name: kName(k), b: fmtB(B) }), 'ok');
+    if (state.bBad.has(k)) message(tr('msg.bOutlier', { name: kName(k), b: fmtB(B) }), 'warn', 0);
+    else message(tr('msg.bMeasured', { name: kName(k), b: fmtB(B) }), 'ok');
   } else {
     message(tr('msg.bFailed'), 'warn');
   }
@@ -934,7 +937,8 @@ function finishMapping() {
     (isQuick()
       ? tr('map.doneQuick', { b: withB(planKeys()), n: planKeys().length })
       : tr('map.doneFull', { n: all.filter(isMapped).length, b: withB(all) })) +
-    (!skipped.length ? '' : skipped.length <= 8 ? tr('map.skipped', { keys: skipped.map(kName).join(', ') }) : tr('map.skippedMany', { n: skipped.length }));
+    (!skipped.length ? '' : skipped.length <= 8 ? tr('map.skipped', { keys: skipped.map(kName).join(', ') }) : tr('map.skippedMany', { n: skipped.length })) +
+    (state.bBad.size ? tr('map.bOutliers', { keys: [...state.bBad].sort((a, b) => a - b).map(kName).join(', ') }) : '');
   setMode('lock');
   selectKey(A4, false); // tuning starts in the temperament octave
   message(text, 'ok', 0);

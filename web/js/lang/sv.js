@@ -109,6 +109,7 @@ export default {
   'map.b': 'Inharmonicitet {p}/{n}',
   'map.doneQuick': 'Kartläggningen av alla A är klar: inharmonicitet för {b} av {n} toner. Tangenterna däremellan interpoleras. Se Referens A4 under Stämning för hur pianot ligger.',
   'map.skipped': ' Överhoppade: {keys}.',
+  'map.bOutliers': ' B för {keys} avviker från grannarna och används inte; mät om med Mät B under Deltoner mot mål.',
   'map.skippedMany': ' {n} tangenter överhoppade.',
   'map.doneFull': 'Kartläggningen är klar: {n} tangenter mätta, inharmonicitet för {b}. Se Referens A4 under Stämning för hur pianot ligger.',
 
@@ -122,6 +123,7 @@ export default {
   'msg.conflictFailed': 'Stämningen har ändrats någon annanstans men kunde inte laddas om. Ladda om sidan.',
   'msg.noServer': 'Kunde inte nå servern. Mätningar sparas inte förrän den svarar.',
   'msg.bMeasured': 'Inharmonicitet för {name}: B = {b}',
+  'msg.bOutlier': 'Inharmonicitet för {name}: B = {b}, långt från grannarna, så den används inte. Mät igen.',
   'msg.bFailed': 'Kunde inte mäta inharmonicitet. Slå an tangenten kraftigt och låt den klinga i ett par sekunder.',
   'msg.micFirst': 'Starta mikrofonen först.',
   'msg.strikeB': 'Slå an {name} kraftigt och låt den klinga …',
@@ -249,6 +251,7 @@ export default {
   'measure.bval': 'Inharmonicitet B = {b} ({src})',
   'b.measured': 'uppmätt',
   'b.model': 'modell',
+  'b.outlier': 'uppmätt, avviker från grannarna och används inte',
 
   'curve.target': 'Mål mot liksvävande',
   'curve.label': 'Målkurva i cent per tangent',

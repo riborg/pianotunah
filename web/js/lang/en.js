@@ -109,6 +109,7 @@ export default {
   'map.b': 'Inharmonicity {p}/{n}',
   'map.doneQuick': 'Survey of all A done: inharmonicity for {b} of {n} notes. The keys in between are interpolated. See Reference A4 under Tuning for where the piano is.',
   'map.skipped': ' Skipped: {keys}.',
+  'map.bOutliers': ' B for {keys} differs from the neighbouring keys and is not used; measure it again with Measure B under Partials vs target.',
   'map.skippedMany': ' {n} keys skipped.',
   'map.doneFull': 'Survey done: {n} keys measured, inharmonicity for {b}. See Reference A4 under Tuning for where the piano is.',
 
@@ -122,6 +123,7 @@ export default {
   'msg.conflictFailed': 'This tuning was changed elsewhere but could not be reloaded. Reload the page.',
   'msg.noServer': 'Cannot reach the server. Measurements are not saved until it responds.',
   'msg.bMeasured': 'Inharmonicity for {name}: B = {b}',
+  'msg.bOutlier': 'Inharmonicity for {name}: B = {b}, far from the neighbouring keys, so it is not used. Measure again.',
   'msg.bFailed': 'Could not measure inharmonicity. Strike the key firmly and let it ring for a couple of seconds.',
   'msg.micFirst': 'Start the microphone first.',
   'msg.strikeB': 'Strike {name} firmly and let it ring …',
@@ -249,6 +251,7 @@ export default {
   'measure.bval': 'Inharmonicity B = {b} ({src})',
   'b.measured': 'measured',
   'b.model': 'model',
+  'b.outlier': 'measured, differs from the neighbours and is not used',
 
   'curve.target': 'Target vs equal temperament',
   'curve.label': 'Target curve in cents per key',

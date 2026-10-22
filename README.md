@@ -32,7 +32,7 @@ $B$ is estimated per key from the measured partials. The expression is linear in
 
 $$\left(\frac{f_n}{n}\right)^2 = f_0^2 + f_0^2 B\, n^2$$
 
-Before the piano is measured, $B$ is guessed from the instrument's size. Measured values correct the guess, and the correction (the ratio to the model, on a log scale) is interpolated between measured keys.
+Before the piano is measured, $B$ is guessed from the instrument's size. Measured values correct the guess, and the correction (the ratio to the model, on a log scale) is interpolated between measured keys. A value more than twice, or less than half, the measured keys on both sides is taken as a misreading and left out.
 
 **Stretch.** Octave type $p{:}q$ ($p = 2q$) makes partial $p$ of the lower note and partial $q$ of the upper note beatless. With $B_1$ for the lower and $B_2$ for the upper string, the octave is wider than 1200 cents by
 

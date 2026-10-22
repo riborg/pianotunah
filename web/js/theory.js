@@ -147,12 +147,37 @@ export function migrateSettings(s = {}) {
   return { ...rest, pianoKind, sizeCm, keyCount };
 }
 
+// A measured B more than twice, or less than half, the measured keys on both
+// sides (up to two each, within three keys) is taken as a misreading: B♭1 on
+// a 120 cm upright once came out eight times its neighbours. At a break B
+// jumps on one side only, so that is kept. Sparse measurements (All A) are
+// not judged.
+export function bOutliers(measured = {}) {
+  const at = (k) => Number(measured[k]) || 0;
+  const side = (k, dir) => {
+    const v = [];
+    for (let i = 1; i <= 3 && v.length < 2; i++) if (at(k + dir * i) > 0) v.push(at(k + dir * i));
+    return v.length ? v.reduce((a, b) => a + b) / v.length : 0;
+  };
+  const out = new Set();
+  for (const key of Object.keys(measured)) {
+    const k = Number(key);
+    const lo = side(k, -1);
+    const hi = side(k, 1);
+    if (!at(k) || !lo || !hi) continue;
+    const [r1, r2] = [at(k) / lo, at(k) / hi];
+    if ((r1 > 2 && r2 > 2) || (r1 < 0.5 && r2 < 0.5)) out.add(k);
+  }
+  return out;
+}
+
 // B for every key. Measured values act as correction factors on the model,
-// interpolated logarithmically between the measured keys.
+// interpolated logarithmically between the measured keys. Outliers are left out.
 function bCurve(inst, measured = {}) {
+  const bad = bOutliers(measured);
   const pts = Object.entries(measured)
     .map(([k, b]) => [Number(k), Math.log(b / modelB(Number(k), inst))])
-    .filter(([k, r]) => k >= 1 && k <= KEY_COUNT && Number.isFinite(r))
+    .filter(([k, r]) => k >= 1 && k <= KEY_COUNT && Number.isFinite(r) && !bad.has(k))
     .sort((a, b) => a[0] - b[0]);
   const out = new Float64Array(KEY_COUNT + 1);
   for (let k = 1; k <= KEY_COUNT; k++) {

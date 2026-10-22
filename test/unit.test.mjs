@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   computeTargets, temperamentOffsets, partialFreq, centsBetween, noteName,
-  migrateSettings, recommendedOverpull, octaveStretch, DEFAULT_SETTINGS,
+  migrateSettings, recommendedOverpull, octaveStretch, bOutliers, DEFAULT_SETTINGS,
 } from '../web/js/theory.js';
 import { Analyzer } from '../web/js/dsp.js';
 import { wavBlob } from '../web/js/mic.js';
@@ -90,6 +90,16 @@ test('stretch: breaks in B do not make steps between neighbouring keys', () => {
     const irregular = S[k] - S[k - 1] - (S[k - 1] - S[k - 2] + S[k + 1] - S[k]) / 2;
     assert.ok(Math.abs(irregular) < 1, `semitone up to key ${k} is off by ${irregular.toFixed(2)} cents`);
   }
+});
+
+test('a measured B far from both sides is left out, a break is kept', () => {
+  // Measured on a 120 cm upright: B♭1 (14) eight times its neighbours, and
+  // the break between E♭3 (31) and E3 (32).
+  const measured = { 12: 2.51e-4, 13: 2.26e-4, 14: 1.86e-3, 15: 2.48e-4, 16: 2.41e-4, 29: 1.92e-4, 30: 1.92e-4, 31: 1.78e-4, 32: 4.33e-4, 33: 4.13e-4, 34: 3.8e-4 };
+  assert.deepEqual([...bOutliers(measured)], [14]);
+  const t = computeTargets(DEFAULT_SETTINGS, measured);
+  assert.ok(t.B[14] > 2e-4 && t.B[14] < 2.6e-4, `B♭1 interpolated to ${t.B[14]}`);
+  assert.deepEqual([...bOutliers({ 1: 5.6e-4, 13: 2.3e-4, 25: 1.9e-4, 37: 3.3e-4 })], []); // All A: not judged
 });
 
 test('old instrument choices are migrated', () => {
