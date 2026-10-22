@@ -61,8 +61,9 @@ export default {
   'tone.sineTitle': 'Pure, sustained sine tone at the target frequency',
   'tone.play': 'Play target tone',
   'tone.playTitle': 'Play target tone (T)',
-  'tone.playSine': 'Play sine tone',
-  'tone.stopSine': 'Stop sine tone',
+  'tone.playSine': 'Play sine tone {what}',
+  'tone.stopSine': 'Stop sine tone {what}',
+  'tone.partialNote': '{note} (partial {n})',
 
   'mic.start': 'Start microphone',
   'mic.stop': 'Stop microphone',

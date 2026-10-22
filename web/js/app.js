@@ -367,6 +367,7 @@ function renderKeyInfo() {
     diag(`sine ${kName(k)} partial ${n}, ${fmtHz(sineFreq())}`);
     tones.setSine(sineFreq());
   }
+  renderToneButton();
 }
 
 function renderKeyboard() {
@@ -1040,9 +1041,14 @@ function setToneMode(m) {
   renderToneButton();
 }
 
+// The sine sounds at the measured partial, in the bass and tenor an octave or
+// more above the key, so the button names the note it plays.
 function renderToneButton() {
   const b = $('btn-tone');
-  b.textContent = tr(tones.sineOn ? 'tone.stopSine' : state.toneMode === 'sine' ? 'tone.playSine' : 'tone.play');
+  const n = partialOf(state.key);
+  const note = kName(Math.min(KEY_COUNT, state.key + Math.round(12 * Math.log2(n))));
+  const what = n > 1 ? tr('tone.partialNote', { note, n }) : note;
+  b.textContent = tr(tones.sineOn ? 'tone.stopSine' : state.toneMode === 'sine' ? 'tone.playSine' : 'tone.play', { what });
   b.setAttribute('aria-pressed', tones.sineOn);
   b.hidden = state.toneMode === 'off';
 }

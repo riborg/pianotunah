@@ -61,8 +61,9 @@ export default {
   'tone.sineTitle': 'Ren, ihållande sinuston på målfrekvensen',
   'tone.play': 'Spela målton',
   'tone.playTitle': 'Spela målton (T)',
-  'tone.playSine': 'Spela sinuston',
-  'tone.stopSine': 'Stoppa sinuston',
+  'tone.playSine': 'Spela sinuston {what}',
+  'tone.stopSine': 'Stoppa sinuston {what}',
+  'tone.partialNote': '{note} (delton {n})',
 
   'mic.start': 'Starta mikrofon',
   'mic.stop': 'Stoppa mikrofon',
