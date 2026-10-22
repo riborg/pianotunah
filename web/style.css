@@ -303,8 +303,12 @@ select:disabled { opacity: 0.55; }
 .strobe, .spectro, .beatstrip, .chart { display: block; width: 100%; }
 .strobe, .spectro, .beatstrip { border-radius: 6px; }
 .spectro, .beatstrip { background: var(--sunk); }
-.beats, .strobe-box { display: flex; flex-direction: column; gap: 6px; }
-.beats-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+/* Strobe bands, beats and partials: folded under the dial, closed by default. */
+.fold-box { display: flex; flex-direction: column; gap: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+.fold-box + .fold-box { margin-top: -4px; }
+.fold-box .fold { align-self: flex-start; font-size: 14px; text-align: left; }
+.fold-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.fold-row { display: flex; flex-direction: column; gap: 6px; }
 .beat-rate { font: 600 14px var(--f-mono); font-variant-numeric: tabular-nums; }
 .mini-label { font-size: 12px; color: var(--muted); }
 
@@ -384,9 +388,7 @@ body.drawer-open { overflow: hidden; }
 .note-text { font-size: 13px; color: var(--muted); margin: 0; }
 
 /* Partials */
-.partials-box { display: flex; flex-direction: column; gap: 8px; }
-.partials-box .fold { align-self: flex-start; font-size: 13px; }
-.partials-row { display: flex; flex-direction: column; gap: 8px; }
+.partials-row { gap: 8px; }
 .partials-row .desc { margin: 0; }
 .partial-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
 .bval-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }

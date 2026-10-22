@@ -22,7 +22,7 @@ const SPEC_COLS = 100; // spectrogram history, ≈ 9 s
 const SPEC_BINS = 48;
 const SPEC_CENTS = 30;
 const REC_MAX_S = 120;
-const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab', curve: 'pianotunah.curve', partials: 'pianotunah.partials', mic: 'pianotunah.mic' };
+const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab', curve: 'pianotunah.curve', partials: 'pianotunah.partials', bands: 'pianotunah.bands', beats: 'pianotunah.beats', mic: 'pianotunah.mic' };
 
 const mic = new Mic();
 const tones = new TonePlayer();
@@ -485,10 +485,11 @@ function setCurveOpen(open) {
   if (open) renderChart(); // not drawn while folded
 }
 
-function setPartialsOpen(open) {
-  $('partials-row').hidden = !open;
-  $('partials-toggle').setAttribute('aria-expanded', open);
-  renderPartials();
+// Folds under the dial: strobe bands, beats and partials. Not drawn while closed.
+function setFoldOpen(name, open) {
+  $(name + '-row').hidden = !open;
+  $(name + '-toggle').setAttribute('aria-expanded', open);
+  if (name === 'partials') renderPartials();
 }
 
 // Update key status at most once per frame, even if readings are saved more often.
@@ -1067,10 +1068,12 @@ function animate(t) {
     const tol = tolerance();
     const live = state.signal && Number.isFinite(state.display);
     drawDial($('dial'), { display: state.display, signal: state.signal, bands: state.strobe, live, tol }, C, dt, state.ringPhase);
-    drawStrobe($('strobe'), { bands: state.strobe, live, tol }, C, dt, state.strobePhase);
-    drawSpectro($('spectro'), state.spec, { capacity: SPEC_COLS, bins: SPEC_BINS, cents: SPEC_CENTS, tol }, C);
+    if (!$('bands-row').hidden) drawStrobe($('strobe'), { bands: state.strobe, live, tol }, C, dt, state.strobePhase);
     const beatLive = live && Number.isFinite(state.beatHz);
-    state.beatPhase = drawBeat($('beat'), { beatHz: state.beatHz, display: state.display, live: beatLive, tol }, C, dt, state.beatPhase);
+    if (!$('beats-row').hidden) {
+      drawSpectro($('spectro'), state.spec, { capacity: SPEC_COLS, bins: SPEC_BINS, cents: SPEC_CENTS, tol }, C);
+      state.beatPhase = drawBeat($('beat'), { beatHz: state.beatHz, display: state.display, live: beatLive, tol }, C, dt, state.beatPhase);
+    }
     const df = Math.abs(state.beatHz);
     const rate = !beatLive ? '–' : df < 0.1 ? tr('beat.none') : tr('beat.rate', { n: num(df, df < 10 ? 1 : 0) });
     if ($('beat-rate').textContent !== rate) $('beat-rate').textContent = rate;
@@ -1423,11 +1426,13 @@ function bindEvents() {
     setCurveOpen(open);
     try { localStorage.setItem(LS.curve, open ? 'open' : 'closed'); } catch { /* optional */ }
   });
-  on('partials-toggle', 'click', () => {
-    const open = $('partials-row').hidden;
-    setPartialsOpen(open);
-    try { localStorage.setItem(LS.partials, open ? 'open' : 'closed'); } catch { /* optional */ }
-  });
+  for (const name of ['bands', 'beats', 'partials']) {
+    on(name + '-toggle', 'click', () => {
+      const open = $(name + '-row').hidden;
+      setFoldOpen(name, open);
+      try { localStorage.setItem(LS[name], open ? 'open' : 'closed'); } catch { /* optional */ }
+    });
+  }
 
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
@@ -1500,7 +1505,7 @@ async function boot() {
     plan = localStorage.getItem(LS.plan) === 'full' ? 'full' : 'quick';
     tone = localStorage.getItem(LS.tone) || 'off';
     if (localStorage.getItem(LS.curve) === 'closed') setCurveOpen(false);
-    if (localStorage.getItem(LS.partials) === 'open') setPartialsOpen(true);
+    for (const name of ['bands', 'beats', 'partials']) if (localStorage.getItem(LS[name]) === 'open') setFoldOpen(name, true);
   } catch { /* optional */ }
   setMapPlan(plan);
   setToneMode(tone);
