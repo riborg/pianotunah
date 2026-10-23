@@ -32,7 +32,7 @@ export default {
   'mode.lock': 'Lock',
   'mode.lockTitle': 'Lock on the selected key (L)',
   'mode.map': 'Survey',
-  'mode.mapTitle': 'Measure the piano note by note before tuning',
+  'mode.mapTitle': 'Measure the piano key by key before tuning',
 
   'key.sub': 'Key {k} · target {c} cents',
   'key.label': '{name}, {dev}',
@@ -89,14 +89,13 @@ export default {
 
   'map.title': 'Survey',
   'map.scope': 'Scope',
-  'map.quick': 'All A, 8 notes',
+  'map.quick': 'All A, 8 keys',
   'map.full': 'All keys',
   'map.intro': 'Measures the inharmonicity of the strings and gives a tuning curve for your piano. You do not tune anything and need no felt strip. <strong>All A:</strong> A0–A7, about a minute. <strong>All keys:</strong> every key; needed for overpull and to see drift since last time. Switching starts the survey over.',
   'map.skip': 'Skip',
   'map.redo': 'Measure again',
   'map.stop': 'Finish',
-  'map.progressQuick': '{done} of {total} notes',
-  'map.progressFull': '{done} of {total} keys',
+  'map.progress': '{done} of {total} keys',
   'map.strike': 'Strike {name} firmly and let it ring.',
   'map.lost': '{name} died away before the measurement was done. Strike it again.',
   'map.wrong': 'That sounds like {heard}. Strike {name}, or press Skip.',
@@ -106,7 +105,7 @@ export default {
   'map.bKnown': 'Inharmonicity already measured',
   'map.bSkipped': 'Inharmonicity: overtones too weak, skipped',
   'map.b': 'Inharmonicity {p}/{n}',
-  'map.doneQuick': 'Survey of all A done: inharmonicity for {b} of {n} notes. The keys in between are interpolated. See Reference A4 under Tuning for where the piano is.',
+  'map.doneQuick': 'Survey of all A done: inharmonicity for {b} of {n} keys. The keys in between are interpolated. See Reference A4 under Tuning for where the piano is.',
   'map.skipped': ' Skipped: {keys}.',
   'map.bOutliers': ' B for {keys} differs from the neighbouring keys and is not used; measure it again with Measure inharmonicity (B) under Partials vs target.',
   'map.skippedMany': ' {n} keys skipped.',
@@ -296,7 +295,7 @@ export default {
 
   help: `<h3>Workflow</h3>
 <ol>
-  <li><strong>Survey.</strong> Choose <em>All A</em> (A0–A7, about a minute) or <em>All keys</em> (3–5 minutes) in the panel that opens. Strike the note shown; the app moves on by itself and stops when every key is done.</li>
+  <li><strong>Survey.</strong> Choose <em>All A</em> (A0–A7, about a minute) or <em>All keys</em> (3–5 minutes) in the panel that opens. Strike the key shown; the app moves on by itself and stops when every key is done.</li>
   <li><strong>Choose the pitch.</strong> If the piano is flat: <em>Use the piano's current pitch</em> under Tuning, or raise it with overpull.</li>
   <li><strong>Mute the unisons</strong> with a felt strip. Tune one string per note and the others by ear against it.</li>
   <li><strong>Tune A3–A4 first</strong>, then upwards octave by octave, the bass last.</li>

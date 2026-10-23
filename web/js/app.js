@@ -1044,7 +1044,7 @@ function renderMapPanel() {
   const name = kName(state.key);
   const ks = planKeys();
   const done = ks.filter((k) => mapping.handled(state.run, k)).length;
-  $('map-progress').textContent = tr(isQuick() ? 'map.progressQuick' : 'map.progressFull', { done, total: ks.length });
+  $('map-progress').textContent = tr('map.progress', { done, total: ks.length });
   $('map-bar').style.width = `${(done / ks.length) * 100}%`;
   $('map-step').textContent = mp.wrong
     ? mp.wrong > 0 ? tr('map.wrong', { heard: kName(mp.wrong), name }) : tr('map.offPitch', { name, c: mapping.OFFSET_LIMIT })

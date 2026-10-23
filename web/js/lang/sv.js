@@ -32,7 +32,7 @@ export default {
   'mode.lock': 'Lås',
   'mode.lockTitle': 'Lås på vald tangent (L)',
   'mode.map': 'Kartlägg',
-  'mode.mapTitle': 'Mät pianot ton för ton innan du stämmer',
+  'mode.mapTitle': 'Mät pianot tangent för tangent innan du stämmer',
 
   'key.sub': 'Tangent {k} · mål {c} cent',
   'key.label': '{name}, {dev}',
@@ -89,14 +89,13 @@ export default {
 
   'map.title': 'Kartläggning',
   'map.scope': 'Omfattning',
-  'map.quick': 'Alla A, 8 toner',
+  'map.quick': 'Alla A, 8 tangenter',
   'map.full': 'Alla tangenter',
   'map.intro': 'Mäter strängarnas inharmonicitet och ger en stämkurva för just ditt piano. Du stämmer inget och behöver ingen filtremsa. <strong>Alla A:</strong> A0–A7, ungefär en minut. <strong>Alla tangenter:</strong> hela pianot; behövs för överdrag och för att se drift sedan sist. Byter du börjar kartläggningen om.',
   'map.skip': 'Hoppa över',
   'map.redo': 'Mät om',
   'map.stop': 'Avsluta',
-  'map.progressQuick': '{done} av {total} toner',
-  'map.progressFull': '{done} av {total} tangenter',
+  'map.progress': '{done} av {total} tangenter',
   'map.strike': 'Slå an {name} kraftigt och låt den klinga.',
   'map.lost': '{name} klingade ut innan mätningen var klar. Slå an den igen.',
   'map.wrong': 'Det låter som {heard}. Slå an {name}, eller tryck Hoppa över.',
@@ -106,7 +105,7 @@ export default {
   'map.bKnown': 'Inharmonicitet redan uppmätt',
   'map.bSkipped': 'Inharmonicitet: för svaga övertoner, hoppas över',
   'map.b': 'Inharmonicitet {p}/{n}',
-  'map.doneQuick': 'Kartläggningen av alla A är klar: inharmonicitet för {b} av {n} toner. Tangenterna däremellan interpoleras. Se Referens A4 under Stämning för hur pianot ligger.',
+  'map.doneQuick': 'Kartläggningen av alla A är klar: inharmonicitet för {b} av {n} tangenter. Tangenterna däremellan interpoleras. Se Referens A4 under Stämning för hur pianot ligger.',
   'map.skipped': ' Överhoppade: {keys}.',
   'map.bOutliers': ' B för {keys} avviker från grannarna och används inte; mät om med Mät inharmonicitet (B) under Deltoner mot mål.',
   'map.skippedMany': ' {n} tangenter överhoppade.',
@@ -296,7 +295,7 @@ export default {
 
   help: `<h3>Arbetsgång</h3>
 <ol>
-  <li><strong>Kartlägg.</strong> Välj <em>Alla A</em> (A0–A7, ungefär en minut) eller <em>Alla tangenter</em> (3–5 minuter) i panelen som öppnas. Slå an tonen som visas; appen går vidare själv och slutar när alla tangenter är klara.</li>
+  <li><strong>Kartlägg.</strong> Välj <em>Alla A</em> (A0–A7, ungefär en minut) eller <em>Alla tangenter</em> (3–5 minuter) i panelen som öppnas. Slå an tangenten som visas; appen går vidare själv och slutar när alla tangenter är klara.</li>
   <li><strong>Välj tonhöjd.</strong> Ligger pianot lågt: <em>Använd pianots nuvarande tonhöjd</em> under Stämning, eller dra upp med överdrag.</li>
   <li><strong>Dämpa unisonerna</strong> med filtremsa. Stäm en sträng per ton, de övriga efter gehör mot den.</li>
   <li><strong>Stäm A3–A4 först</strong>, sedan uppåt oktav för oktav, sist basen.</li>
