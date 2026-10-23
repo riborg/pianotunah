@@ -7,7 +7,7 @@ import {
 } from '../web/js/theory.js';
 import { Analyzer } from '../web/js/dsp.js';
 import { wavBlob } from '../web/js/mic.js';
-import { newRun, nextPending, handled, wrongKey } from '../web/js/mapping.js';
+import { newRun, nextPending, handled, wrongKey } from '../web/js/survey.js';
 
 const SR = 48000;
 const N = 32768;
@@ -196,8 +196,8 @@ test('survey run: ends when every planned key is measured or skipped', () => {
 });
 
 test('survey run: a full survey resumes, wraps around and starts over when complete', () => {
-  const mapped = (k) => k <= 10 || k === 50;
-  const run = newRun('full', 88, mapped);
+  const surveyed = (k) => k <= 10 || k === 50;
+  const run = newRun('full', 88, surveyed);
   assert.equal(nextPending(run, 'full', 88, 0), 11);
   assert.equal(nextPending(run, 'full', 88, 49), 51);
   assert.equal(nextPending(run, 'full', 88, 88), 11);

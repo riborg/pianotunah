@@ -15,11 +15,11 @@ export const planKeys = (plan, top) =>
   plan === 'quick' ? QUICK_KEYS.filter((k) => k <= top) : Array.from({ length: top }, (_, i) => i + 1);
 
 // A run is one survey from start to finish: the keys measured or skipped so
-// far. A full survey continues where the last one stopped (keys already
-// marked as mapped); once every key is mapped it starts over.
-export function newRun(plan, top, isMapped) {
+// far. A full survey continues where the last one stopped (keys marked
+// with the stored flag `mapped`); once every key is marked it starts over.
+export function newRun(plan, top, isSurveyed) {
   const keys = planKeys(plan, top);
-  const done = plan === 'full' ? keys.filter(isMapped) : [];
+  const done = plan === 'full' ? keys.filter(isSurveyed) : [];
   // offsets: cents from target for each key measured in this run.
   return { done: new Set(done.length < keys.length ? done : []), skipped: new Set(), offsets: [] };
 }
@@ -54,7 +54,7 @@ export function wrongKey(d, k, raw, ref, done = new Set()) {
   return clear ? d.key : -1;
 }
 
-export const bGivenUp = (mp, plan) => mp.bs.length < B_READINGS && mp.ms >= bTimeoutMs(plan);
+export const bGivenUp = (sk, plan) => sk.bs.length < B_READINGS && sk.ms >= bTimeoutMs(plan);
 
-export const keyDone = (mp, needB, plan) =>
-  mp.pitch.length >= PITCH_READINGS && (!needB || mp.bs.length >= B_READINGS || bGivenUp(mp, plan));
+export const keyDone = (sk, needB, plan) =>
+  sk.pitch.length >= PITCH_READINGS && (!needB || sk.bs.length >= B_READINGS || bGivenUp(sk, plan));

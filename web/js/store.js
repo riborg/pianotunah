@@ -39,7 +39,7 @@ export function newTuning(name = '') {
     settings: { ...DEFAULT_SETTINGS },
     inharmonicity: {}, // key -> measured B
     partials: {}, // key -> chosen partial (if not the default)
-    keys: {}, // key -> { hz, n, bhz, bn, at, mapped }
+    keys: {}, // key -> { hz, n, bhz, bn, at, mapped }; mapped = surveyed
     passStartedAt: now,
     rev: 0, // server revision; set on every save
     history: [], // finished passes
