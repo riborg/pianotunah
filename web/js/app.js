@@ -1001,7 +1001,8 @@ function collectSurvey(A, k, partialHz, f1, raw) {
   const hz = median(sk.pitch);
   const n = partialOf(k);
   state.run.offsets.push(centsBetween(hz, partialFreq(state.T.freq[k], state.T.B[k], n)));
-  state.tuning.keys[k] = { ...keyRec(k), bhz: hz, bn: n, hz, n, at: Date.now(), mapped: true };
+  // Before stays the first measurement in the pass, as in recordKey.
+  state.tuning.keys[k] = { bhz: hz, bn: n, ...keyRec(k), hz, n, at: Date.now(), mapped: true };
   if (sk.bs.length >= 3) storeB(k, median(sk.bs));
   else {
     markDirty();
