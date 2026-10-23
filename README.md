@@ -1,6 +1,6 @@
 # Piano Tunah
 
-Piano tuner in the browser. Listens through the computer's microphone, computes stretch from the strings' inharmonicity and saves tunings per piano.
+Piano tuner in the browser. Listens through the computer's microphone, computes stretch from the strings' inharmonicity and keeps the measurements for each piano.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png">
@@ -67,7 +67,7 @@ The image is built `FROM scratch` (~7 MB) for amd64 and arm64: a static Go binar
 | Variable   | Default | |
 |------------|---------|-|
 | `ADDR`     | `:8080` | listen address |
-| `DATA_DIR` | `/data` | saved tunings (JSON) |
+| `DATA_DIR` | `/data` | saved pianos (JSON) |
 | `DEBUG`    | unset   | set (e.g. `1`): the page sends what it does to the container log, for `docker compose logs -f` |
 
 ### Reverse proxy

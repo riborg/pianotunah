@@ -14,7 +14,7 @@ import { TonePlayer } from './tone.js';
 import { Saver } from './saver.js';
 import { enableDiag, diagOn, diag } from './diag.js';
 import { readColors, drawDial, drawSpectro, drawBeat, drawChart } from './draw.js';
-import * as mapping from './mapping.js';
+import * as survey from './survey.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -33,7 +33,7 @@ const state = {
   T: null, // targets from computeTargets
   list: [],
   key: A4,
-  mode: 'auto', // auto | lock | map
+  mode: 'auto', // auto | lock | survey
   analyzer: null,
   timer: 0,
   level: -100,
@@ -68,9 +68,9 @@ const state = {
   jump: null, // { k, hz, attack } a reading far from the last one, waiting for a new attack
   diag: { frames: 0, readings: 0, idle: {}, savedKey: 0, savedAt: 0 }, // counts for the debug log, see diagStatus
   measureB: null, // { k, until } during manual B measurement
-  map: null, // survey of the current key, see mapping.newKeyState
-  run: null, // the survey as a whole, see mapping.newRun
-  mapPlan: 'quick',
+  survey: null, // the current key in a survey, see survey.newKeyState
+  run: null, // the survey as a whole, see survey.newRun
+  surveyPlan: 'quick',
   toneMode: 'off', // off | piano | sine
   refUntil: 0, // reference tone audible in the microphone until this time
   refTainted: false,
@@ -389,13 +389,13 @@ function renderKeyInfo() {
 function renderKeyboard() {
   buildKeyboard(top());
   const cur = Math.min(state.key, top());
-  const quickPlan = state.map && state.mapPlan === 'quick';
+  const quickPlan = state.survey && state.surveyPlan === 'quick';
   for (const el of $('keyboard').children) {
     const k = Number(el.dataset.k);
     const label = tr('key.label', { name: kName(k), dev: Number.isFinite(curDev(k)) ? fmtC(statusDev(k)) + ' ' + tr('unit.cents') : tr('key.unmeasured') });
     el.classList.toggle('current', k === cur);
     el.classList.toggle('has-b', !!state.tuning.inharmonicity[k]);
-    el.classList.toggle('plan', !!quickPlan && mapping.QUICK_KEYS.includes(k));
+    el.classList.toggle('plan', !!quickPlan && survey.QUICK_KEYS.includes(k));
     if (el.firstChild) el.firstChild.textContent = pitchClass(k) === 0 || k === 1 ? kName(k) : '';
     el.setAttribute('aria-label', label);
     el.setAttribute('aria-current', k === cur);
@@ -482,7 +482,7 @@ function renderChart() {
 
 // Until some inharmonicity is measured, the curve comes from the model.
 function renderCurveHint() {
-  $('curve-hint').hidden = $('curve-row').hidden || state.mode === 'map' || Object.keys(state.tuning.inharmonicity).length > 0;
+  $('curve-hint').hidden = $('curve-row').hidden || state.mode === 'survey' || Object.keys(state.tuning.inharmonicity).length > 0;
 }
 
 function setCurveOpen(open) {
@@ -557,8 +557,8 @@ function selectKey(k, manual = true) {
   diag(`key ${kName(k)} (${manual ? 'chosen' : state.mode})`);
   state.key = k;
   resetReadings();
-  if (state.map) state.map = mapping.newKeyState();
-  renderMapPanel();
+  if (state.survey) state.survey = survey.newKeyState();
+  renderSurveyPanel();
   renderKeyInfo();
   renderKeyboard();
   renderChart();
@@ -568,14 +568,14 @@ function selectKey(k, manual = true) {
 function setMode(m) {
   if (m !== state.mode) diag(`mode ${m}`);
   state.mode = m;
-  for (const id of ['auto', 'lock', 'map']) $('mode-' + id).setAttribute('aria-pressed', m === id);
-  state.map = m === 'map' ? mapping.newKeyState() : null;
-  state.run = m === 'map' ? newRun() : null;
+  for (const id of ['auto', 'lock', 'survey']) $('mode-' + id).setAttribute('aria-pressed', m === id);
+  state.survey = m === 'survey' ? survey.newKeyState() : null;
+  state.run = m === 'survey' ? newRun() : null;
   state.bReadings = [];
-  $('map-panel').hidden = m !== 'map';
-  if (m === 'map') selectKey(nextPending(0), false);
+  $('survey-panel').hidden = m !== 'survey';
+  if (m === 'survey') selectKey(nextPending(0), false);
   renderKeyboard();
-  renderMapPanel();
+  renderSurveyPanel();
   renderCurveHint();
 }
 
@@ -736,9 +736,9 @@ function analyseFrame() {
   const up = state.signal ? 0.02 : 0.15;
   state.noise = lvl < state.noise ? lvl : state.noise + Math.min(up, (lvl - state.noise) * 0.01);
   // The survey waits for an attack so the previous key's decay is not measured.
-  if (state.map?.waitAttack) {
+  if (state.survey?.waitAttack) {
     if (lvl - state.prevLevel <= 6) return idle('waiting for attack');
-    state.map.waitAttack = false;
+    state.survey.waitAttack = false;
   }
   // A note starts 10 dB above the noise and is followed down to 5 dB.
   if (lvl < Math.max(state.noise + (state.signal ? 5 : 10), -72)) return idle('quiet');
@@ -756,7 +756,7 @@ function analyseFrame() {
     // notes or a note halfway between two keys.
     if (d.key !== state.key || d.margin < 2) return idle(d.key !== state.key ? `hears ${kName(d.key)}` : 'unsure');
     state.shift = d.shift;
-  } else if (state.map) state.map.heard = A.detectKey(state.T, state.key, top());
+  } else if (state.survey) state.survey.heard = A.detectKey(state.T, state.key, top());
   measureCurrent(A);
 }
 
@@ -778,8 +778,8 @@ function followDetectedKey(d) {
 function idle(why) {
   state.diag.idle[why] = (state.diag.idle[why] || 0) + 1;
   state.signal = false;
-  if (state.map && !state.map.waitAttack && state.map.pitch.length) state.map.lost = true;
-  renderMapPanel();
+  if (state.survey && !state.survey.waitAttack && state.survey.pitch.length) state.survey.lost = true;
+  renderSurveyPanel();
   updateReadout();
 }
 
@@ -794,7 +794,7 @@ function measureCurrent(A) {
   const m = A.measure(target * 2 ** ((auto ? state.shift : 0) / 1200), auto ? 50 : 150, 8);
   if (!m) {
     // A key far away has no partial near the target, but detection still hears it.
-    if (state.map && !refPlaying()) trackWrongKey(mapping.wrongKey(state.map.heard, k, NaN, NaN, state.run.done));
+    if (state.survey && !refPlaying()) trackWrongKey(survey.wrongKey(state.survey.heard, k, NaN, NaN, state.run.done));
     return idle('no partial');
   }
 
@@ -831,16 +831,16 @@ function measureCurrent(A) {
   state.strobe = [{ p: n, c: state.display }];
   [2 * n, 4 * n].forEach((p, i) => {
     const fp = partialFreq(T.freq[k], T.B[k], p);
-    const mp = fp < A.sr * 0.45 ? A.measure(fp * 2 ** (raw / 1200), 30, 8) : null;
+    const sk = fp < A.sr * 0.45 ? A.measure(fp * 2 ** (raw / 1200), 30, 8) : null;
     const rs = state.strobeReadings[i];
-    rs.push(mp ? centsBetween(mp.freq, fp) - g : NaN);
+    rs.push(sk ? centsBetween(sk.freq, fp) - g : NaN);
     if (rs.length > 5) rs.shift();
     const ok = rs.filter(Number.isFinite);
     state.strobe.push({ p, c: ok.length >= 3 ? median(ok) : NaN });
   });
 
-  // Save the value that is shown. During a survey, collectMapping saves instead.
-  if (state.stable && !state.map) {
+  // Save the value that is shown. During a survey, collectSurvey saves instead.
+  if (state.stable && !state.survey) {
     const hz = median(last.map((r) => r.hz));
     if (jumpConfirmed(k, n, hz)) recordKey(k, n, hz);
   }
@@ -850,7 +850,7 @@ function measureCurrent(A) {
     const r = A.inharmonicity(f1, T.B[k]);
     if (r) state.bReadings.push(r.B);
   }
-  if (state.map && !ref) collectMapping(A, k, m.freq, f1, raw);
+  if (state.survey && !ref) collectSurvey(A, k, m.freq, f1, raw);
   if (state.measureB && performance.now() > state.measureB.until) finishMeasureB();
   updateReadout();
 }
@@ -957,103 +957,104 @@ function flashKey(k) {
 // ---------------------------------------------------------------------------
 // Survey
 
-const isMapped = (k) => !!keyRec(k)?.mapped;
-const isQuick = () => state.mapPlan === 'quick';
+const isSurveyed = (k) => !!keyRec(k)?.mapped;
+const isQuick = () => state.surveyPlan === 'quick';
 const needsB = (k) => isQuick() || !state.tuning.inharmonicity[k]; // the quick survey always remeasures B
-const planKeys = () => mapping.planKeys(state.mapPlan, top());
-const newRun = () => mapping.newRun(state.mapPlan, top(), isMapped);
-const nextPending = (k) => mapping.nextPending(state.run, state.mapPlan, top(), k);
+const planKeys = () => survey.planKeys(state.surveyPlan, top());
+const newRun = () => survey.newRun(state.surveyPlan, top(), isSurveyed);
+const nextPending = (k) => survey.nextPending(state.run, state.surveyPlan, top(), k);
 
-function setMapPlan(p) {
-  state.mapPlan = p;
+function setSurveyPlan(p) {
+  state.surveyPlan = p;
   try { localStorage.setItem(LS.plan, p); } catch { /* optional */ }
   document.querySelectorAll('[data-plan]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.plan === p));
-  if (!state.map) return;
-  state.map = mapping.newKeyState();
+  if (!state.survey) return;
+  state.survey = survey.newKeyState();
   state.run = newRun();
   selectKey(nextPending(0), false);
   renderKeyboard();
-  renderMapPanel();
+  renderSurveyPanel();
 }
 
 // Nothing from another key is kept; the hint shows after a few frames in a row.
 function trackWrongKey(other) {
-  const mp = state.map;
-  mp.wrongFrames = other ? mp.wrongFrames + 1 : 0;
-  mp.wrong = mp.wrongFrames >= 3 ? other : 0;
+  const sk = state.survey;
+  sk.wrongFrames = other ? sk.wrongFrames + 1 : 0;
+  sk.wrong = sk.wrongFrames >= 3 ? other : 0;
   // Drop what was collected: the start of a wrong note can look right.
-  if (other) Object.assign(mp, { pitch: [], bs: [], ms: 0 });
+  if (other) Object.assign(sk, { pitch: [], bs: [], ms: 0 });
   return other;
 }
 
-function collectMapping(A, k, partialHz, f1, raw) {
-  const mp = state.map;
-  if (trackWrongKey(mapping.wrongKey(mp.heard, k, raw, median(state.run.offsets), state.run.done))) return renderMapPanel();
-  mp.pitch.push(partialHz);
-  mp.ms += FRAME_MS;
-  mp.lost = false;
-  if (needsB(k) && mp.bs.length < mapping.B_READINGS) {
+function collectSurvey(A, k, partialHz, f1, raw) {
+  const sk = state.survey;
+  if (trackWrongKey(survey.wrongKey(sk.heard, k, raw, median(state.run.offsets), state.run.done))) return renderSurveyPanel();
+  sk.pitch.push(partialHz);
+  sk.ms += FRAME_MS;
+  sk.lost = false;
+  if (needsB(k) && sk.bs.length < survey.B_READINGS) {
     const r = A.inharmonicity(f1, state.T.B[k]);
-    if (r) mp.bs.push(r.B);
+    if (r) sk.bs.push(r.B);
   }
-  if (!mapping.keyDone(mp, needsB(k), state.mapPlan)) return renderMapPanel();
+  if (!survey.keyDone(sk, needsB(k), state.surveyPlan)) return renderSurveyPanel();
 
-  const hz = median(mp.pitch);
+  const hz = median(sk.pitch);
   const n = partialOf(k);
   state.run.offsets.push(centsBetween(hz, partialFreq(state.T.freq[k], state.T.B[k], n)));
-  state.tuning.keys[k] = { ...keyRec(k), bhz: hz, bn: n, hz, n, at: Date.now(), mapped: true };
-  if (mp.bs.length >= 3) storeB(k, median(mp.bs));
+  // Before stays the first measurement in the pass, as in recordKey.
+  state.tuning.keys[k] = { bhz: hz, bn: n, ...keyRec(k), hz, n, at: Date.now(), mapped: true };
+  if (sk.bs.length >= 3) storeB(k, median(sk.bs));
   else {
     markDirty();
     recompute();
   }
   flashKey(k);
   state.run.done.add(k);
-  advanceMapping(k);
+  advanceSurvey(k);
 }
 
-function skipMapping() {
+function skipSurveyKey() {
   state.run.skipped.add(state.key);
-  advanceMapping(state.key);
+  advanceSurvey(state.key);
 }
 
-function advanceMapping(k) {
+function advanceSurvey(k) {
   const next = nextPending(k);
   if (next) selectKey(next, false);
-  else finishMapping();
+  else finishSurvey();
 }
 
-function finishMapping() {
+function finishSurvey() {
   const withB = (ks) => ks.filter((k) => state.tuning.inharmonicity[k]).length;
   const all = Array.from({ length: top() }, (_, i) => i + 1);
   const skipped = [...state.run.skipped].sort((a, b) => a - b);
   const text =
     (isQuick()
-      ? tr('map.doneQuick', { b: withB(planKeys()), n: planKeys().length })
-      : tr('map.doneFull', { n: all.filter(isMapped).length, b: withB(all) })) +
-    (!skipped.length ? '' : skipped.length <= 8 ? tr('map.skipped', { keys: skipped.map(kName).join(', ') }) : tr('map.skippedMany', { n: skipped.length })) +
-    (state.bBad.size ? tr('map.bOutliers', { keys: [...state.bBad].sort((a, b) => a - b).map(kName).join(', ') }) : '');
+      ? tr('survey.doneQuick', { b: withB(planKeys()), n: planKeys().length })
+      : tr('survey.doneFull', { n: all.filter(isSurveyed).length, b: withB(all) })) +
+    (!skipped.length ? '' : skipped.length <= 8 ? tr('survey.skipped', { keys: skipped.map(kName).join(', ') }) : tr('survey.skippedMany', { n: skipped.length })) +
+    (state.bBad.size ? tr('survey.bOutliers', { keys: [...state.bBad].sort((a, b) => a - b).map(kName).join(', ') }) : '');
   setMode('lock');
   selectKey(A4, false); // tuning starts in the temperament octave
   message(text, 'ok', 0);
 }
 
-function renderMapPanel() {
-  if (!state.map) return;
-  const mp = state.map;
+function renderSurveyPanel() {
+  if (!state.survey) return;
+  const sk = state.survey;
   const name = kName(state.key);
   const ks = planKeys();
-  const done = ks.filter((k) => mapping.handled(state.run, k)).length;
-  $('map-progress').textContent = tr(isQuick() ? 'map.progressQuick' : 'map.progressFull', { done, total: ks.length });
-  $('map-bar').style.width = `${(done / ks.length) * 100}%`;
-  $('map-step').textContent = mp.wrong
-    ? mp.wrong > 0 ? tr('map.wrong', { heard: kName(mp.wrong), name }) : tr('map.offPitch', { name, c: mapping.OFFSET_LIMIT })
-    : tr(mp.waitAttack ? 'map.strike' : mp.lost ? 'map.lost' : 'map.listening', { name });
-  const p = Math.min(mp.pitch.length, mapping.PITCH_READINGS);
-  setCheck('map-chk-pitch', tr('map.pitch', { p, n: mapping.PITCH_READINGS }), p >= mapping.PITCH_READINGS);
-  if (!needsB(state.key)) setCheck('map-chk-b', tr('map.bKnown'), true);
-  else if (mapping.bGivenUp(mp, state.mapPlan)) setCheck('map-chk-b', tr('map.bSkipped'), true);
-  else setCheck('map-chk-b', tr('map.b', { p: Math.min(mp.bs.length, mapping.B_READINGS), n: mapping.B_READINGS }), mp.bs.length >= mapping.B_READINGS);
+  const done = ks.filter((k) => survey.handled(state.run, k)).length;
+  $('survey-progress').textContent = tr('survey.progress', { done, total: ks.length });
+  $('survey-bar').style.width = `${(done / ks.length) * 100}%`;
+  $('survey-step').textContent = sk.wrong
+    ? sk.wrong > 0 ? tr('survey.wrong', { heard: kName(sk.wrong), name }) : tr('survey.offPitch', { name, c: survey.OFFSET_LIMIT })
+    : tr(sk.waitAttack ? 'survey.strike' : sk.lost ? 'survey.lost' : 'survey.listening', { name });
+  const p = Math.min(sk.pitch.length, survey.PITCH_READINGS);
+  setCheck('survey-chk-pitch', tr('survey.pitch', { p, n: survey.PITCH_READINGS }), p >= survey.PITCH_READINGS);
+  if (!needsB(state.key)) setCheck('survey-chk-b', tr('survey.bKnown'), true);
+  else if (survey.bGivenUp(sk, state.surveyPlan)) setCheck('survey-chk-b', tr('survey.bSkipped'), true);
+  else setCheck('survey-chk-b', tr('survey.b', { p: Math.min(sk.bs.length, survey.B_READINGS), n: survey.B_READINGS }), sk.bs.length >= survey.B_READINGS);
 }
 
 function setCheck(id, text, done) {
@@ -1122,7 +1123,7 @@ function updateReadout() {
   let text;
   let s = 'idle';
   if (!mic.running) text = tr('status.start');
-  else if (!state.signal) text = state.map?.waitAttack ? tr('status.strike', { name: kName(state.key) }) : tr('status.listening');
+  else if (!state.signal) text = state.survey?.waitAttack ? tr('status.strike', { name: kName(state.key) }) : tr('status.listening');
   else {
     s = statusClass(state.display);
     text = tr(refPlaying() ? 'status.ref' : s === 'good' ? 'status.good' : state.display > 0 ? 'status.high' : 'status.low');
@@ -1304,7 +1305,7 @@ function changeLanguage(l) {
   setSaveState($('save-status').dataset.state);
   renderSettings();
   recompute();
-  renderMapPanel();
+  renderSurveyPanel();
   renderToneButton();
   renderThemeButton();
   renderMicButton();
@@ -1380,22 +1381,22 @@ function bindEvents() {
   on('mode-auto', 'click', () => setMode('auto'));
   on('mode-lock', 'click', () => setMode('lock'));
   const startSurvey = () => {
-    if (state.mode === 'map') return;
-    setMode('map');
+    if (state.mode === 'survey') return;
+    setMode('survey');
     if (!mic.running) startMic();
   };
-  on('mode-map', 'click', startSurvey);
-  on('btn-curve-map', 'click', () => {
-    setMapPlan('quick');
+  on('mode-survey', 'click', startSurvey);
+  on('btn-curve-survey', 'click', () => {
+    setSurveyPlan('quick');
     startSurvey();
   });
-  on('map-skip', 'click', skipMapping);
-  on('map-redo', 'click', () => {
-    state.map = mapping.newKeyState();
-    renderMapPanel();
+  on('survey-skip', 'click', skipSurveyKey);
+  on('survey-redo', 'click', () => {
+    state.survey = survey.newKeyState();
+    renderSurveyPanel();
   });
-  on('map-stop', 'click', () => setMode('lock'));
-  onAll('[data-plan]', (b) => setMapPlan(b.dataset.plan));
+  on('survey-stop', 'click', () => setMode('lock'));
+  onAll('[data-plan]', (b) => setSurveyPlan(b.dataset.plan));
 
   on('keyboard', 'click', (e) => {
     const k = Number(e.target.closest('.key')?.dataset.k);
@@ -1619,7 +1620,7 @@ async function boot() {
     if (localStorage.getItem(LS.curve) === 'closed') setCurveOpen(false);
     for (const name of ['beats', 'partials']) if (localStorage.getItem(LS[name]) === 'open') setFoldOpen(name, true);
   } catch { /* optional */ }
-  setMapPlan(plan);
+  setSurveyPlan(plan);
   setToneMode(tone);
   fetch('api/version')
     .then((r) => r.json())

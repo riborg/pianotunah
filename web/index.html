@@ -23,7 +23,7 @@
     <span class="brand-name">Piano Tunah</span>
   </a>
   <div class="tuning-bar">
-    <label class="sr-only" for="tuning-select" data-i18n="top.tuning">Saved tuning</label>
+    <label class="sr-only" for="tuning-select" data-i18n="top.tuning">Piano</label>
     <select id="tuning-select"></select>
     <span id="save-status" class="chip" data-state="idle">–</span>
   </div>
@@ -58,31 +58,31 @@
         <div class="modes mode-pick" role="group" aria-label="Mode" data-i18n-aria-label="tuner.mode">
           <button id="mode-auto" class="seg" type="button" aria-pressed="true" title="Detect the key automatically (A)" data-i18n="mode.auto" data-i18n-title="mode.autoTitle">Auto</button>
           <button id="mode-lock" class="seg" type="button" aria-pressed="false" title="Lock on the selected key (L)" data-i18n="mode.lock" data-i18n-title="mode.lockTitle">Lock</button>
-          <button id="mode-map" class="seg" type="button" aria-pressed="false" title="Measure the piano note by note before tuning" data-i18n="mode.map" data-i18n-title="mode.mapTitle">Survey</button>
+          <button id="mode-survey" class="seg" type="button" aria-pressed="false" title="Measure the piano key by key before tuning" data-i18n="mode.survey" data-i18n-title="mode.surveyTitle">Survey</button>
         </div>
       </div>
     </div>
 
-    <div class="map-panel" id="map-panel" hidden>
-      <div class="map-head">
-        <b data-i18n="map.title">Survey</b>
-        <div class="modes plan-modes" role="group" aria-label="Scope" data-i18n-aria-label="map.scope">
-          <button class="seg" type="button" data-plan="quick" aria-pressed="true" data-i18n="map.quick">All A, 8 notes</button>
-          <button class="seg" type="button" data-plan="full" aria-pressed="false" data-i18n="map.full">All keys</button>
+    <div class="survey-panel" id="survey-panel" hidden>
+      <div class="survey-head">
+        <b data-i18n="survey.title">Survey</b>
+        <div class="modes plan-modes" role="group" aria-label="Scope" data-i18n-aria-label="survey.scope">
+          <button class="seg" type="button" data-plan="quick" aria-pressed="true" data-i18n="survey.quick">All A, 8 keys</button>
+          <button class="seg" type="button" data-plan="full" aria-pressed="false" data-i18n="survey.full">All keys</button>
         </div>
-        <span id="map-progress"></span>
+        <span id="survey-progress"></span>
       </div>
-      <div class="map-bar" aria-hidden="true"><i id="map-bar"></i></div>
-      <p class="map-step" id="map-step" aria-live="polite"></p>
-      <div class="map-checks">
-        <span class="chk" id="map-chk-pitch"></span>
-        <span class="chk" id="map-chk-b"></span>
+      <div class="survey-bar" aria-hidden="true"><i id="survey-bar"></i></div>
+      <p class="survey-step" id="survey-step" aria-live="polite"></p>
+      <div class="survey-checks">
+        <span class="chk" id="survey-chk-pitch"></span>
+        <span class="chk" id="survey-chk-b"></span>
       </div>
-      <p class="map-intro" data-i18n-html="map.intro"></p>
+      <p class="survey-intro" data-i18n-html="survey.intro"></p>
       <div class="btn-row">
-        <button id="map-skip" class="btn ghost" type="button" data-i18n="map.skip">Skip</button>
-        <button id="map-redo" class="btn ghost" type="button" data-i18n="map.redo">Measure again</button>
-        <button id="map-stop" class="btn ghost" type="button" data-i18n="map.stop">Finish</button>
+        <button id="survey-skip" class="btn ghost" type="button" data-i18n="survey.skip">Skip</button>
+        <button id="survey-redo" class="btn ghost" type="button" data-i18n="survey.redo">Measure again</button>
+        <button id="survey-stop" class="btn ghost" type="button" data-i18n="survey.stop">Finish</button>
       </div>
     </div>
 
@@ -110,7 +110,7 @@
       </div>
       <div class="curve-hint" id="curve-hint" hidden>
         <span data-i18n="curve.hint">The curve is estimated from the size of the piano.</span>
-        <button id="btn-curve-map" class="btn primary" type="button" data-i18n="curve.hintMap">Survey all A</button>
+        <button id="btn-curve-survey" class="btn primary" type="button" data-i18n="curve.hintSurvey">Survey all A</button>
       </div>
       <div class="legend">
         <button id="curve-toggle" class="fold" type="button" aria-controls="curve-row" aria-expanded="true" data-i18n="tab.curve">Curve</button>
@@ -204,7 +204,7 @@
       <textarea id="set-notes" rows="3" data-i18n-placeholder="piano.notesHint"></textarea>
     </div>
 
-    <h3 data-i18n="piano.saved">Saved tunings</h3>
+    <h3 data-i18n="piano.saved">Saved pianos</h3>
     <div class="btn-row">
       <button id="btn-new" class="btn ghost" type="button" data-i18n="piano.new">New</button>
       <button id="btn-dup" class="btn ghost" type="button" data-i18n="piano.dup">Duplicate</button>
@@ -327,7 +327,7 @@
     <h3 data-i18n="app.about">About</h3>
     <div class="about">
       <p><strong>Piano Tunah</strong> <a id="app-version" href="https://github.com/riborg/pianotunah/releases">–</a></p>
-      <p data-i18n="app.desc">Piano tuner in the browser. Listens through the computer's microphone, computes stretch from the strings' inharmonicity and saves tunings per piano.</p>
+      <p data-i18n="app.desc">Piano tuner in the browser. Listens through the computer's microphone, computes stretch from the strings' inharmonicity and keeps the measurements for each piano.</p>
       <p><a href="https://github.com/riborg/pianotunah">github.com/riborg/pianotunah</a></p>
     </div>
   </section>

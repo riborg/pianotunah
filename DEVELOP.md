@@ -51,7 +51,7 @@ UI strings are in `web/js/lang/en.js` and `sv.js`. Static markup uses `data-i18n
 | `web/js/theory.js` | temperaments, inharmonicity, stretch, overpull, target frequencies |
 | `web/js/dsp.js` | FFT, key detection, partial measurement, estimation of B |
 | `web/js/draw.js` | canvas drawing |
-| `web/js/mapping.js` | survey plans and completion criteria |
+| `web/js/survey.js` | survey plans and completion criteria |
 | `web/js/saver.js` | save queue with revision check |
 | `web/js/mic.js`, `recorder.js`, `tone.js` | microphone, recording (AudioWorklet) and reference tones |
 | `web/js/i18n.js`, `lang/` | UI strings |

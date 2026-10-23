@@ -317,18 +317,18 @@ select:disabled { opacity: 0.55; }
 .level-bar { height: 100%; width: 0; background: var(--accent); transition: width 80ms linear; }
 
 /* Survey */
-.map-panel { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 8px; background: var(--sunk); border: 1px solid var(--accent); }
-.map-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.map-head span { margin-left: auto; font: 13px var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.survey-panel { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 8px; background: var(--sunk); border: 1px solid var(--accent); }
+.survey-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.survey-head span { margin-left: auto; font: 13px var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
 .plan-modes .seg { padding: 3px 10px; font-size: 13px; }
-.map-bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
-.map-bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 200ms ease; }
-.map-step { margin: 0; font-size: 17px; font-weight: 600; }
-.map-checks { display: flex; flex-wrap: wrap; gap: 6px; }
+.survey-bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.survey-bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 200ms ease; }
+.survey-step { margin: 0; font-size: 17px; font-weight: 600; }
+.survey-checks { display: flex; flex-wrap: wrap; gap: 6px; }
 .chk { font: 12px var(--f-mono); padding: 3px 9px; border-radius: 99px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); }
 .chk[data-done="1"] { border-color: var(--good); color: var(--good); }
 .chk[data-done="1"]::before { content: "✓ "; }
-.map-intro { margin: 0; font-size: 13px; color: var(--muted); max-width: 80ch; }
+.survey-intro { margin: 0; font-size: 13px; color: var(--muted); max-width: 80ch; }
 .key.plan { outline: 2px dashed var(--accent); outline-offset: -5px; }
 
 /* Settings drawer */
@@ -577,7 +577,7 @@ details > .form { margin-top: 10px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .key.flash, .drawer { animation: none; }
-  .kb-marker, .level-bar, .map-bar i { transition: none; }
+  .kb-marker, .level-bar, .survey-bar i { transition: none; }
 }
 
 /* App */

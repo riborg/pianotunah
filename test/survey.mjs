@@ -85,9 +85,9 @@ const read = () =>
     return {
       key: Number($('note-sub').textContent.match(/\d+/)?.[0]),
       note: $('note-name').textContent,
-      mode: ['auto', 'lock', 'map'].find((m) => $('mode-' + m).getAttribute('aria-pressed') === 'true'),
-      progress: $('map-progress').textContent,
-      step: $('map-step').textContent,
+      mode: ['auto', 'lock', 'survey'].find((m) => $('mode-' + m).getAttribute('aria-pressed') === 'true'),
+      progress: $('survey-progress').textContent,
+      step: $('survey-step').textContent,
       msg: $('message').hidden ? '' : $('message-text').textContent,
     };
   });
@@ -107,7 +107,7 @@ function strike(k) {
 // for the first 4 s on that key. skip: key to skip. stopAfter: number of keys
 // after which Finish is clicked.
 async function survey(plan, { wrong = {}, skip, stopAfter, maxMs = 400000 } = {}) {
-  if ((await read()).mode !== 'map') await page.click('#mode-map');
+  if ((await read()).mode !== 'survey') await page.click('#mode-survey');
   await page.click(`[data-plan="${plan}"]`);
   await sleep(300);
   const start = await read();
@@ -119,18 +119,18 @@ async function survey(plan, { wrong = {}, skip, stopAfter, maxMs = 400000 } = {}
   let last = 0;
   while (Date.now() - t0 < maxMs) {
     const s = await read();
-    if (s.mode !== 'map') break;
+    if (s.mode !== 'survey') break;
     if (s.key !== cur) {
       cur = s.key;
       seq.push(cur);
       onKeySince = Date.now();
       last = 0;
       if (stopAfter && seq.length > stopAfter) {
-        await page.click('#map-stop');
+        await page.click('#survey-stop');
         break;
       }
       if (cur === skip) {
-        await page.click('#map-skip');
+        await page.click('#survey-skip');
         continue;
       }
       await sleep(400);
