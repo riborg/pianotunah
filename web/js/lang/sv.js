@@ -5,7 +5,7 @@ export default {
   cancel: 'Avbryt',
   'unit.cents': 'cent',
 
-  'top.tuning': 'Sparad stämning',
+  'top.tuning': 'Piano',
   'top.settings': 'Inställningar',
   'top.settingsTitle': 'Inställningar (S)',
   'drawer.close': 'Stäng inställningar',
@@ -117,8 +117,8 @@ export default {
   'save.error': 'Ej sparad',
   'save.errorTitle': 'Servern svarar inte. Försöker igen.',
 
-  'msg.conflict': 'Stämningen har sparats från en annan flik eller enhet. Den senaste versionen är laddad; ändringarna här sparades inte.',
-  'msg.conflictFailed': 'Stämningen har ändrats någon annanstans men kunde inte laddas om. Ladda om sidan.',
+  'msg.conflict': 'Pianot har sparats från en annan flik eller enhet. Den senaste versionen är laddad; ändringarna här sparades inte.',
+  'msg.conflictFailed': 'Pianot har ändrats någon annanstans men kunde inte laddas om. Ladda om sidan.',
   'msg.noServer': 'Kunde inte nå servern. Mätningar sparas inte förrän den svarar.',
   'msg.jump': '{name} lät {c} cent från förra avläsningen. Sparas inte; slå an igen för att spara.',
   'msg.bMeasured': 'Inharmonicitet för {name}: B = {b}',
@@ -133,10 +133,10 @@ export default {
   'msg.imported': 'Importerade "{name}".',
   'msg.importFailed': 'Kunde inte importera filen: {err}',
   'msg.importNoSettings': 'saknar inställningar',
-  'msg.deleted': 'Stämningen raderades.',
-  'msg.deleteFailed': 'Kunde inte radera stämningen.',
-  'msg.openFailed': 'Kunde inte öppna stämningen.',
-  'msg.createFailed': 'Kunde inte skapa stämningen.',
+  'msg.deleted': 'Pianot raderades.',
+  'msg.deleteFailed': 'Kunde inte radera pianot.',
+  'msg.openFailed': 'Kunde inte öppna pianot.',
+  'msg.createFailed': 'Kunde inte skapa pianot.',
   'msg.dupFailed': 'Kunde inte duplicera.',
 
   'name.default': 'Mitt piano',
@@ -145,7 +145,7 @@ export default {
   'name.copy': '{name} (kopia)',
   'name.imported': 'Importerad',
   'name.import': '{name} (import)',
-  'name.file': 'stamning',
+  'name.file': 'piano',
 
   'tab.piano': 'Piano',
   'tab.tuning': 'Stämning',
@@ -162,7 +162,7 @@ export default {
   'piano.notes': 'Anteckningar',
   'piano.notesHint': 'Märke, modell, rum, fuktighet …',
   'piano.sizeDesc': 'Mät {how}. Används som startgissning för strängarnas inharmonicitet tills pianot är kartlagt.',
-  'piano.saved': 'Sparade stämningar',
+  'piano.saved': 'Sparade pianon',
   'piano.new': 'Ny',
   'piano.dup': 'Duplicera',
   'piano.export': 'Exportera',
@@ -291,7 +291,7 @@ export default {
   'app.lang': 'Språk',
   'app.theme': 'Färgläge',
   'app.about': 'Om',
-  'app.desc': 'Stämapparat för piano i webbläsaren. Lyssnar med datorns mikrofon, räknar fram stretch ur strängarnas inharmonicitet och sparar stämningar per piano.',
+  'app.desc': 'Stämapparat för piano i webbläsaren. Lyssnar med datorns mikrofon, räknar fram stretch ur strängarnas inharmonicitet och sparar mätningarna för varje piano.',
 
   help: `<h3>Arbetsgång</h3>
 <ol>

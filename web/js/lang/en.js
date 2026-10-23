@@ -5,7 +5,7 @@ export default {
   cancel: 'Cancel',
   'unit.cents': 'cents',
 
-  'top.tuning': 'Saved tuning',
+  'top.tuning': 'Piano',
   'top.settings': 'Settings',
   'top.settingsTitle': 'Settings (S)',
   'drawer.close': 'Close settings',
@@ -117,8 +117,8 @@ export default {
   'save.error': 'Not saved',
   'save.errorTitle': 'The server is not responding. Retrying.',
 
-  'msg.conflict': 'This tuning was saved from another tab or device. The latest version is loaded; the changes here were not saved.',
-  'msg.conflictFailed': 'This tuning was changed elsewhere but could not be reloaded. Reload the page.',
+  'msg.conflict': 'This piano was saved from another tab or device. The latest version is loaded; the changes here were not saved.',
+  'msg.conflictFailed': 'This piano was changed elsewhere but could not be reloaded. Reload the page.',
   'msg.noServer': 'Cannot reach the server. Measurements are not saved until it responds.',
   'msg.jump': '{name} sounded {c} cents from its last reading. Not saved; strike it again to save it.',
   'msg.bMeasured': 'Inharmonicity for {name}: B = {b}',
@@ -133,10 +133,10 @@ export default {
   'msg.imported': 'Imported "{name}".',
   'msg.importFailed': 'Could not import the file: {err}',
   'msg.importNoSettings': 'no settings',
-  'msg.deleted': 'The tuning was deleted.',
-  'msg.deleteFailed': 'Could not delete the tuning.',
-  'msg.openFailed': 'Could not open the tuning.',
-  'msg.createFailed': 'Could not create the tuning.',
+  'msg.deleted': 'The piano was deleted.',
+  'msg.deleteFailed': 'Could not delete the piano.',
+  'msg.openFailed': 'Could not open the piano.',
+  'msg.createFailed': 'Could not create the piano.',
   'msg.dupFailed': 'Could not duplicate.',
 
   'name.default': 'My piano',
@@ -145,7 +145,7 @@ export default {
   'name.copy': '{name} (copy)',
   'name.imported': 'Imported',
   'name.import': '{name} (import)',
-  'name.file': 'tuning',
+  'name.file': 'piano',
 
   'tab.piano': 'Piano',
   'tab.tuning': 'Tuning',
@@ -162,7 +162,7 @@ export default {
   'piano.notes': 'Notes',
   'piano.notesHint': 'Make, model, room, humidity …',
   'piano.sizeDesc': 'Measure {how}. Used as the initial guess for the strings\' inharmonicity until the piano is surveyed.',
-  'piano.saved': 'Saved tunings',
+  'piano.saved': 'Saved pianos',
   'piano.new': 'New',
   'piano.dup': 'Duplicate',
   'piano.export': 'Export',
@@ -291,7 +291,7 @@ export default {
   'app.lang': 'Language',
   'app.theme': 'Color mode',
   'app.about': 'About',
-  'app.desc': 'Piano tuner in the browser. Listens through the computer\'s microphone, computes stretch from the strings\' inharmonicity and saves tunings per piano.',
+  'app.desc': 'Piano tuner in the browser. Listens through the computer\'s microphone, computes stretch from the strings\' inharmonicity and keeps the measurements for each piano.',
 
   help: `<h3>Workflow</h3>
 <ol>
