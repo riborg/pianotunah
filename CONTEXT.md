@@ -19,6 +19,9 @@ _Avoid_: key (for the name)
 **Unison** [unison]:
 The two or three strings struck by one key. When they disagree the note beats.
 
+**Strings per key** [strängar per tangent]:
+Three, or two up to a key in the bass and one below another; set per piano.
+
 ## Measuring
 
 **Reading**:
@@ -79,3 +82,27 @@ The app works out which key is sounding.
 
 **Lock** [lås]:
 The app measures only the selected key, for keys too far off for Auto to recognise.
+
+## Tuning order
+
+**Tuning order** [arbetsordning]:
+The steps of a tuning by hand, from the pitch check to the last unison, followed key by key. Optional: other keys and modes can be used meanwhile.
+_Avoid_: guide, wizard, mode
+
+**Step** [steg]:
+One part of the tuning order, such as the temperament or the bass. Most steps have tasks; some are only an instruction.
+
+**Task**:
+One key and what to do with it in a step: tune its free string, tune one string with a wedge, or tune the unison pure. Done after two strikes in a row within tolerance.
+
+**Pitch raise** [grovstämning]:
+A quick pass over every key with overpull, before the fine tuning, when the piano is 10 cents or more off.
+
+**Felt strip** [filt]:
+Mutes the outer strings of F3–A4 so one string per key sounds during the temperament.
+
+**Wedge** [kil]:
+Mutes strings outside the felt strip.
+
+**Check** [kontroll]:
+An interval played by ear to confirm a tuned key, shown with the beat rate the targets give.

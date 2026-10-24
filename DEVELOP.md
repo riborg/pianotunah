@@ -18,6 +18,11 @@ docker run --rm --network container:pianotunah -v "$PWD":/usr/src/app/pt zenika/
 # keys and a skip. "full" adds a survey of all keys (about 2 minutes).
 docker run --rm --network container:pianotunah -v "$PWD":/usr/src/app/pt zenika/alpine-chrome:with-puppeteer \
   node pt/test/survey.mjs http://localhost:8080 [full]
+
+# Tuning order: the synthetic piano plays the keys the order asks for, in tune
+# and off, through the temperament and into the treble.
+docker run --rm --network container:pianotunah -v "$PWD":/usr/src/app/pt zenika/alpine-chrome:with-puppeteer \
+  node pt/test/order.mjs http://localhost:8080
 ```
 
 The end-to-end tests share the app container's network, so they work with any reverse proxy. They create and delete their own tuning.
@@ -52,6 +57,7 @@ UI strings are in `web/js/lang/en.js` and `sv.js`. Static markup uses `data-i18n
 | `web/js/dsp.js` | FFT, key detection, partial measurement, estimation of B |
 | `web/js/draw.js` | canvas drawing |
 | `web/js/survey.js` | survey plans and completion criteria |
+| `web/js/order.js` | tuning order: steps, tasks, checks and when a task is done |
 | `web/js/saver.js` | save queue with revision check |
 | `web/js/mic.js`, `recorder.js`, `tone.js` | microphone, recording (AudioWorklet) and reference tones |
 | `web/js/i18n.js`, `lang/` | UI strings |

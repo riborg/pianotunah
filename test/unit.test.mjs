@@ -3,11 +3,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   computeTargets, temperamentOffsets, partialFreq, centsBetween, noteName,
-  migrateSettings, recommendedOverpull, octaveStretch, bOutliers, DEFAULT_SETTINGS,
+  migrateSettings, recommendedOverpull, octaveStretch, bOutliers, intervalBeat, DEFAULT_SETTINGS,
 } from '../web/js/theory.js';
 import { Analyzer } from '../web/js/dsp.js';
 import { wavBlob } from '../web/js/mic.js';
 import { newRun, nextPending, handled, wrongKey } from '../web/js/survey.js';
+import { buildOrder, nextPos, prevPos, clampPos, taskAt, progress, newConfirm, confirmReading, checkRows } from '../web/js/order.js';
 
 const SR = 48000;
 const N = 32768;
@@ -110,6 +111,23 @@ test('recommended overpull: none for small deviations, 25% when flat', () => {
   assert.equal(recommendedOverpull(-5), 0);
   assert.equal(recommendedOverpull(15), 0);
   assert.equal(recommendedOverpull(-15.7), 25); // 436 Hz against 440 Hz
+});
+
+test('beats: equal temperament without inharmonicity gives the textbook rates', () => {
+  const t = computeTargets({ ...DEFAULT_SETTINGS, stretch: 'none' });
+  t.B.fill(0);
+  const near = (lo, hi, want) => assert.ok(Math.abs(intervalBeat(t, lo, hi) - want) < 0.01, `${lo}–${hi}: ${intervalBeat(t, lo, hi)}`);
+  near(33, 37, 6.93); // F3–A3, major third, wide
+  near(33, 40, -0.59); // F3–C4, fifth, narrow
+  near(37, 42, 0.99); // A3–D4, fourth, wide
+  near(37, 49, 0); // A3–A4, octave
+  assert.ok(Math.abs(intervalBeat(t, 33, 49) - intervalBeat(t, 33, 37)) < 0.01); // M10 = M3 with pure partials
+});
+
+test('beats: a stretched octave beats at 2:1 and is beatless at its own type', () => {
+  const t = computeTargets({ ...DEFAULT_SETTINGS, stretch: 'custom', midOctave: '4:2' });
+  assert.ok(Math.abs(intervalBeat(t, 37, 49, [4, 2])) < 0.01);
+  assert.ok(intervalBeat(t, 37, 49) > 0.1); // wider than 2:1
 });
 
 test('key detection on all 88 keys, two piano sizes, in tune and 20 cents flat', () => {
@@ -221,6 +239,63 @@ test('survey: wrong key is recognised, a flat piano is not', () => {
   assert.equal(wrongKey(clear(49), 49, 0, 0), 0);
   // A2 still ringing when A3 is struck.
   assert.equal(wrongKey(clear(25), 37, 0, 0, new Set([25])), 0);
+});
+
+test('tuning order: every key is tuned once, the temperament covers F3–E4', () => {
+  for (const top of [85, 88]) {
+    const order = buildOrder({ top, twoStringsTo: 32, oneStringTo: 8 });
+    const tuned = order.filter((s) => s.id !== 'raise').flatMap((s) => s.tasks).filter((t) => t.what === 'middle' || t.what === 'one').map((t) => t.k);
+    assert.deepEqual([...tuned].sort((a, b) => a - b), Array.from({ length: top }, (_, i) => i + 1));
+    const temper = order.find((s) => s.id === 'temperament').tasks.map((t) => t.k);
+    assert.deepEqual([...temper].sort((a, b) => a - b), [33, 34, 35, 36, 38, 39, 40, 41, 42, 43, 44]); // F3–E4 but A3
+    // Each key is tuned from one already tuned.
+    const done = new Set();
+    for (const t of order.filter((s) => s.id !== 'raise').flatMap((s) => s.tasks)) {
+      if (t.from) assert.ok(done.has(t.from), `${t.k} from ${t.from}`);
+      if (t.what === 'middle' || t.what === 'one') done.add(t.k);
+    }
+    assert.equal(order.find((s) => s.id === 'raise').tasks.length, top);
+  }
+});
+
+test('tuning order: the bass goes two keys at a time, single strings have no unison', () => {
+  const bass = buildOrder({ top: 88, twoStringsTo: 32, oneStringTo: 8 }).find((s) => s.id === 'bass').tasks;
+  assert.deepEqual(bass.slice(0, 4).map((t) => `${t.k}${t.what[0]}`), ['32o', '31o', '32u', '31u']);
+  assert.ok(!bass.some((t) => t.what === 'unison' && t.k <= 8));
+  assert.equal(bass.filter((t) => t.what === 'one').length, 32);
+});
+
+test('tuning order: positions step through and back, empty steps count once', () => {
+  const order = buildOrder({ top: 88 }, [12, 60]);
+  let pos = { step: 0, i: 0 };
+  let n = 1;
+  while ((pos = nextPos(order, pos))) n++;
+  assert.equal(n, order.reduce((s, x) => s + Math.max(1, x.tasks.length), 0));
+  assert.deepEqual(prevPos(order, { step: 3, i: 0 }), { step: 2, i: 0 });
+  assert.deepEqual(clampPos(order, { step: 99, i: 5 }), { step: 9, i: 1 });
+  assert.equal(taskAt(order, { step: 2, i: 0 }), null);
+  assert.equal(progress(order, { step: 0, i: 0 }), 0);
+});
+
+test('tuning order: a task is done after two strikes in a row that end in tune', () => {
+  const c = newConfirm(5);
+  assert.equal(confirmReading(c, 5, true), false); // before the task started
+  assert.equal(confirmReading(c, 6, true), false);
+  assert.equal(confirmReading(c, 6, false), false); // turned past it while ringing
+  assert.equal(confirmReading(c, 7, true), false); // strike 6 ended out of tune
+  assert.equal(confirmReading(c, 8, true), true);
+});
+
+test('tuning order: checks carry the beat rate, inaudible partials left out', () => {
+  const t = computeTargets({ ...DEFAULT_SETTINGS, stretch: 'none' });
+  t.B.fill(0);
+  const order = buildOrder({ top: 88 });
+  const f3 = order.find((s) => s.id === 'temperament').tasks.find((x) => x.k === 33);
+  const rows = checkRows(t, f3, 88);
+  assert.deepEqual(rows.map((r) => `${r.lo}-${r.hi}`), ['33-40', '33-37']);
+  assert.ok(Math.abs(rows[0].beat + 0.59) < 0.01 && Math.abs(rows[1].beat - 6.93) < 0.01);
+  const c8 = order.find((s) => s.id === 'treble').tasks.find((x) => x.k === 88);
+  assert.ok(checkRows(t, c8, 88).every((r) => r.p[0] * t.freq[r.lo] <= 5000));
 });
 
 test('recording: mono 32-bit float WAV', async () => {

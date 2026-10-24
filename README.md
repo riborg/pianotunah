@@ -11,6 +11,7 @@ Piano tuner in the browser. Listens through the computer's microphone, computes 
 
 - Key detection A0–C8 and measurement to a hundredth of a cent. In the bass, partial 6, 4 or 2 is measured. Keys measured in the pass are recognised where they sound, even far from the target.
 - Survey: *All A* (A0–A7) or *All keys*. Measures inharmonicity and the current pitch.
+- Tuning order, optional: pitch check, pitch raise, felt strip, temperament by fourths and fifths, treble, bass, key by key. Each key lists intervals to check by ear with the beat rates the targets give, and the order moves on after two strikes in a row in tune.
 - Stretch with octave type 2:1–8:4 per register, Railsback curve and extra stretch at the ends.
 - Temperaments: equal, Werckmeister III, Kirnberger III, Vallotti, Young II, ¼- and ⅙-comma meantone.
 - Reference A4 380–480 Hz, or set from the piano's current pitch. Overpull for pitch raises, with a recommended amount when the piano is flat.
@@ -43,6 +44,12 @@ The temperament octave A3–A4 is laid first. Then the octaves are built up and 
 **Temperament.** A temperament is given as the deviation from a pure fifth for each of the twelve fifths. The sum is always $-\mathrm{PC}$, the Pythagorean comma (≈ 23.46 cents).
 
 **Overpull.** When the pitch is raised, strings already tuned drop as the load on the plate and soundboard grows. Each key is tuned past the target by a share of how far it started from it: with 25%, a key at −16 cents is tuned to +4. The app recommends 25% when the middle of the piano is 10 cents or more flat.
+
+**Beats.** A check interval beats where its lowest coincident partials meet: partial $p$ of the lower note and $q$ of the upper, 5:4 for a major third, 3:2 for a fifth. With both keys at their targets,
+
+$$\text{beats/s} = q f_\text{hi}\, g(B_\text{hi}, q) - p f_\text{lo}\, g(B_\text{lo}, p)$$
+
+where $f$ is the fundamental, positive for a wide interval and negative for a narrow one.
 
 **Measurement.** An FFT (16,384 points) gives the rough position of the peaks. The frequency is then refined from the phase difference $\Delta\varphi$ between two windows offset by $H$ samples:
 
