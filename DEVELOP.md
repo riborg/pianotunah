@@ -18,6 +18,11 @@ docker run --rm --network container:pianotunah -v "$PWD":/usr/src/app/pt zenika/
 # keys and a skip. "full" adds a survey of all keys (about 2 minutes).
 docker run --rm --network container:pianotunah -v "$PWD":/usr/src/app/pt zenika/alpine-chrome:with-puppeteer \
   node pt/test/survey.mjs http://localhost:8080 [full]
+
+# Tuning order: the synthetic piano plays the keys the order asks for, in tune
+# and off, through the temperament and into the treble.
+docker run --rm --network container:pianotunah -v "$PWD":/usr/src/app/pt zenika/alpine-chrome:with-puppeteer \
+  node pt/test/order.mjs http://localhost:8080
 ```
 
 The end-to-end tests share the app container's network, so they work with any reverse proxy. They create and delete their own tuning.
