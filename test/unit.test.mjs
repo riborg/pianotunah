@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   computeTargets, temperamentOffsets, partialFreq, centsBetween, noteName,
-  migrateSettings, recommendedOverpull, octaveStretch, bOutliers, DEFAULT_SETTINGS,
+  migrateSettings, recommendedOverpull, octaveStretch, bOutliers, intervalBeat, DEFAULT_SETTINGS,
 } from '../web/js/theory.js';
 import { Analyzer } from '../web/js/dsp.js';
 import { wavBlob } from '../web/js/mic.js';
@@ -110,6 +110,23 @@ test('recommended overpull: none for small deviations, 25% when flat', () => {
   assert.equal(recommendedOverpull(-5), 0);
   assert.equal(recommendedOverpull(15), 0);
   assert.equal(recommendedOverpull(-15.7), 25); // 436 Hz against 440 Hz
+});
+
+test('beats: equal temperament without inharmonicity gives the textbook rates', () => {
+  const t = computeTargets({ ...DEFAULT_SETTINGS, stretch: 'none' });
+  t.B.fill(0);
+  const near = (lo, hi, want) => assert.ok(Math.abs(intervalBeat(t, lo, hi) - want) < 0.01, `${lo}–${hi}: ${intervalBeat(t, lo, hi)}`);
+  near(33, 37, 6.93); // F3–A3, major third, wide
+  near(33, 40, -0.59); // F3–C4, fifth, narrow
+  near(37, 42, 0.99); // A3–D4, fourth, wide
+  near(37, 49, 0); // A3–A4, octave
+  assert.ok(Math.abs(intervalBeat(t, 33, 49) - intervalBeat(t, 33, 37)) < 0.01); // M10 = M3 with pure partials
+});
+
+test('beats: a stretched octave beats at 2:1 and is beatless at its own type', () => {
+  const t = computeTargets({ ...DEFAULT_SETTINGS, stretch: 'custom', midOctave: '4:2' });
+  assert.ok(Math.abs(intervalBeat(t, 37, 49, [4, 2])) < 0.01);
+  assert.ok(intervalBeat(t, 37, 49) > 0.1); // wider than 2:1
 });
 
 test('key detection on all 88 keys, two piano sizes, in tune and 20 cents flat', () => {

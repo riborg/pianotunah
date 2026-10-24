@@ -356,3 +356,19 @@ export function defaultPartial(k) {
 }
 
 export const centsBetween = (f, ref) => 1200 * Math.log2(f / ref);
+
+// ---------------------------------------------------------------------------
+// Beats
+//
+// An interval is checked by ear at its lowest coincident partials: a major
+// third lo–hi beats where partial 5 of lo meets partial 4 of hi. Per interval
+// in semitones: [partial of the lower note, partial of the upper note].
+export const COINCIDENT = {
+  3: [6, 5], 4: [5, 4], 5: [4, 3], 7: [3, 2], 9: [5, 3], 12: [2, 1], 16: [5, 2], 19: [3, 1], 24: [4, 1], 28: [5, 1],
+};
+
+// Beats per second between keys lo and hi with both at their targets T.
+// Positive: the interval is wide (the upper partial is higher).
+export function intervalBeat(T, lo, hi, [pl, pu] = COINCIDENT[hi - lo]) {
+  return partialFreq(T.freq[hi], T.B[hi], pu) - partialFreq(T.freq[lo], T.B[lo], pl);
+}
