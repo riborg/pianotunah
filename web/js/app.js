@@ -15,6 +15,7 @@ import { Saver } from './saver.js';
 import { enableDiag, diagOn, diag } from './diag.js';
 import { readColors, drawDial, drawSpectro, drawBeat, drawChart } from './draw.js';
 import * as survey from './survey.js';
+import * as order from './order.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -23,7 +24,7 @@ const SPEC_COLS = 100; // spectrogram history, ≈ 9 s
 const SPEC_BINS = 48;
 const SPEC_CENTS = 30;
 const REC_MAX_S = 120;
-const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab', curve: 'pianotunah.curve', partials: 'pianotunah.partials', beats: 'pianotunah.beats', mic: 'pianotunah.mic' };
+const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab', curve: 'pianotunah.curve', partials: 'pianotunah.partials', beats: 'pianotunah.beats', mic: 'pianotunah.mic', order: 'pianotunah.order' };
 
 const mic = new Mic();
 const tones = new TonePlayer();
@@ -71,6 +72,11 @@ const state = {
   survey: null, // the current key in a survey, see survey.newKeyState
   run: null, // the survey as a whole, see survey.newRun
   surveyPlan: 'quick',
+  orderOn: false, // the tuning order is shown and followed
+  order: null, // steps from order.buildOrder
+  orderPos: { step: 0, i: 0 },
+  orderConfirm: null, // strikes towards the current task, see order.confirmReading
+  orderRecheck: null, // keys outside tolerance when the last step began
   toneMode: 'off', // off | piano | sine
   refUntil: 0, // reference tone audible in the microphone until this time
   refTainted: false,
@@ -209,12 +215,14 @@ function renderTuningSelect() {
 async function openTuning(t) {
   await saver.flush();
   state.tuning = normalize(t);
+  state.orderRecheck = null;
   try { localStorage.setItem(LS.tuning, t.id); } catch { /* optional */ }
   resetReadings();
   recompute();
   renderSettings();
   renderTuningSelect();
   setSaveState('idle');
+  followOrder();
 }
 
 async function createAndOpen(t) {
@@ -237,6 +245,7 @@ function recompute() {
   renderPass();
   renderChart();
   if ($('table-details').open) renderTable();
+  renderOrderPanel();
 }
 
 // Language-dependent parts of the static markup. Run again when the language changes.
@@ -279,6 +288,7 @@ function buildKeyboard(n) {
 
 function applyKeyCount() {
   buildKeyboard(top());
+  rebuildOrder();
   if (state.key > top()) selectKey(top(), false);
   renderKeyboard();
   renderChart();
@@ -393,12 +403,13 @@ function renderKeyboard() {
   buildKeyboard(top());
   const cur = Math.min(state.key, top());
   const quickPlan = state.survey && state.surveyPlan === 'quick';
+  const orderKey = orderOn() ? orderTask()?.k : 0;
   for (const el of $('keyboard').children) {
     const k = Number(el.dataset.k);
     const label = tr('key.label', { name: kName(k), dev: Number.isFinite(curDev(k)) ? fmtC(statusDev(k)) + ' ' + tr('unit.cents') : tr('key.unmeasured') });
     el.classList.toggle('current', k === cur);
     el.classList.toggle('has-b', !!state.tuning.inharmonicity[k]);
-    el.classList.toggle('plan', !!quickPlan && survey.QUICK_KEYS.includes(k));
+    el.classList.toggle('plan', (!!quickPlan && survey.QUICK_KEYS.includes(k)) || k === orderKey);
     if (el.firstChild) el.firstChild.textContent = pitchClass(k) === 0 || k === 1 ? kName(k) : '';
     el.setAttribute('aria-label', label);
     el.setAttribute('aria-current', k === cur);
@@ -562,6 +573,7 @@ function selectKey(k, manual = true) {
   resetReadings();
   if (state.survey) state.survey = survey.newKeyState();
   renderSurveyPanel();
+  renderOrderPanel();
   renderKeyInfo();
   renderKeyboard();
   renderChart();
@@ -579,6 +591,7 @@ function setMode(m) {
   if (m === 'survey') selectKey(nextPending(0), false);
   renderKeyboard();
   renderSurveyPanel();
+  renderOrderPanel();
   renderCurveHint();
 }
 
@@ -842,6 +855,8 @@ function measureCurrent(A) {
     state.strobe.push({ p, c: ok.length >= 3 ? median(ok) : NaN });
   });
 
+  if (state.stable && orderOn()) trackOrder(k);
+
   // Save the value that is shown. During a survey, collectSurvey saves instead.
   if (state.stable && !state.survey) {
     const hz = median(last.map((r) => r.hz));
@@ -1066,6 +1081,186 @@ function setCheck(id, text, done) {
 }
 
 // ---------------------------------------------------------------------------
+// Tuning order: optional. The panel shows the step and the key it is on; any
+// other key or mode can be used meanwhile, and the order waits for its key.
+
+const orderOn = () => state.orderOn && state.mode !== 'survey' && !!state.order;
+const orderTask = () => (state.order ? order.taskAt(state.order, state.orderPos) : null);
+const orderStepIndex = (id) => state.order.findIndex((s) => s.id === id);
+const strings = (k) => (k <= Number(S().oneStringTo) ? 1 : k <= Number(S().twoStringsTo) ? 2 : 3);
+
+const recheckKeys = () => Array.from({ length: top() }, (_, i) => i + 1).filter((k) => Number.isFinite(curDev(k)) && statusClass(statusDev(k)) !== 'good');
+
+function rebuildOrder() {
+  if (!state.tuning) return;
+  const s = S();
+  const build = () => {
+    state.order = order.buildOrder({ top: top(), twoStringsTo: Number(s.twoStringsTo) || 0, oneStringTo: Number(s.oneStringTo) || 0 }, state.orderRecheck || []);
+    state.orderPos = order.clampPos(state.order, state.tuning.order);
+  };
+  build();
+  if (state.order[state.orderPos.step].id === 'finish' && !state.orderRecheck) {
+    state.orderRecheck = recheckKeys(); // opened on the last step
+    build();
+  }
+  state.orderConfirm = order.newConfirm(state.attacks);
+}
+
+// Select the key the order is on.
+function followOrder() {
+  const t = orderTask();
+  if (t && orderOn()) selectKey(t.k, false);
+  renderOrderPanel();
+  renderKeyboard();
+}
+
+function setOrderOn(on) {
+  state.orderOn = on;
+  try { localStorage.setItem(LS.order, on ? 'on' : 'off'); } catch { /* optional */ }
+  $('btn-order').setAttribute('aria-pressed', on);
+  diag(`tuning order ${on ? 'on' : 'off'}`);
+  if (on && state.mode === 'auto') setMode('lock');
+  followOrder();
+}
+
+// Move to a position and select its key. The last step lists the keys
+// outside tolerance as it begins.
+function goOrder(pos) {
+  const finish = orderStepIndex('finish');
+  if (pos.step === finish && state.orderPos.step !== finish) state.orderRecheck = recheckKeys();
+  else if (pos.step !== finish) state.orderRecheck = null;
+  state.tuning.order = { step: pos.step, i: pos.i };
+  rebuildOrder();
+  markDirty();
+  followOrder();
+}
+
+function orderDone() {
+  diag('tuning order done');
+  message(tr('order.done'), 'ok');
+}
+
+// A steady reading on the order's key: in tune counts, and two strikes in a
+// row move on. Unisons also need the beat check to have seen the note clean.
+function trackOrder(k) {
+  const t = orderTask();
+  if (!t || t.k !== k || refPlaying()) return;
+  const s = statusClass(state.display);
+  const unison = t.what === 'unison' || t.what === 'pull';
+  const ok = state.order[state.orderPos.step].loose ? s !== 'bad' : s === 'good' && !(unison && (state.beating || state.unison.length < 8));
+  const done = order.confirmReading(state.orderConfirm, state.attacks, ok);
+  renderOrderState();
+  if (!done) return;
+  diag(`order: ${t.what} ${kName(k)} done`);
+  flashKey(k);
+  const next = order.nextPos(state.order, state.orderPos);
+  if (next) goOrder(next);
+  else orderDone();
+}
+
+function renderOrderState() {
+  const c = state.orderConfirm;
+  $('order-state').textContent = orderTask() && c && c.cur > c.since && c.ok ? tr('order.confirm') : '';
+}
+
+const ivName = ({ semis, p }) => tr('iv.' + semis) + (semis === 12 ? ' ' + p.join(':') : '');
+
+function rateText(b) {
+  const a = Math.abs(b);
+  if (a < 0.05) return tr('order.beatless');
+  return tr('order.rate', { n: num(a, a < 10 ? 1 : 0), dir: tr(b > 0 ? 'order.wide' : 'order.narrow') });
+}
+
+function stepParams(id) {
+  const r = {
+    strip: order.STRIP, pull: [order.STRIP[1], order.STRIP[0]], temperament: [33, 44], upper: [45, order.STRIP[1] - 1],
+    treble: [order.STRIP[1] + 1, top()], bass: [order.STRIP[0] - 1, 1],
+  }[id];
+  return r ? { lo: kName(r[0]), hi: kName(r[1]) } : {};
+}
+
+function taskText(t) {
+  const p = { name: kName(t.k), from: t.from ? kName(t.from) : '' };
+  if (t.from) p.iv = tr('iv.' + Math.abs(t.k - t.from));
+  if (t.what === 'middle') return tr(t.from ? 'order.task.middleFrom' : 'order.task.middle', p);
+  if (t.what === 'one') return tr(strings(t.k) === 1 ? 'order.task.single' : 'order.task.one', p);
+  if (t.what === 'unison') return tr(strings(t.k) === 2 ? 'order.task.unison2' : 'order.task.unison3', p);
+  if (t.what === 'recheck') return tr('order.task.recheck', { ...p, c: fmtC(statusDev(t.k)) });
+  return tr('order.task.' + t.what, p);
+}
+
+// Where the piano is, for the first two steps.
+function pitchAdvice() {
+  const mid = midBefore();
+  if (mid.length < 3) return tr('order.pitch.unknown');
+  const m = median(mid);
+  return tr(Math.abs(m) >= 10 ? 'order.pitch.off' : 'order.pitch.near', { c: fmtC(m, 0) });
+}
+
+function orderButton(id, label, run) {
+  const b = $(id);
+  b.hidden = !label;
+  if (label) Object.assign(b, { textContent: label, onclick: run });
+}
+
+function renderOrderPanel() {
+  const on = orderOn();
+  $('order-panel').hidden = !on;
+  if (!on) return;
+  const o = state.order;
+  const pos = state.orderPos;
+  const step = o[pos.step];
+  const t = orderTask();
+  const sel = $('order-step');
+  if (sel.options.length !== o.length || sel.dataset.lang !== lang() || sel.dataset.top !== String(top())) {
+    sel.replaceChildren(...o.map((s, i) => option(i, `${i + 1}. ${tr('order.' + s.id, stepParams(s.id))}`)));
+    Object.assign(sel.dataset, { lang: lang(), top: String(top()) });
+  }
+  sel.value = pos.step;
+  $('order-progress').textContent = step.tasks.length ? tr('order.progress', { i: pos.i + 1, n: step.tasks.length }) : '';
+  $('order-bar').style.width = `${order.progress(o, pos) * 100}%`;
+  $('order-task').textContent = t ? taskText(t) : tr(`order.${step.id}.task`, stepParams(step.id));
+
+  const rows = t ? order.checkRows(state.T, t, top()) : [];
+  $('order-checks').replaceChildren(
+    ...rows.map((r, i) => Object.assign(document.createElement('span'), {
+      className: 'chk' + (i === 0 && t.from ? ' main' : ''),
+      textContent: `${kName(r.lo)}–${kName(r.hi)} ${ivName(r)} ${rateText(r.beat)}`,
+    })),
+  );
+  $('order-checks').hidden = !rows.length;
+
+  let text = tr(`order.${step.id}.text`, stepParams(step.id));
+  if (step.id === 'pitch' || step.id === 'raise') text += ' ' + pitchAdvice();
+  if (t && t.what !== 'raise') text += ' ' + tr('order.how');
+  $('order-text').textContent = text;
+
+  orderButton('order-back', t && state.key !== t.k ? tr('order.back', { name: kName(t.k) }) : '');
+  orderButton('order-action', '');
+  orderButton('order-action2', '');
+  if (step.id === 'pitch') {
+    orderButton('order-action', tr('curve.hintSurvey'), () => {
+      setSurveyPlan('quick');
+      setMode('survey');
+      if (!mic.running) startMic();
+    });
+  } else if (step.id === 'raise') {
+    const mid = midBefore();
+    const p = mid.length >= 3 ? recommendedOverpull(median(mid)) : 0;
+    if (p && Number(S().overpull) !== p) orderButton('order-action', tr('ref.useOverpull', { p }), () => setSetting('overpull', p));
+    orderButton('order-action2', tr('order.finePass'), () => {
+      newPass();
+      setSetting('overpull', 0);
+      goOrder({ step: orderStepIndex('strip'), i: 0 });
+    });
+  }
+  $('order-prev').disabled = !order.prevPos(o, pos);
+  $('order-next').textContent = tr(t ? 'order.nextKey' : 'order.next');
+  $('order-skip').hidden = !t;
+  renderOrderState();
+}
+
+// ---------------------------------------------------------------------------
 // Reference tones
 
 const goalF1 = (k) => state.T.freq[k] * 2 ** (goal(k) / 1200);
@@ -1230,6 +1425,9 @@ function newPass() {
   }
   t.keys = {};
   t.passStartedAt = new Date().toISOString();
+  t.order = { step: 0, i: 0 };
+  state.orderRecheck = null;
+  rebuildOrder();
   resetReadings();
   recompute();
   markDirty();
@@ -1309,6 +1507,7 @@ function changeLanguage(l) {
   renderSettings();
   recompute();
   renderSurveyPanel();
+  renderOrderPanel();
   renderToneButton();
   renderThemeButton();
   renderMicButton();
@@ -1400,6 +1599,24 @@ function bindEvents() {
   });
   on('survey-stop', 'click', () => setMode('lock'));
   onAll('[data-plan]', (b) => setSurveyPlan(b.dataset.plan));
+  on('btn-order', 'click', () => setOrderOn(!state.orderOn));
+  on('order-close', 'click', () => setOrderOn(false));
+  on('order-step', 'change', (e) => goOrder({ step: Number(e.target.value), i: 0 }));
+  on('order-prev', 'click', () => goOrder(order.prevPos(state.order, state.orderPos) || state.orderPos));
+  on('order-next', 'click', () => {
+    const next = order.nextPos(state.order, state.orderPos);
+    if (next) goOrder(next);
+    else orderDone();
+  });
+  on('order-skip', 'click', () => {
+    const step = state.orderPos.step + 1;
+    if (step < state.order.length) goOrder({ step, i: 0 });
+    else orderDone();
+  });
+  on('order-back', 'click', () => {
+    if (state.mode === 'auto') setMode('lock');
+    selectKey(orderTask().k, false);
+  });
 
   on('keyboard', 'click', (e) => {
     const k = Number(e.target.closest('.key')?.dataset.k);
@@ -1464,6 +1681,8 @@ function bindEvents() {
     $('set-two').value = S().twoStringsTo = two;
     $('set-one').value = S().oneStringTo = one;
     renderSettingDescs();
+    rebuildOrder();
+    renderOrderPanel();
     markDirty();
   };
   on('set-two', 'change', setStrings);
@@ -1569,6 +1788,7 @@ function bindEvents() {
       ArrowRight: () => selectKey(state.key + 1),
       l: () => setMode('lock'),
       a: () => setMode('auto'),
+      o: () => setOrderOn(!state.orderOn),
       t: playCurrent,
       s: () => ($('drawer').hidden ? openDrawer() : closeDrawer()),
     }[e.key.length === 1 ? e.key.toLowerCase() : e.key];
@@ -1637,6 +1857,7 @@ async function boot() {
   } catch { /* optional */ }
   setSurveyPlan(plan);
   setToneMode(tone);
+  try { if (localStorage.getItem(LS.order) === 'on') setOrderOn(true); } catch { /* optional */ }
   fetch('api/version')
     .then((r) => r.json())
     .then(({ version, debug }) => {

@@ -60,6 +60,7 @@
           <button id="mode-lock" class="seg" type="button" aria-pressed="false" title="Lock on the selected key (L)" data-i18n="mode.lock" data-i18n-title="mode.lockTitle">Lock</button>
           <button id="mode-survey" class="seg" type="button" aria-pressed="false" title="Measure the piano key by key before tuning" data-i18n="mode.survey" data-i18n-title="mode.surveyTitle">Survey</button>
         </div>
+        <button id="btn-order" class="btn ghost" type="button" aria-pressed="false" aria-controls="order-panel" title="Step by step through the tuning (O)" data-i18n="order.button" data-i18n-title="order.buttonTitle">Tuning order</button>
       </div>
     </div>
 
@@ -83,6 +84,29 @@
         <button id="survey-skip" class="btn ghost" type="button" data-i18n="survey.skip">Skip</button>
         <button id="survey-redo" class="btn ghost" type="button" data-i18n="survey.redo">Measure again</button>
         <button id="survey-stop" class="btn ghost" type="button" data-i18n="survey.stop">Finish</button>
+      </div>
+    </div>
+
+    <div class="survey-panel order-panel" id="order-panel" hidden>
+      <div class="survey-head">
+        <b data-i18n="order.title">Tuning order</b>
+        <label class="sr-only" for="order-step" data-i18n="order.step">Step</label>
+        <select id="order-step"></select>
+        <span id="order-progress"></span>
+      </div>
+      <div class="survey-bar" aria-hidden="true"><i id="order-bar"></i></div>
+      <p class="survey-step" id="order-task" aria-live="polite"></p>
+      <p class="order-state" id="order-state" aria-live="polite"></p>
+      <div class="survey-checks" id="order-checks"></div>
+      <p class="survey-intro" id="order-text"></p>
+      <div class="btn-row">
+        <button id="order-back" class="btn primary" type="button" hidden></button>
+        <button id="order-action" class="btn primary" type="button" hidden></button>
+        <button id="order-action2" class="btn ghost" type="button" hidden></button>
+        <button id="order-prev" class="btn ghost" type="button" data-i18n="order.prev">Previous</button>
+        <button id="order-next" class="btn ghost" type="button" data-i18n="order.next">Next</button>
+        <button id="order-skip" class="btn ghost" type="button" data-i18n="order.nextStep">Next step</button>
+        <button id="order-close" class="btn ghost" type="button" data-i18n="order.close">Close</button>
       </div>
     </div>
 

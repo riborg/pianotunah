@@ -111,6 +111,74 @@ export default {
   'survey.skippedMany': ' {n} keys skipped.',
   'survey.doneFull': 'Survey done: {n} keys measured, inharmonicity for {b}. See Reference A4 under Tuning for where the piano is.',
 
+  'order.button': 'Tuning order',
+  'order.buttonTitle': 'Step by step through the tuning (O)',
+  'order.title': 'Tuning order',
+  'order.step': 'Step',
+  'order.prev': 'Previous',
+  'order.next': 'Next',
+  'order.nextKey': 'Next key',
+  'order.nextStep': 'Next step',
+  'order.close': 'Close',
+  'order.progress': 'key {i} of {n}',
+  'order.back': 'Back to {name}',
+  'order.confirm': 'In tune. Strike firmly once more to check that it holds.',
+  'order.done': 'Tuning order done.',
+  'order.how': 'Set the pin so the string stays where it is. The order moves on after two firm strikes in a row within tolerance.',
+  'order.beatless': 'beatless',
+  'order.rate': '{n}/s {dir}',
+  'order.wide': 'wide',
+  'order.narrow': 'narrow',
+  'order.finePass': 'Done: new pass for the fine tuning',
+  'iv.3': 'minor third',
+  'iv.4': 'major third',
+  'iv.5': 'fourth',
+  'iv.7': 'fifth',
+  'iv.9': 'major sixth',
+  'iv.12': 'octave',
+  'iv.16': 'tenth',
+  'iv.19': 'twelfth',
+  'iv.24': 'double octave',
+  'iv.28': 'seventeenth',
+
+  'order.task.raise': 'Raise {name}, all its strings.',
+  'order.task.middle': 'Tune {name}.',
+  'order.task.middleFrom': 'Tune {name} from {from} ({iv}).',
+  'order.task.one': 'Wedge {name} so one string sounds and tune it from {from}.',
+  'order.task.single': 'Tune {name} from {from}.',
+  'order.task.unison2': 'Pull the wedge and tune the second string of {name} pure against the first.',
+  'order.task.unison3': 'Move the wedge so strings 1 and 2 of {name} sound and tune 2 pure against 1; then pull it and tune 3 against both.',
+  'order.task.pull': 'Pull the strip from {name} and tune its outer strings pure against the middle one.',
+  'order.task.recheck': '{name} is {c} cents off: tune it again.',
+
+  'order.pitch': 'Check the pitch',
+  'order.pitch.task': 'Survey all A to see where the piano is.',
+  'order.pitch.text': 'Set the reference under Tuning first: 440 Hz, or 442 for playing with an orchestra. The survey measures A0–A7, since the treble and bass are often further off than A4.',
+  'order.pitch.unknown': 'Not measured yet.',
+  'order.pitch.off': 'The middle is {c} cents from the target: do a pitch raise first.',
+  'order.pitch.near': 'The middle is {c} cents from the target: no pitch raise needed, go on to the felt strip.',
+  'order.raise': 'Pitch raise',
+  'order.raise.task': 'Pitch raise.',
+  'order.raise.text': 'Only when the piano is 10 cents or more off. A quick pass over every key and all its strings, no strip, from the middle up to the top and then down to the bottom, within a few cents. Overpull tunes each key past the target so the piano settles near it. More than 50 cents flat: two pitch raises. Old strings can break; raise gradually. The fine tuning can follow the same day.',
+  'order.strip': 'Felt strip {lo}–{hi}',
+  'order.strip.task': 'Mute the outer strings of {lo}–{hi} with the felt strip.',
+  'order.strip.text': 'Only the middle string of each key may sound. On an upright, hold the damper pedal down while putting in the strip or a wedge, so the dampers are not bent. The strip must sit clear of where the hammers strike: push a few hammers forward and check. Press Next when it is in.',
+  'order.middle': 'A4 and A3',
+  'order.middle.text': 'A4 to the target, then A3 as an octave below it. The tenth F3–A4 should beat as fast as the third F3–A3 (a 4:2 octave) or slightly faster; if the third is faster, A3 is too high. F3 is not tuned yet, but the comparison holds.',
+  'order.temperament': 'Temperament {lo}–{hi}',
+  'order.temperament.text': 'Fourths are slightly wide and fifths slightly narrow, at the rates shown. Thirds beat faster the higher they lie; compare each new interval with the one of the same kind below it. If fourths and fifths are tuned too pure, F3–A3 beats too fast.',
+  'order.upper': 'Octaves {lo}–{hi}',
+  'order.upper.text': 'Keep the strip in. Each key as an octave from the temperament, checked with the third and tenth (M3–M10) and with the fourth and fifth.',
+  'order.treble': 'Treble {lo}–{hi}',
+  'order.treble.text': 'A wedge between strings 2 and 3 of the key leaves string 1. Tune it as an octave from below, then the other strings pure against it. High up: short, firm strikes, listen right after the attack, and check against two or three octaves down.',
+  'order.pull': 'Pull the strip {lo}–{hi}',
+  'order.pull.text': 'One key at a time from {lo} down to {hi}: the outer strings pure against the middle one.',
+  'order.bass': 'Bass {lo}–{hi}',
+  'order.bass.text': 'Two keys at a time from {lo} down: wedge so one string sounds, tune both as octaves from above, then the other strings. Longer strikes; let the note ring. In the deep bass the twelfth and double octave tell more than the octave, and the beats get slower further down. Keys with one string have no unison; set the string counts under Piano.',
+  'order.finish': 'Finish',
+  'order.finish.task': 'Every key measured in this pass is within tolerance.',
+  'order.finish.text': 'Firm test blows across the keyboard, then play through the circle of fifths and listen. The keys listed are the ones outside tolerance when this step began.',
+
   'save.idle': 'Saved',
   'save.dirty': 'Changed',
   'save.saving': 'Saving …',
@@ -305,6 +373,7 @@ export default {
   <li><strong>Tune A3–A4 first</strong>, then upwards octave by octave, the bass last.</li>
   <li><strong>New pass</strong> next time. The history shows how far the piano has drifted.</li>
 </ol>
+<p><strong>Tuning order</strong> (O) goes through these steps key by key: pitch check, pitch raise, felt strip, temperament by fourths and fifths, treble, bass, with intervals to check by ear and their beat rates. It moves on after two strikes in a row in tune. Other keys and modes can be used meanwhile; it waits on its key.</p>
 <h3>Why stretch?</h3>
 <p>Strings are stiff, so the overtones lie slightly above integer multiples: f<sub>n</sub> = n·f₀·√(1 + B·n²). B, the inharmonicity, is largest in the treble and in short bass strings.</p>
 <p>Beatless octaves require the upper note's fundamental to match the lower note's second (fourth, sixth) partial. So the treble is tuned sharp and the bass flat, typically 20–40 cents at the ends.</p>
@@ -316,5 +385,5 @@ export default {
 <p><strong>Strobe:</strong> one ring per partial behind the needle, numbered at the right end: innermost the measured one, then the two octaves above it. Still = in tune, turning clockwise = too high. If the inner ring stands still but the others turn, the string's inharmonicity differs from the model; measure its inharmonicity under <em>Partials vs target</em>.</p>
 <p><strong>Sine tone:</strong> choose Sine under <em>Reference tone</em> and click a key. Tune until the beats disappear.</p>
 <p><strong>Temperament:</strong> how the fifths are distributed within the octave. Equal temperament is the standard for pianos; the historical ones under Tuning are for early music.</p>
-<p class="keys-hint">Keyboard: ← → change key, L locks, A auto, T plays or stops the target tone, S opens settings.</p>`,
+<p class="keys-hint">Keyboard: ← → change key, L locks, A auto, O tuning order, T plays or stops the target tone, S opens settings.</p>`,
 };

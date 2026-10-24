@@ -51,7 +51,7 @@ export function buildOrder({ top, twoStringsTo = 0, oneStringTo = 0 }, recheck =
     // From the middle up, then down: all strings, within a few cents.
     { id: 'raise', loose: true, tasks: [...range(37, top), ...range(36, 1)].map((k) => ({ k, what: 'raise' })) },
     { id: 'strip', tasks: [] },
-    { id: 'middle', tasks: [{ k: 49, what: 'middle' }, { k: 37, from: 49, what: 'middle', checks: [[33, 37], [33, 49]] }] },
+    { id: 'middle', tasks: [{ k: 49, what: 'middle' }, { k: 37, from: 49, what: 'middle', checks: [[37, 49, [4, 2]], [33, 37], [33, 49]] }] },
     { id: 'temperament', tasks: TEMPERAMENT.map(([k, from, checks]) => ({ k, from, what: 'middle', checks })) },
     { id: 'upper', tasks: range(45, STRIP[1] - 1).map((k) => ({ k, from: k - 12, what: 'middle', checks: up(k) })) },
     { id: 'treble', tasks: range(STRIP[1] + 1, top).flatMap((k) => [{ k, from: k - 12, what: 'one', checks: up(k) }, { k, what: 'unison' }]) },

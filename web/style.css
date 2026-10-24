@@ -330,6 +330,12 @@ select:disabled { opacity: 0.55; }
 .chk[data-done="1"]::before { content: "✓ "; }
 .survey-intro { margin: 0; font-size: 13px; color: var(--muted); max-width: 80ch; }
 .key.plan { outline: 2px dashed var(--accent); outline-offset: -5px; }
+/* Tuning order: the panel of the survey, plus checks and a toggle. */
+#btn-order[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.order-panel select { font-size: 13px; padding-block: 3px; max-width: 100%; }
+.order-state { margin: -4px 0 0; font-size: 14px; color: var(--good); }
+.order-state:empty { display: none; }
+.chk.main { border-color: var(--accent); color: var(--ink); }
 
 /* Settings drawer */
 body.drawer-open { overflow: hidden; }

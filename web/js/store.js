@@ -41,6 +41,7 @@ export function newTuning(name = '') {
     partials: {}, // key -> chosen partial (if not the default)
     keys: {}, // key -> { hz, n, bhz, bn, at, mapped }; mapped = surveyed
     passStartedAt: now,
+    order: { step: 0, i: 0 }, // where the tuning order is in this pass
     rev: 0, // server revision; set on every save
     history: [], // finished passes
   };

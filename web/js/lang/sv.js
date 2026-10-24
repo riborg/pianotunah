@@ -111,6 +111,74 @@ export default {
   'survey.skippedMany': ' {n} tangenter överhoppade.',
   'survey.doneFull': 'Kartläggningen är klar: {n} tangenter mätta, inharmonicitet för {b}. Se Referens A4 under Stämning för hur pianot ligger.',
 
+  'order.button': 'Arbetsordning',
+  'order.buttonTitle': 'Steg för steg genom stämningen (O)',
+  'order.title': 'Arbetsordning',
+  'order.step': 'Steg',
+  'order.prev': 'Föregående',
+  'order.next': 'Nästa',
+  'order.nextKey': 'Nästa tangent',
+  'order.nextStep': 'Nästa steg',
+  'order.close': 'Stäng',
+  'order.progress': 'tangent {i} av {n}',
+  'order.back': 'Tillbaka till {name}',
+  'order.confirm': 'I stäm. Slå an kraftigt en gång till för att se att den ligger kvar.',
+  'order.done': 'Arbetsordningen är klar.',
+  'order.how': 'Sätt stämskruven så att strängen ligger kvar. Arbetsordningen går vidare efter två kraftiga anslag i rad inom toleransen.',
+  'order.beatless': 'svävningsfri',
+  'order.rate': '{n}/s {dir}',
+  'order.wide': 'vid',
+  'order.narrow': 'trång',
+  'order.finePass': 'Klar: ny omgång för finstämningen',
+  'iv.3': 'liten ters',
+  'iv.4': 'stor ters',
+  'iv.5': 'kvart',
+  'iv.7': 'kvint',
+  'iv.9': 'stor sext',
+  'iv.12': 'oktav',
+  'iv.16': 'decima',
+  'iv.19': 'duodecima',
+  'iv.24': 'dubbeloktav',
+  'iv.28': 'septdecima',
+
+  'order.task.raise': 'Dra upp {name}, alla strängar.',
+  'order.task.middle': 'Stäm {name}.',
+  'order.task.middleFrom': 'Stäm {name} mot {from} ({iv}).',
+  'order.task.one': 'Kila {name} så att en sträng klingar och stäm den mot {from}.',
+  'order.task.single': 'Stäm {name} mot {from}.',
+  'order.task.unison2': 'Ta bort kilen och stäm andra strängen i {name} ren mot den första.',
+  'order.task.unison3': 'Flytta kilen så att sträng 1 och 2 i {name} klingar och stäm 2 ren mot 1; ta sedan bort den och stäm 3 mot båda.',
+  'order.task.pull': 'Ta ur filten vid {name} och stäm de yttre strängarna rena mot den mittersta.',
+  'order.task.recheck': '{name} ligger {c} cent fel: stäm om den.',
+
+  'order.pitch': 'Kontrollera tonhöjden',
+  'order.pitch.task': 'Kartlägg alla A för att se hur pianot ligger.',
+  'order.pitch.text': 'Ställ in referensen under Stämning först: 440 Hz, eller 442 om pianot ska spela med orkester. Kartläggningen mäter A0–A7, eftersom diskanten och basen ofta ligger längre ifrån än A4.',
+  'order.pitch.unknown': 'Inte mätt än.',
+  'order.pitch.off': 'Mitten ligger {c} cent från målet: grovstäm först.',
+  'order.pitch.near': 'Mitten ligger {c} cent från målet: ingen grovstämning behövs, gå vidare till filten.',
+  'order.raise': 'Grovstämning',
+  'order.raise.task': 'Grovstämning.',
+  'order.raise.text': 'Bara när pianot ligger 10 cent fel eller mer. En snabb omgång över alla tangenter och alla strängar, utan filt, från mitten upp till toppen och sedan ner till botten, inom några cent. Överdraget stämmer varje tangent förbi målet så att pianot sätter sig nära det. Mer än 50 cent lågt: två grovstämningar. Gamla strängar kan brista; höj i etapper. Finstämningen kan göras samma dag.',
+  'order.strip': 'Filt {lo}–{hi}',
+  'order.strip.task': 'Dämpa de yttre strängarna i {lo}–{hi} med filten.',
+  'order.strip.text': 'Bara mittensträngen i varje tangent ska klinga. På ett pianino: håll högerpedalen nere när du sätter i filten eller en kil, så att dämmarna inte böjs. Filten ska ligga fritt från hammarnas anslagspunkt: tryck fram några hammare och kontrollera. Tryck Nästa när den sitter.',
+  'order.middle': 'A4 och A3',
+  'order.middle.text': 'A4 till målet, sedan A3 som oktav under. Decimen F3–A4 ska sväva lika fort som tersen F3–A3 (oktav 4:2) eller något snabbare; svävar tersen snabbast ligger A3 för högt. F3 är inte stämd än, men jämförelsen håller ändå.',
+  'order.temperament': 'Temperering {lo}–{hi}',
+  'order.temperament.text': 'Kvarter något vida och kvinter något trånga, med svävningarna som visas. Terserna svävar snabbare ju högre de ligger; jämför varje nytt intervall med samma slags intervall under. Stäms kvarter och kvinter för rent svävar F3–A3 för snabbt.',
+  'order.upper': 'Oktaver {lo}–{hi}',
+  'order.upper.text': 'Låt filten sitta kvar. Varje tangent som oktav mot tempereringen, kontrollerad med ters och decima (M3–M10) och med kvart och kvint.',
+  'order.treble': 'Diskant {lo}–{hi}',
+  'order.treble.text': 'En kil mellan sträng 2 och 3 i tangenten lämnar sträng 1. Stäm den som oktav nedifrån, sedan de andra strängarna rena mot den. Högt upp: korta, kraftiga anslag, lyssna direkt efter anslaget och kontrollera mot två–tre oktaver ner.',
+  'order.pull': 'Ta ur filten {lo}–{hi}',
+  'order.pull.text': 'En tangent i taget från {lo} ner till {hi}: de yttre strängarna rena mot den mittersta.',
+  'order.bass': 'Bas {lo}–{hi}',
+  'order.bass.text': 'Två tangenter i taget från {lo} och nedåt: kila så att en sträng klingar, stäm båda som oktaver uppifrån, sedan de andra strängarna. Längre anslag; låt tonen klinga. I djupbasen säger duodecima och dubbeloktav mer än oktaven, och svävningarna blir långsammare ju längre ner. Tangenter med en sträng saknar kor; ställ in antalet strängar under Piano.',
+  'order.finish': 'Avslut',
+  'order.finish.task': 'Alla tangenter som mätts i omgången ligger inom toleransen.',
+  'order.finish.text': 'Kraftiga anslag över hela klaviaturen, spela sedan igenom kvintcirkeln och lyssna. Tangenterna i listan låg utanför toleransen när steget började.',
+
   'save.idle': 'Sparad',
   'save.dirty': 'Ändrad',
   'save.saving': 'Sparar …',
@@ -305,6 +373,7 @@ export default {
   <li><strong>Stäm A3–A4 först</strong>, sedan uppåt oktav för oktav, sist basen.</li>
   <li><strong>Ny omgång</strong> nästa gång. Historiken visar hur mycket pianot drivit.</li>
 </ol>
+<p><strong>Arbetsordning</strong> (O) går igenom stegen tangent för tangent: tonhöjd, grovstämning, filt, temperering med kvarter och kvinter, diskant, bas, med intervall att kontrollera efter gehör och deras svävningar. Den går vidare efter två anslag i rad i stäm. Andra tangenter och lägen går att använda under tiden; den väntar på sin tangent.</p>
 <h3>Varför stretch?</h3>
 <p>Strängar är styva, så övertonerna ligger något över heltalsmultipler: f<sub>n</sub> = n·f₀·√(1 + B·n²). B, inharmoniciteten, är störst i diskanten och i korta bassträngar.</p>
 <p>Rena oktaver kräver att den övre tonens grundton matchar den undre tonens andra (fjärde, sjätte) delton. Därför stäms diskanten högre och basen lägre, typiskt 20–40 cent i ändarna.</p>
@@ -316,5 +385,5 @@ export default {
 <p><strong>Strobe:</strong> en ring per deltons bakom visaren, numrerad i högra änden: innerst den uppmätta, sedan de två oktaverna ovanför. Stilla = rent, snurrar medurs = för högt. Står den inre ringen still men de andra snurrar, avviker strängens inharmonicitet från modellen; mät dess inharmonicitet under <em>Deltoner mot mål</em>.</p>
 <p><strong>Sinuston:</strong> välj Sinus under <em>Referenston</em> och klicka på en tangent. Stäm tills svävningarna försvinner.</p>
 <p><strong>Temperatur:</strong> hur kvinterna fördelas inom oktaven. Liksvävande är standard för piano; de historiska under Stämning är för tidig musik.</p>
-<p class="keys-hint">Tangentbord: ← → byter tangent, L låser, A auto, T spelar eller stoppar målton, S öppnar inställningar.</p>`,
+<p class="keys-hint">Tangentbord: ← → byter tangent, L låser, A auto, O arbetsordning, T spelar eller stoppar målton, S öppnar inställningar.</p>`,
 };
