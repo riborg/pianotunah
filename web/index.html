@@ -200,6 +200,12 @@
         <option value="85" data-i18n="piano.keys85">85 (A0–A7, older piano)</option>
       </select>
 
+      <label for="set-two"><span data-i18n="piano.twoStrings">Two strings up to key</span> <output id="out-two"></output></label>
+      <input id="set-two" class="num-in" type="number" min="0" max="88" step="1" inputmode="numeric">
+      <label for="set-one"><span data-i18n="piano.oneString">One string up to key</span> <output id="out-one"></output></label>
+      <input id="set-one" class="num-in" type="number" min="0" max="88" step="1" inputmode="numeric">
+      <p class="desc" data-i18n="piano.stringsDesc">Counted from A0 = 1; 0 = none. The tuning order uses it for which keys need a wedge and which have no unison to tune.</p>
+
       <label for="set-notes" data-i18n="piano.notes">Notes</label>
       <textarea id="set-notes" rows="3" data-i18n-placeholder="piano.notesHint"></textarea>
     </div>

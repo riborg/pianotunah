@@ -252,6 +252,10 @@ export const DEFAULT_SETTINGS = {
   keyCount: 88, // 88 (A0–C8) or 85 (A0–A7, older pianos)
   overpull: 0,
   tolerance: 1,
+  // Strings per key, counted from A0: keys up to twoStringsTo have two, up to
+  // oneStringTo one (0 = none), the rest three. Used by the tuning order.
+  twoStringsTo: 32,
+  oneStringTo: 0,
 };
 
 // The temperament octave A3–A4 (keys 37–49) is tuned first. From there the

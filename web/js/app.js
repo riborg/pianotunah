@@ -291,6 +291,8 @@ function renderSettings() {
   $('set-kind').value = s.pianoKind;
   $('set-size').value = s.sizeCm;
   $('set-keys').value = String(top());
+  $('set-two').value = s.twoStringsTo;
+  $('set-one').value = s.oneStringTo;
   $('set-temperament').value = s.temperament;
   $('set-root').value = s.root;
   if (s.temperament !== 'et') $('temper-details').open = true; // never hide an active historical temperament
@@ -321,6 +323,7 @@ function renderSettingDescs() {
   $('out-extra-treble').textContent = tr('tuning.atC8', { c: fmtC(Number(s.extraTreble), 0) });
   $('out-extra-bass').textContent = tr('tuning.atA0', { c: Number(s.extraBass) ? '−' + num(Number(s.extraBass), 0) : '±0' });
   $('out-overpull').textContent = s.overpull + (lang() === 'sv' ? ' %' : '%');
+  for (const [id, k] of [['out-two', s.twoStringsTo], ['out-one', s.oneStringTo]]) $(id).textContent = k ? kName(k) : tr('piano.stringsNone');
 }
 
 function renderRef() {
@@ -1453,6 +1456,18 @@ function bindEvents() {
     setSetting('keyCount', Number(e.target.value));
     applyKeyCount();
   });
+  // Strings per key: within the keyboard, one string never above two.
+  const setStrings = () => {
+    const clamp = (id) => Math.max(0, Math.min(top(), Math.round(Number($(id).value) || 0)));
+    const two = clamp('set-two');
+    const one = Math.min(clamp('set-one'), two);
+    $('set-two').value = S().twoStringsTo = two;
+    $('set-one').value = S().oneStringTo = one;
+    renderSettingDescs();
+    markDirty();
+  };
+  on('set-two', 'change', setStrings);
+  on('set-one', 'change', setStrings);
   bindSetting('set-temperament', 'temperament');
   bindSetting('set-root', 'root', Number);
   bindSetting('set-stretch', 'stretch');
