@@ -1524,7 +1524,25 @@ function refreshColors() {
 // ---------------------------------------------------------------------------
 // Settings drawer
 
+// The reference popover at the A4 chip borrows the reference controls from
+// the Tuning tab while it is open.
+function openRefPop() {
+  $('ref-pop').prepend($('ref-box'));
+  $('ref-pop').hidden = false;
+  $('btn-ref-chip').setAttribute('aria-expanded', 'true');
+  $('ref-pop').focus();
+}
+
+function closeRefPop(focusChip = false) {
+  if ($('ref-pop').hidden) return;
+  $('ref-pop').hidden = true;
+  $('ref-home').append($('ref-box'));
+  $('btn-ref-chip').setAttribute('aria-expanded', 'false');
+  if (focusChip) $('btn-ref-chip').focus();
+}
+
 function openDrawer(tab) {
+  closeRefPop();
   $('drawer').hidden = $('drawer-backdrop').hidden = false;
   document.body.classList.add('drawer-open');
   $('btn-settings').setAttribute('aria-expanded', 'true');
@@ -1572,7 +1590,11 @@ function bindEvents() {
   on('btn-settings', 'click', () => ($('drawer').hidden ? openDrawer() : closeDrawer()));
   on('drawer-close', 'click', closeDrawer);
   on('drawer-backdrop', 'click', closeDrawer);
-  on('btn-ref-chip', 'click', () => openDrawer('tuning'));
+  on('btn-ref-chip', 'click', () => ($('ref-pop').hidden ? openRefPop() : closeRefPop()));
+  on('ref-more', 'click', () => openDrawer('tuning'));
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.ref-anchor')) closeRefPop();
+  });
   onAll('[data-tab]', (b) => showTab(b.dataset.tab));
   on('btn-mic', 'click', () => (mic.running ? stopMic() : startMic()));
   on('btn-rec', 'click', toggleRecording);
@@ -1782,6 +1804,7 @@ function bindEvents() {
 
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !$('ref-pop').hidden) return closeRefPop(true);
     if (e.key === 'Escape' && !$('drawer').hidden) return closeDrawer();
     if (e.target.closest('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
     const action = {

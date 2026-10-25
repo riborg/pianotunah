@@ -255,6 +255,7 @@ export default {
   'size.parlourGrand': 'salongsflygel',
   'size.concertGrand': 'konsertflygel',
 
+  'ref.more': 'Fler stämningsinställningar',
   'ref.title': 'Referens A4',
   'ref.input': 'Referensfrekvens i Hz',
   'ref.fit': 'Använd pianots nuvarande tonhöjd',

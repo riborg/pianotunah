@@ -39,7 +39,12 @@
   <section class="tuner card" aria-label="Tuner" data-i18n-aria-label="tuner.label">
     <div class="tuner-head">
       <div class="head-left">
-        <button id="btn-ref-chip" class="ref-chip" type="button" title="Change reference" data-i18n-title="tuner.refTitle"></button>
+        <div class="ref-anchor">
+          <button id="btn-ref-chip" class="ref-chip" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="ref-pop" title="Change reference" data-i18n-title="tuner.refTitle"></button>
+          <div id="ref-pop" class="ref-pop" role="dialog" aria-labelledby="ref-h" tabindex="-1" hidden>
+            <button id="ref-more" class="btn ghost wide" type="button" data-i18n="ref.more">More tuning settings</button>
+          </div>
+        </div>
         <div class="level-box">
           <span class="mini-label" data-i18n="tuner.level">Mic level</span>
           <div class="level"><div class="level-bar" id="level-bar"></div></div>
@@ -250,7 +255,9 @@
   </section>
 
   <section class="panel" role="tabpanel" data-panel="tuning" hidden>
-    <h3 data-i18n="ref.title">Reference A4</h3>
+    <!-- The reference moves to the popover at the A4 chip while it is open. -->
+    <div id="ref-home"><div id="ref-box" class="ref-box">
+    <h3 id="ref-h" data-i18n="ref.title">Reference A4</h3>
     <div class="ref-row">
       <button class="btn icon sm" type="button" data-ref="-1"></button>
       <button class="btn icon sm" type="button" data-ref="-0.1"></button>
@@ -275,6 +282,7 @@
     <button id="btn-fit-ref" class="btn ghost wide" type="button" data-i18n="ref.fit">Use the piano's current pitch</button>
     <p class="note-text" id="ref-advice"></p>
     <button id="btn-overpull" class="btn ghost wide" type="button" hidden></button>
+    </div></div>
 
     <div class="form">
       <label for="set-stretch" data-i18n="tuning.stretch">Stretch</label>

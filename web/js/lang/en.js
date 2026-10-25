@@ -255,6 +255,7 @@ export default {
   'size.parlourGrand': 'parlour grand',
   'size.concertGrand': 'concert grand',
 
+  'ref.more': 'More tuning settings',
   'ref.title': 'Reference A4',
   'ref.input': 'Reference frequency in Hz',
   'ref.fit': 'Use the piano\'s current pitch',
