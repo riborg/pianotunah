@@ -43,6 +43,8 @@ export function trNodes(key, params) {
 export function translateDom(root = document) {
   document.documentElement.lang = cur;
   for (const el of root.querySelectorAll('[data-i18n]')) el.textContent = tr(el.dataset.i18n);
+  // Reserves the width of the bold label in segments and tabs (style.css).
+  for (const el of root.querySelectorAll('.seg, .tab')) el.dataset.label = el.textContent;
   for (const el of root.querySelectorAll('[data-i18n-html]')) el.innerHTML = tr(el.dataset.i18nHtml);
   for (const attr of ['title', 'aria-label', 'placeholder']) {
     for (const el of root.querySelectorAll(`[data-i18n-${attr}]`)) el.setAttribute(attr, tr(el.getAttribute(`data-i18n-${attr}`)));

@@ -24,7 +24,7 @@ const SPEC_COLS = 100; // spectrogram history, ≈ 9 s
 const SPEC_BINS = 48;
 const SPEC_CENTS = 30;
 const REC_MAX_S = 120;
-const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab', curve: 'pianotunah.curve', partials: 'pianotunah.partials', beats: 'pianotunah.beats', mic: 'pianotunah.mic', order: 'pianotunah.order' };
+const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', toneOnKey: 'pianotunah.toneOnKey', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab', curve: 'pianotunah.curve', partials: 'pianotunah.partials', beats: 'pianotunah.beats', mic: 'pianotunah.mic', order: 'pianotunah.order' };
 
 const mic = new Mic();
 const tones = new TonePlayer();
@@ -77,7 +77,8 @@ const state = {
   orderPos: { step: 0, i: 0 },
   orderConfirm: null, // strikes towards the current task, see order.confirmReading
   orderRecheck: null, // keys outside tolerance when the last step began
-  toneMode: 'off', // off | piano | sine
+  toneMode: 'piano', // piano | sine
+  toneOnKey: false, // clicking a key also plays the tone
   refUntil: 0, // reference tone audible in the microphone until this time
   refTainted: false,
   wakeLock: null,
@@ -583,7 +584,8 @@ function selectKey(k, manual = true) {
 function setMode(m) {
   if (m !== state.mode) diag(`mode ${m}`);
   state.mode = m;
-  for (const id of ['auto', 'lock', 'survey']) $('mode-' + id).setAttribute('aria-pressed', m === id);
+  for (const id of ['auto', 'lock']) $('mode-' + id).setAttribute('aria-pressed', m === id);
+  $('btn-survey').setAttribute('aria-pressed', m === 'survey');
   state.survey = m === 'survey' ? survey.newKeyState() : null;
   state.run = m === 'survey' ? newRun() : null;
   state.bReadings = [];
@@ -686,7 +688,8 @@ async function renderMicList() {
 }
 
 function renderMicButton() {
-  $('btn-mic').textContent = tr(mic.running ? 'mic.stop' : 'mic.start');
+  $('mic-txt').textContent = tr(mic.running ? 'mic.stop' : 'mic.start');
+  $('mic-alt').textContent = tr(mic.running ? 'mic.start' : 'mic.stop');
   $('btn-mic').classList.toggle('primary', !mic.running);
   renderRecButton();
 }
@@ -1289,7 +1292,6 @@ function stopSine() {
 }
 
 function playCurrent() {
-  if (state.toneMode === 'off') return;
   if (state.toneMode === 'piano') playPiano();
   else if (tones.sineOn) stopSine();
   else startSine();
@@ -1298,21 +1300,34 @@ function playCurrent() {
 function setToneMode(m) {
   state.toneMode = m;
   if (m !== 'sine') stopSine();
-  document.querySelectorAll('[data-tone]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.tone === m));
+  document.querySelectorAll('[data-tone]').forEach((b) => b.setAttribute('aria-checked', b.dataset.tone === m));
+  document.querySelectorAll('[data-tone-label]').forEach((s) => s.toggleAttribute('data-off', s.dataset.toneLabel !== m));
   try { localStorage.setItem(LS.tone, m); } catch { /* optional */ }
   renderToneButton();
+}
+
+function setToneOnKey(on) {
+  state.toneOnKey = on;
+  $('tone-on-key').setAttribute('aria-checked', on);
+  try { localStorage.setItem(LS.toneOnKey, on ? 'on' : 'off'); } catch { /* optional */ }
+}
+
+function setToneMenuOpen(open) {
+  $('tone-menu').hidden = !open;
+  $('btn-tone-menu').setAttribute('aria-expanded', open);
 }
 
 // The sine sounds at the measured partial, in the bass and tenor an octave or
 // more above the key, so the button names the note it plays.
 function renderToneButton() {
   const b = $('btn-tone');
-  const n = partialOf(state.key);
+  const n = state.toneMode === 'sine' ? partialOf(state.key) : 1;
   const note = kName(Math.min(KEY_COUNT, state.key + Math.round(12 * Math.log2(n))));
   const what = n > 1 ? tr('tone.partialNote', { note, n }) : note;
-  b.textContent = tr(tones.sineOn ? 'tone.stopSine' : state.toneMode === 'sine' ? 'tone.playSine' : 'tone.play', { what });
+  b.textContent = `${tones.sineOn ? '■' : '▶'} ${note}`;
+  b.title = tr(tones.sineOn ? 'tone.stopSine' : state.toneMode === 'sine' ? 'tone.playSine' : 'tone.playTitle', { what });
+  b.setAttribute('aria-label', b.title);
   b.setAttribute('aria-pressed', tones.sineOn);
-  b.hidden = state.toneMode === 'off';
 }
 
 // ---------------------------------------------------------------------------
@@ -1338,7 +1353,7 @@ function updateReadout() {
   const hint = $('unison-hint');
   hint.hidden = !(mic.running && state.beating);
   if (!hint.hidden) hint.textContent = tr('unison.hint');
-  $('level-bar').style.width = `${Math.max(0, Math.min(100, (state.level + 80) * 1.4))}%`;
+  $('level-bar').style.width = mic.running ? `${Math.max(0, Math.min(100, (state.level + 80) * 1.4))}%` : '0';
   renderPartials();
 }
 
@@ -1524,7 +1539,25 @@ function refreshColors() {
 // ---------------------------------------------------------------------------
 // Settings drawer
 
+// The reference popover at the A4 chip borrows the reference controls from
+// the Tuning tab while it is open.
+function openRefPop() {
+  $('ref-pop').prepend($('ref-box'));
+  $('ref-pop').hidden = false;
+  $('btn-ref-chip').setAttribute('aria-expanded', 'true');
+  $('ref-pop').focus();
+}
+
+function closeRefPop(focusChip = false) {
+  if ($('ref-pop').hidden) return;
+  $('ref-pop').hidden = true;
+  $('ref-home').append($('ref-box'));
+  $('btn-ref-chip').setAttribute('aria-expanded', 'false');
+  if (focusChip) $('btn-ref-chip').focus();
+}
+
 function openDrawer(tab) {
+  closeRefPop();
   $('drawer').hidden = $('drawer-backdrop').hidden = false;
   document.body.classList.add('drawer-open');
   $('btn-settings').setAttribute('aria-expanded', 'true');
@@ -1572,7 +1605,11 @@ function bindEvents() {
   on('btn-settings', 'click', () => ($('drawer').hidden ? openDrawer() : closeDrawer()));
   on('drawer-close', 'click', closeDrawer);
   on('drawer-backdrop', 'click', closeDrawer);
-  on('btn-ref-chip', 'click', () => openDrawer('tuning'));
+  on('btn-ref-chip', 'click', () => ($('ref-pop').hidden ? openRefPop() : closeRefPop()));
+  on('ref-more', 'click', () => openDrawer('tuning'));
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.ref-anchor')) closeRefPop();
+  });
   onAll('[data-tab]', (b) => showTab(b.dataset.tab));
   on('btn-mic', 'click', () => (mic.running ? stopMic() : startMic()));
   on('btn-rec', 'click', toggleRecording);
@@ -1588,7 +1625,7 @@ function bindEvents() {
     setMode('survey');
     if (!mic.running) startMic();
   };
-  on('mode-survey', 'click', startSurvey);
+  on('btn-survey', 'click', () => (state.mode === 'survey' ? setMode('lock') : startSurvey()));
   on('btn-curve-survey', 'click', () => {
     setSurveyPlan('quick');
     startSurvey();
@@ -1624,11 +1661,23 @@ function bindEvents() {
     if (!k) return;
     const prev = state.key;
     selectKey(k);
+    if (!state.toneOnKey) return;
     if (state.toneMode === 'piano') playPiano();
-    else if (state.toneMode === 'sine') (tones.sineOn && k === prev ? stopSine : startSine)();
+    else (tones.sineOn && k === prev ? stopSine : startSine)();
   });
-  onAll('[data-tone]', (b) => setToneMode(b.dataset.tone));
   on('btn-tone', 'click', playCurrent);
+  on('btn-tone-menu', 'click', () => setToneMenuOpen($('tone-menu').hidden));
+  onAll('[data-tone]', (b) => {
+    setToneMode(b.dataset.tone);
+    setToneMenuOpen(false);
+  });
+  on('tone-on-key', 'click', () => {
+    setToneOnKey(!state.toneOnKey);
+    setToneMenuOpen(false);
+  });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.split')) setToneMenuOpen(false);
+  });
 
   const setPartial = (d) => {
     const k = state.key;
@@ -1782,6 +1831,11 @@ function bindEvents() {
 
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !$('ref-pop').hidden) return closeRefPop(true);
+    if (e.key === 'Escape' && !$('tone-menu').hidden) {
+      setToneMenuOpen(false);
+      return $('btn-tone-menu').focus();
+    }
     if (e.key === 'Escape' && !$('drawer').hidden) return closeDrawer();
     if (e.target.closest('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
     const action = {
@@ -1849,15 +1903,20 @@ async function boot() {
   renderThemeButton();
   renderMicButton();
   let plan = 'quick';
-  let tone = 'off';
+  let tone = 'piano';
+  let onKey = false;
   try {
     plan = localStorage.getItem(LS.plan) === 'full' ? 'full' : 'quick';
-    tone = localStorage.getItem(LS.tone) || 'off';
+    // Before 1.8 the tone had an Off choice, and Piano and Sine played on key clicks.
+    const saved = localStorage.getItem(LS.tone);
+    if (saved === 'sine') tone = 'sine';
+    onKey = (localStorage.getItem(LS.toneOnKey) || (saved && saved !== 'off' ? 'on' : 'off')) === 'on';
     if (localStorage.getItem(LS.curve) === 'closed') setCurveOpen(false);
     for (const name of ['beats', 'partials']) if (localStorage.getItem(LS[name]) === 'open') setFoldOpen(name, true);
   } catch { /* optional */ }
   setSurveyPlan(plan);
   setToneMode(tone);
+  setToneOnKey(onKey);
   try { if (localStorage.getItem(LS.order) === 'on') setOrderOn(true); } catch { /* optional */ }
   fetch('api/version')
     .then((r) => r.json())
