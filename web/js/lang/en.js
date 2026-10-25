@@ -155,7 +155,7 @@ export default {
   'order.pitch.task': 'Survey all A to see where the piano is.',
   'order.pitch.text': 'Set the reference under Tuning first: 440 Hz, or 442 for playing with an orchestra. The survey measures A0–A7, since the treble and bass are often further off than A4.',
   'order.pitch.unknown': 'Not measured yet.',
-  'order.pitch.off': 'The middle is {c} cents from the target: do a pitch raise first.',
+  'order.pitch.off': 'The middle is {c} cents from the target: do a pitch raise first, or keep the piano\'s current pitch. On an old piano with fragile strings, keeping it can be the safer choice.',
   'order.pitch.near': 'The middle is {c} cents from the target: no pitch raise needed, go on to the felt strip.',
   'order.raise': 'Pitch raise',
   'order.raise.task': 'Pitch raise.',

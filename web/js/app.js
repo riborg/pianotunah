@@ -1244,6 +1244,7 @@ function renderOrderPanel() {
       setMode('survey');
       if (!mic.running) startMic();
     });
+    if (midBefore().length >= 3) orderButton('order-action2', tr('ref.fit'), fitRefToPiano);
   } else if (step.id === 'raise') {
     const mid = midBefore();
     const p = mid.length >= 3 ? recommendedOverpull(median(mid)) : 0;
