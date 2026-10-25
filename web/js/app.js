@@ -584,7 +584,8 @@ function selectKey(k, manual = true) {
 function setMode(m) {
   if (m !== state.mode) diag(`mode ${m}`);
   state.mode = m;
-  for (const id of ['auto', 'lock', 'survey']) $('mode-' + id).setAttribute('aria-pressed', m === id);
+  for (const id of ['auto', 'lock']) $('mode-' + id).setAttribute('aria-pressed', m === id);
+  $('btn-survey').setAttribute('aria-pressed', m === 'survey');
   state.survey = m === 'survey' ? survey.newKeyState() : null;
   state.run = m === 'survey' ? newRun() : null;
   state.bReadings = [];
@@ -1624,7 +1625,7 @@ function bindEvents() {
     setMode('survey');
     if (!mic.running) startMic();
   };
-  on('mode-survey', 'click', startSurvey);
+  on('btn-survey', 'click', () => (state.mode === 'survey' ? setMode('lock') : startSurvey()));
   on('btn-curve-survey', 'click', () => {
     setSurveyPlan('quick');
     startSurvey();

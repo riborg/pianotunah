@@ -85,7 +85,7 @@ const read = () =>
     return {
       key: Number($('note-sub').textContent.match(/\d+/)?.[0]),
       note: $('note-name').textContent,
-      mode: ['auto', 'lock', 'survey'].find((m) => $('mode-' + m).getAttribute('aria-pressed') === 'true'),
+      mode: ['auto', 'lock', 'survey'].find((m) => $(m === 'survey' ? 'btn-survey' : 'mode-' + m).getAttribute('aria-pressed') === 'true'),
       progress: $('survey-progress').textContent,
       step: $('survey-step').textContent,
       msg: $('message').hidden ? '' : $('message-text').textContent,
@@ -107,7 +107,7 @@ function strike(k) {
 // for the first 4 s on that key. skip: key to skip. stopAfter: number of keys
 // after which Finish is clicked.
 async function survey(plan, { wrong = {}, skip, stopAfter, maxMs = 400000 } = {}) {
-  if ((await read()).mode !== 'survey') await page.click('#mode-survey');
+  if ((await read()).mode !== 'survey') await page.click('#btn-survey');
   await page.click(`[data-plan="${plan}"]`);
   await sleep(300);
   const start = await read();

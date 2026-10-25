@@ -48,8 +48,6 @@
             <button id="ref-more" class="btn ghost wide" type="button" data-i18n="ref.more">More tuning settings</button>
           </div>
         </div>
-      </div>
-      <div class="head-right">
         <div class="split" role="group" aria-label="Reference tone" data-i18n-aria-label="tone.label">
           <button id="btn-tone" class="btn" type="button" aria-pressed="false"></button>
           <button id="btn-tone-menu" class="btn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="tone-menu" title="Reference tone" data-i18n-title="tone.label">
@@ -61,12 +59,16 @@
             <button id="tone-on-key" type="button" role="menuitemcheckbox" aria-checked="false"><b data-i18n="tone.onKey">Also play when a key is clicked</b></button>
           </div>
         </div>
+      </div>
+      <div class="head-right">
         <div class="modes mode-pick" role="group" aria-label="Mode" data-i18n-aria-label="tuner.mode">
           <button id="mode-auto" class="seg" type="button" aria-pressed="true" title="Detect the key automatically (A)" data-i18n="mode.auto" data-i18n-title="mode.autoTitle">Auto</button>
           <button id="mode-lock" class="seg" type="button" aria-pressed="false" title="Lock on the selected key (L)" data-i18n="mode.lock" data-i18n-title="mode.lockTitle">Lock</button>
-          <button id="mode-survey" class="seg" type="button" aria-pressed="false" title="Measure the piano key by key before tuning" data-i18n="mode.survey" data-i18n-title="mode.surveyTitle">Survey</button>
         </div>
-        <button id="btn-order" class="btn ghost" type="button" aria-pressed="false" aria-controls="order-panel" title="Step by step through the tuning (O)" data-i18n="order.button" data-i18n-title="order.buttonTitle">Tuning order</button>
+        <div class="flows">
+          <button id="btn-survey" class="btn ghost" type="button" aria-pressed="false" aria-controls="survey-panel" title="Measure the piano key by key before tuning" data-i18n="mode.survey" data-i18n-title="mode.surveyTitle">Survey</button>
+          <button id="btn-order" class="btn ghost" type="button" aria-pressed="false" aria-controls="order-panel" title="Step by step through the tuning (O)" data-i18n="order.button" data-i18n-title="order.buttonTitle">Tuning order</button>
+        </div>
       </div>
     </div>
 

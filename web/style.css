@@ -176,6 +176,7 @@ select:disabled { opacity: 0.55; }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
 .btn.danger { background: var(--bad); border-color: var(--bad); color: #fff; }
 .btn.ghost { background: transparent; }
+.btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .btn.icon { min-width: 36px; padding: 4px 8px; font-size: 18px; line-height: 1.2; }
 .btn.icon.sm { min-width: 0; font-size: 13px; padding: 4px 8px; font-family: var(--f-mono); }
 .btn.wide { width: 100%; }
@@ -247,9 +248,10 @@ select:disabled { opacity: 0.55; }
 /* Tuner */
 .tuner { display: flex; flex-direction: column; gap: 14px; }
 .tuner-head { display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; }
-/* Left: reference pitch and mic level. Right: reference tone and mode. */
+/* Left: reference pitch and tone. Right: key mode, then survey and tuning order. */
 .head-left, .head-right { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
 .head-right { margin-left: auto; justify-content: flex-end; }
+.flows { display: flex; gap: 6px; }
 .ref-chip {
   border: 1px solid var(--line);
   background: var(--sunk) var(--chev) no-repeat right 10px center / 10px 7px;
@@ -346,7 +348,6 @@ select:disabled { opacity: 0.55; }
 .split { position: relative; display: inline-flex; }
 .split > .btn:first-child { border-radius: 7px 0 0 7px; min-width: 5.2em; text-align: left; }
 .split > .btn + .btn { border-radius: 0 7px 7px 0; margin-left: -1px; padding-right: 30px; background: var(--surface) var(--chev) no-repeat right 10px center / 10px 7px; }
-#btn-tone[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .stack { display: inline-grid; }
 .stack > * { grid-area: 1 / 1; }
 .stack > [data-off] { visibility: hidden; }
@@ -354,8 +355,9 @@ select:disabled { opacity: 0.55; }
   position: absolute;
   z-index: 20;
   top: calc(100% + 4px);
-  right: 0;
-  min-width: 240px;
+  left: 0;
+  width: max-content;
+  max-width: min(340px, calc(100vw - 32px));
   display: flex;
   flex-direction: column;
   padding: 4px;
@@ -393,7 +395,6 @@ select:disabled { opacity: 0.55; }
 .survey-intro { margin: 0; font-size: 13px; color: var(--muted); max-width: 80ch; }
 .key.plan { outline: 2px dashed var(--accent); outline-offset: -5px; }
 /* Tuning order: the panel of the survey, plus checks and a toggle. */
-#btn-order[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .order-panel select { font-size: 13px; padding-block: 3px; max-width: 100%; }
 .order-state { margin: -4px 0 0; font-size: 14px; color: var(--good); }
 .order-state:empty { display: none; }
@@ -627,9 +628,9 @@ details > .form { margin-top: 10px; }
   .tuner-head { position: relative; }
   .ref-anchor { position: static; }
   .ref-pop { width: auto; right: 0; }
-  .head-left { width: 100%; justify-content: center; }
-  .head-right { width: 100%; }
-  .mode-pick { width: 100%; order: -1; }
+  .head-left, .head-right { width: 100%; justify-content: space-between; gap: 8px; }
+  .head-right .seg, .flows .btn { padding-inline: 9px; }
+  .menu { left: auto; right: 0; }
   .plan-modes { order: 1; width: 100%; }
   .seg { white-space: nowrap; }
   .seg { flex: 1; }
