@@ -686,7 +686,8 @@ async function renderMicList() {
 }
 
 function renderMicButton() {
-  $('btn-mic').textContent = tr(mic.running ? 'mic.stop' : 'mic.start');
+  $('mic-txt').textContent = tr(mic.running ? 'mic.stop' : 'mic.start');
+  $('mic-alt').textContent = tr(mic.running ? 'mic.start' : 'mic.stop');
   $('btn-mic').classList.toggle('primary', !mic.running);
   renderRecButton();
 }
@@ -1338,7 +1339,7 @@ function updateReadout() {
   const hint = $('unison-hint');
   hint.hidden = !(mic.running && state.beating);
   if (!hint.hidden) hint.textContent = tr('unison.hint');
-  $('level-bar').style.width = `${Math.max(0, Math.min(100, (state.level + 80) * 1.4))}%`;
+  $('level-bar').style.width = mic.running ? `${Math.max(0, Math.min(100, (state.level + 80) * 1.4))}%` : '0';
   renderPartials();
 }
 

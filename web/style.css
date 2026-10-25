@@ -344,9 +344,12 @@ select:disabled { opacity: 0.55; }
 .tone-pick { display: flex; align-items: center; gap: 8px; }
 .tone-pick .seg { padding: 4px 10px; }
 #btn-tone[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.level-box { display: flex; align-items: center; gap: 8px; }
-.level { width: 90px; height: 6px; border-radius: 3px; background: var(--sunk); overflow: hidden; }
-.level-bar { height: 100%; width: 0; background: var(--accent); transition: width 80ms linear; }
+/* Mic button: the level is a line along its bottom edge. Both labels share
+   one grid cell, so the width stays when it switches between start and stop. */
+.mic-btn { position: relative; overflow: hidden; display: inline-grid; }
+.mic-btn > span { grid-area: 1 / 1; }
+#mic-alt { visibility: hidden; }
+.mic-level { position: absolute; left: 0; bottom: 0; height: 3px; width: 0; background: var(--accent); transition: width 80ms linear; }
 
 /* Survey */
 .survey-panel { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 8px; background: var(--sunk); border: 1px solid var(--accent); }
@@ -618,7 +621,7 @@ details > .form { margin-top: 10px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .key.flash, .drawer { animation: none; }
-  .kb-marker, .level-bar, .survey-bar i { transition: none; }
+  .kb-marker, .mic-level, .survey-bar i { transition: none; }
 }
 
 /* App */

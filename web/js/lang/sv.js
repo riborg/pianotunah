@@ -26,7 +26,6 @@ export default {
   'tuner.nextTitle': 'Nästa tangent (→)',
   'tuner.refTitle': 'Ändra referens',
   'tuner.mode': 'Läge',
-  'tuner.level': 'Mikrofonnivå',
   'mode.auto': 'Auto',
   'mode.autoTitle': 'Hitta tangenten automatiskt (A)',
   'mode.lock': 'Lås',

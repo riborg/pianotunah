@@ -26,7 +26,6 @@ export default {
   'tuner.nextTitle': 'Next key (→)',
   'tuner.refTitle': 'Change reference',
   'tuner.mode': 'Mode',
-  'tuner.level': 'Mic level',
   'mode.auto': 'Auto',
   'mode.autoTitle': 'Detect the key automatically (A)',
   'mode.lock': 'Lock',

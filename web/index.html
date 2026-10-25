@@ -32,7 +32,10 @@
     <span data-i18n="top.settings">Settings</span>
   </button>
   <button id="btn-rec-stop" class="btn danger" type="button" hidden></button>
-  <button id="btn-mic" class="btn primary" type="button">Start microphone</button>
+  <button id="btn-mic" class="btn primary mic-btn" type="button">
+    <span id="mic-txt"></span><span id="mic-alt" aria-hidden="true"></span>
+    <i class="mic-level" id="level-bar"></i>
+  </button>
 </header>
 
 <main class="layout">
@@ -44,10 +47,6 @@
           <div id="ref-pop" class="ref-pop" role="dialog" aria-labelledby="ref-h" tabindex="-1" hidden>
             <button id="ref-more" class="btn ghost wide" type="button" data-i18n="ref.more">More tuning settings</button>
           </div>
-        </div>
-        <div class="level-box">
-          <span class="mini-label" data-i18n="tuner.level">Mic level</span>
-          <div class="level"><div class="level-bar" id="level-bar"></div></div>
         </div>
       </div>
       <div class="head-right">
