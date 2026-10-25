@@ -105,11 +105,11 @@ export default {
   'survey.bKnown': 'Inharmonicitet redan uppmätt',
   'survey.bSkipped': 'Inharmonicitet: för svaga övertoner, hoppas över',
   'survey.b': 'Inharmonicitet {p}/{n}',
-  'survey.doneQuick': 'Kartläggningen av alla A är klar: inharmonicitet för {b} av {n} tangenter. Tangenterna däremellan interpoleras. Se Referens A4 under Stämning för hur pianot ligger.',
+  'survey.doneQuick': 'Kartläggningen av alla A är klar: inharmonicitet för {b} av {n} tangenter. Tangenterna däremellan interpoleras. Klicka på A4 = … Hz ovanför ratten för att se hur pianot ligger.',
   'survey.skipped': ' Överhoppade: {keys}.',
   'survey.bOutliers': ' B för {keys} avviker från grannarna och används inte; mät om med Mät inharmonicitet (B) under Deltoner mot mål.',
   'survey.skippedMany': ' {n} tangenter överhoppade.',
-  'survey.doneFull': 'Kartläggningen är klar: {n} tangenter mätta, inharmonicitet för {b}. Se Referens A4 under Stämning för hur pianot ligger.',
+  'survey.doneFull': 'Kartläggningen är klar: {n} tangenter mätta, inharmonicitet för {b}. Klicka på A4 = … Hz ovanför ratten för att se hur pianot ligger.',
 
   'order.button': 'Arbetsordning',
   'order.buttonTitle': 'Steg för steg genom stämningen (O)',
@@ -153,7 +153,7 @@ export default {
 
   'order.pitch': 'Kontrollera tonhöjden',
   'order.pitch.task': 'Kartlägg alla A för att se hur pianot ligger.',
-  'order.pitch.text': 'Ställ in referensen under Stämning först: 440 Hz, eller 442 om pianot ska spela med orkester. Kartläggningen mäter A0–A7, eftersom diskanten och basen ofta ligger längre ifrån än A4.',
+  'order.pitch.text': 'Ställ in referensen först, vid A4 = … Hz ovanför ratten: 440 Hz, eller 442 om pianot ska spela med orkester. Kartläggningen mäter A0–A7, eftersom diskanten och basen ofta ligger längre ifrån än A4.',
   'order.pitch.unknown': 'Inte mätt än.',
   'order.pitch.off': 'Mitten ligger {c} cent från målet: grovstäm först, eller behåll pianots nuvarande tonhöjd. På ett gammalt piano med sköra strängar kan det vara säkrast att behålla den.',
   'order.pitch.near': 'Mitten ligger {c} cent från målet: ingen grovstämning behövs, gå vidare till filten.',
@@ -369,7 +369,7 @@ export default {
   help: `<h3>Arbetsgång</h3>
 <ol>
   <li><strong>Kartlägg.</strong> Välj <em>Alla A</em> (A0–A7, ungefär en minut) eller <em>Alla tangenter</em> (3–5 minuter) i panelen som öppnas. Slå an tangenten som visas; appen går vidare själv och slutar när alla tangenter är klara.</li>
-  <li><strong>Välj tonhöjd.</strong> Ligger pianot lågt: <em>Använd pianots nuvarande tonhöjd</em> under Stämning, eller dra upp med överdrag.</li>
+  <li><strong>Välj tonhöjd.</strong> Ligger pianot lågt: <em>Använd pianots nuvarande tonhöjd</em> vid A4 = … Hz ovanför ratten, eller dra upp med överdrag.</li>
   <li><strong>Dämpa unisonerna</strong> med filtremsa. Stäm en sträng per ton, de övriga efter gehör mot den.</li>
   <li><strong>Stäm A3–A4 först</strong>, sedan uppåt oktav för oktav, sist basen.</li>
   <li><strong>Ny omgång</strong> nästa gång. Historiken visar hur mycket pianot drivit.</li>
@@ -382,7 +382,7 @@ export default {
 <h3>Mätningen</h3>
 <p>I basen mäts delton 6, 4 eller 2: grundtonen är svag och laptopmikrofoner hör dåligt under 100 Hz. En extern USB-mikrofon 20–40 cm ovanför strängarna hjälper; välj den under App.</p>
 <p><strong>Auto och Lås:</strong> Auto hittar tangenten ur ljudet. Tangenter som mätts i omgången känns igen där de låter, även långt från målet. En omätt tangent mitt emellan två toner: klicka på den på klaviaturen så låses den.</p>
-<p><strong>Överdrag:</strong> vid uppdragning sjunker redan stämda strängar när belastningen ökar. Med 25 % stäms en ton som låg −20 cent till +5. Under Stämning föreslår appen ett överdrag när mitten av pianot är mätt.</p>
+<p><strong>Överdrag:</strong> vid uppdragning sjunker redan stämda strängar när belastningen ökar. Med 25 % stäms en ton som låg −20 cent till +5. Vid A4 = … Hz föreslår appen ett överdrag när mitten av pianot är mätt.</p>
 <p><strong>Strobe:</strong> en ring per deltons bakom visaren, numrerad i högra änden: innerst den uppmätta, sedan de två oktaverna ovanför. Stilla = rent, snurrar medurs = för högt. Står den inre ringen still men de andra snurrar, avviker strängens inharmonicitet från modellen; mät dess inharmonicitet under <em>Deltoner mot mål</em>.</p>
 <p><strong>Sinuston:</strong> välj <em>Sinuston</em> i menyn bredvid ▶ och spela den. Stäm tills svävningarna försvinner.</p>
 <p><strong>Temperatur:</strong> hur kvinterna fördelas inom oktaven. Liksvävande är standard för piano; de historiska under Stämning är för tidig musik.</p>

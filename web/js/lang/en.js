@@ -105,11 +105,11 @@ export default {
   'survey.bKnown': 'Inharmonicity already measured',
   'survey.bSkipped': 'Inharmonicity: overtones too weak, skipped',
   'survey.b': 'Inharmonicity {p}/{n}',
-  'survey.doneQuick': 'Survey of all A done: inharmonicity for {b} of {n} keys. The keys in between are interpolated. See Reference A4 under Tuning for where the piano is.',
+  'survey.doneQuick': 'Survey of all A done: inharmonicity for {b} of {n} keys. The keys in between are interpolated. Click A4 = … Hz above the dial to see where the piano is.',
   'survey.skipped': ' Skipped: {keys}.',
   'survey.bOutliers': ' B for {keys} differs from the neighbouring keys and is not used; measure it again with Measure inharmonicity (B) under Partials vs target.',
   'survey.skippedMany': ' {n} keys skipped.',
-  'survey.doneFull': 'Survey done: {n} keys measured, inharmonicity for {b}. See Reference A4 under Tuning for where the piano is.',
+  'survey.doneFull': 'Survey done: {n} keys measured, inharmonicity for {b}. Click A4 = … Hz above the dial to see where the piano is.',
 
   'order.button': 'Tuning order',
   'order.buttonTitle': 'Step by step through the tuning (O)',
@@ -153,7 +153,7 @@ export default {
 
   'order.pitch': 'Check the pitch',
   'order.pitch.task': 'Survey all A to see where the piano is.',
-  'order.pitch.text': 'Set the reference under Tuning first: 440 Hz, or 442 for playing with an orchestra. The survey measures A0–A7, since the treble and bass are often further off than A4.',
+  'order.pitch.text': 'Set the reference first, at A4 = … Hz above the dial: 440 Hz, or 442 for playing with an orchestra. The survey measures A0–A7, since the treble and bass are often further off than A4.',
   'order.pitch.unknown': 'Not measured yet.',
   'order.pitch.off': 'The middle is {c} cents from the target: do a pitch raise first, or keep the piano\'s current pitch. On an old piano with fragile strings, keeping it can be the safer choice.',
   'order.pitch.near': 'The middle is {c} cents from the target: no pitch raise needed, go on to the felt strip.',
@@ -369,7 +369,7 @@ export default {
   help: `<h3>Workflow</h3>
 <ol>
   <li><strong>Survey.</strong> Choose <em>All A</em> (A0–A7, about a minute) or <em>All keys</em> (3–5 minutes) in the panel that opens. Strike the key shown; the app moves on by itself and stops when every key is done.</li>
-  <li><strong>Choose the pitch.</strong> If the piano is flat: <em>Use the piano's current pitch</em> under Tuning, or raise it with overpull.</li>
+  <li><strong>Choose the pitch.</strong> If the piano is flat: <em>Use the piano's current pitch</em> at A4 = … Hz above the dial, or raise it with overpull.</li>
   <li><strong>Mute the unisons</strong> with a felt strip. Tune one string per note and the others by ear against it.</li>
   <li><strong>Tune A3–A4 first</strong>, then upwards octave by octave, the bass last.</li>
   <li><strong>New pass</strong> next time. The history shows how far the piano has drifted.</li>
@@ -382,7 +382,7 @@ export default {
 <h3>Measuring</h3>
 <p>In the bass, partial 6, 4 or 2 is measured: the fundamental is weak and laptop microphones pick up little below 100 Hz. An external USB microphone 20–40 cm above the strings helps; choose it under App.</p>
 <p><strong>Auto and Lock:</strong> Auto finds the key from the sound. Keys measured in this pass are also recognised where they sound, even far from the target. An unmeasured key halfway between two notes: click it on the keyboard to lock it.</p>
-<p><strong>Overpull:</strong> when raising the pitch, strings already tuned go flat as the load increases. With 25%, a note that was at −20 cents is tuned to +5. Under Tuning the app suggests an overpull once the middle of the piano is measured.</p>
+<p><strong>Overpull:</strong> when raising the pitch, strings already tuned go flat as the load increases. With 25%, a note that was at −20 cents is tuned to +5. At A4 = … Hz the app suggests an overpull once the middle of the piano is measured.</p>
 <p><strong>Strobe:</strong> one ring per partial behind the needle, numbered at the right end: innermost the measured one, then the two octaves above it. Still = in tune, turning clockwise = too high. If the inner ring stands still but the others turn, the string's inharmonicity differs from the model; measure its inharmonicity under <em>Partials vs target</em>.</p>
 <p><strong>Sine tone:</strong> choose <em>Sine tone</em> in the menu next to ▶ and play it. Tune until the beats disappear.</p>
 <p><strong>Temperament:</strong> how the fifths are distributed within the octave. Equal temperament is the standard for pianos; the historical ones under Tuning are for early music.</p>
