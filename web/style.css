@@ -333,7 +333,10 @@ select:disabled { opacity: 0.55; }
 .status[data-s="good"] { color: var(--good); }
 .status[data-s="warn"] { color: var(--warn); }
 .status[data-s="bad"] { color: var(--bad); }
-.keyline { margin: -8px 0 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 0 16px; font-size: 13px; color: var(--muted); }
+/* One line each, so the height does not change with the length of the target text. */
+.keyline { margin: -8px 0 0; display: flex; flex-direction: column; align-items: center; text-align: center; font-size: 13px; color: var(--muted); }
+/* On a phone the target line wraps in the bass (partial and overpull); keep room for that. */
+@media (max-width: 480px) { .keyline { line-height: 1.5; min-height: 6em; } }
 /* Words in the body face, values in mono. */
 .keyline .v { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
 #measured[data-live="1"] { color: var(--ink); }
