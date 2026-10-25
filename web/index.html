@@ -50,15 +50,17 @@
         </div>
       </div>
       <div class="head-right">
-        <div class="tone-pick">
-          <span class="mini-label" id="tone-lbl" data-i18n="tone.label">Reference tone</span>
-          <div class="modes" role="group" aria-labelledby="tone-lbl">
-            <button class="seg" type="button" data-tone="off" aria-pressed="true" data-i18n="tone.off">Off</button>
-            <button class="seg" type="button" data-tone="piano" aria-pressed="false" title="Short piano-like tone" data-i18n="tone.piano" data-i18n-title="tone.pianoTitle">Piano</button>
-            <button class="seg" type="button" data-tone="sine" aria-pressed="false" title="Pure, sustained sine tone at the target frequency" data-i18n="tone.sine" data-i18n-title="tone.sineTitle">Sine</button>
+        <div class="split" role="group" aria-label="Reference tone" data-i18n-aria-label="tone.label">
+          <button id="btn-tone" class="btn" type="button" aria-pressed="false"></button>
+          <button id="btn-tone-menu" class="btn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="tone-menu" title="Reference tone" data-i18n-title="tone.label">
+            <span class="stack"><span data-tone-label="piano" data-i18n="tone.piano">Piano</span><span data-tone-label="sine" data-i18n="tone.sine">Sine</span></span>
+          </button>
+          <div id="tone-menu" class="menu" role="menu" hidden>
+            <button type="button" role="menuitemradio" data-tone="piano" aria-checked="true"><b data-i18n="tone.pianoItem">Piano tone</b><small data-i18n="tone.pianoTitle">Short piano-like tone</small></button>
+            <button type="button" role="menuitemradio" data-tone="sine" aria-checked="false"><b data-i18n="tone.sineItem">Sine tone</b><small data-i18n="tone.sineTitle">Pure, sustained sine tone at the target frequency</small></button>
+            <button id="tone-on-key" type="button" role="menuitemcheckbox" aria-checked="false"><b data-i18n="tone.onKey">Also play when a key is clicked</b></button>
           </div>
         </div>
-        <button id="btn-tone" class="btn ghost" type="button" title="Play target tone (T)" data-i18n-title="tone.playTitle"></button>
         <div class="modes mode-pick" role="group" aria-label="Mode" data-i18n-aria-label="tuner.mode">
           <button id="mode-auto" class="seg" type="button" aria-pressed="true" title="Detect the key automatically (A)" data-i18n="mode.auto" data-i18n-title="mode.autoTitle">Auto</button>
           <button id="mode-lock" class="seg" type="button" aria-pressed="false" title="Lock on the selected key (L)" data-i18n="mode.lock" data-i18n-title="mode.lockTitle">Lock</button>

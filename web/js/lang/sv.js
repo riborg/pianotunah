@@ -55,15 +55,16 @@ export default {
   'beat.rate': '{n} svävningar/s',
 
   'tone.label': 'Referenston',
-  'tone.off': 'Av',
   'tone.piano': 'Piano',
   'tone.pianoTitle': 'Kort pianolik ton',
   'tone.sine': 'Sinus',
   'tone.sineTitle': 'Ren, ihållande sinuston på målfrekvensen',
-  'tone.play': 'Spela målton',
+  'tone.pianoItem': 'Pianoton',
+  'tone.sineItem': 'Sinuston',
+  'tone.onKey': 'Spela också när en tangent klickas',
   'tone.playTitle': 'Spela målton (T)',
-  'tone.playSine': 'Spela sinuston {what}',
-  'tone.stopSine': 'Stoppa sinuston {what}',
+  'tone.playSine': 'Spela sinuston {what} (T)',
+  'tone.stopSine': 'Stoppa sinuston {what} (T)',
   'tone.partialNote': '{note} (delton {n})',
 
   'mic.start': 'Starta mikrofon',
@@ -383,7 +384,7 @@ export default {
 <p><strong>Auto och Lås:</strong> Auto hittar tangenten ur ljudet. Tangenter som mätts i omgången känns igen där de låter, även långt från målet. En omätt tangent mitt emellan två toner: klicka på den på klaviaturen så låses den.</p>
 <p><strong>Överdrag:</strong> vid uppdragning sjunker redan stämda strängar när belastningen ökar. Med 25 % stäms en ton som låg −20 cent till +5. Under Stämning föreslår appen ett överdrag när mitten av pianot är mätt.</p>
 <p><strong>Strobe:</strong> en ring per deltons bakom visaren, numrerad i högra änden: innerst den uppmätta, sedan de två oktaverna ovanför. Stilla = rent, snurrar medurs = för högt. Står den inre ringen still men de andra snurrar, avviker strängens inharmonicitet från modellen; mät dess inharmonicitet under <em>Deltoner mot mål</em>.</p>
-<p><strong>Sinuston:</strong> välj Sinus under <em>Referenston</em> och klicka på en tangent. Stäm tills svävningarna försvinner.</p>
+<p><strong>Sinuston:</strong> välj <em>Sinuston</em> i menyn bredvid ▶ och spela den. Stäm tills svävningarna försvinner.</p>
 <p><strong>Temperatur:</strong> hur kvinterna fördelas inom oktaven. Liksvävande är standard för piano; de historiska under Stämning är för tidig musik.</p>
 <p class="keys-hint">Tangentbord: ← → byter tangent, L låser, A auto, O arbetsordning, T spelar eller stoppar målton, S öppnar inställningar.</p>`,
 };
