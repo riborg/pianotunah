@@ -246,7 +246,19 @@ select:disabled { opacity: 0.55; }
 .keys-block .legend { justify-content: center; }
 
 /* Tuner */
-.tuner { display: flex; flex-direction: column; gap: 14px; }
+.tuner, .dial-col { display: flex; flex-direction: column; gap: 14px; }
+.tuner-main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+/* Wide: the survey and tuning order panels open to the right of the dial,
+   which slides left to make room instead of being pushed down. */
+@media (min-width: 960px) {
+  .tuner-main {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 560px) minmax(0, 1fr);
+    transition: grid-template-columns 200ms ease;
+  }
+  .tuner-main:has(> .survey-panel:not([hidden])) { grid-template-columns: minmax(0, 0fr) minmax(0, 560px) minmax(320px, 2fr); }
+  .dial-col { grid-column: 2; grid-row: 1 / span 2; }
+  .tuner-main > .survey-panel { grid-column: 3; align-self: start; }
+}
 .tuner-head { display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; }
 /* Left: reference pitch and tone. Right: key mode, then survey and tuning order. */
 .head-left, .head-right { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
@@ -640,12 +652,12 @@ details > .form { margin-top: 10px; }
 /* Landscape phones: a sticky top bar would take a fifth of the height. */
 @media (max-height: 560px) {
   .top { position: static; padding-block: 8px; }
-  .tuner { gap: 8px; }
+  .tuner, .tuner-main, .dial-col { gap: 8px; }
   .dial { max-width: 320px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .key.flash, .drawer { animation: none; }
-  .kb-marker, .mic-level, .survey-bar i { transition: none; }
+  .kb-marker, .mic-level, .survey-bar i, .tuner-main { transition: none; }
 }
 
 /* App */

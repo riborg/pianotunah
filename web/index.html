@@ -72,64 +72,72 @@
       </div>
     </div>
 
-    <div class="survey-panel" id="survey-panel" hidden>
-      <div class="survey-head">
-        <b data-i18n="survey.title">Survey</b>
-        <div class="modes plan-modes" role="group" aria-label="Scope" data-i18n-aria-label="survey.scope">
-          <button class="seg" type="button" data-plan="quick" aria-pressed="true" data-i18n="survey.quick">All A, 8 keys</button>
-          <button class="seg" type="button" data-plan="full" aria-pressed="false" data-i18n="survey.full">All keys</button>
+    <!-- Panels beside the dial on wide screens and under it on narrow ones,
+         so the dial keeps its height when one opens. -->
+    <div class="tuner-main">
+      <div class="dial-col">
+        <div class="dial">
+          <canvas id="dial" data-fluid aria-hidden="true"></canvas>
+          <button id="btn-prev" class="btn icon nav prev" type="button" aria-label="Previous key" title="Previous key (←)" data-i18n-aria-label="tuner.prev" data-i18n-title="tuner.prevTitle">‹</button>
+          <div class="hub" id="hub" data-s="idle">
+            <div class="cents" id="cents"><span id="cents-num">–</span><span class="unit" data-i18n="unit.cents">cents</span></div>
+            <div class="note-name" id="note-name">A4</div>
+          </div>
+          <button id="btn-next" class="btn icon nav next" type="button" aria-label="Next key" title="Next key (→)" data-i18n-aria-label="tuner.next" data-i18n-title="tuner.nextTitle">›</button>
         </div>
-        <span id="survey-progress"></span>
-      </div>
-      <div class="survey-bar" aria-hidden="true"><i id="survey-bar"></i></div>
-      <p class="survey-step" id="survey-step" aria-live="polite"></p>
-      <div class="survey-checks">
-        <span class="chk" id="survey-chk-pitch"></span>
-        <span class="chk" id="survey-chk-b"></span>
-      </div>
-      <p class="survey-intro" data-i18n-html="survey.intro"></p>
-      <div class="btn-row">
-        <button id="survey-skip" class="btn ghost" type="button" data-i18n="survey.skip">Skip</button>
-        <button id="survey-redo" class="btn ghost" type="button" data-i18n="survey.redo">Measure again</button>
-        <button id="survey-stop" class="btn ghost" type="button" data-i18n="survey.stop">Finish</button>
-      </div>
-    </div>
+        <p class="status" id="status" data-s="idle"></p>
+        <p class="keyline"><span id="note-sub"></span><span id="targetline"></span><span id="measured"></span></p>
+        <div class="hint-slot"><p class="unison-hint" id="unison-hint" role="status" hidden></p></div>
 
-    <div class="survey-panel order-panel" id="order-panel" hidden>
-      <div class="survey-head">
-        <b data-i18n="order.title">Tuning order</b>
-        <label class="sr-only" for="order-step" data-i18n="order.step">Step</label>
-        <select id="order-step"></select>
-        <span id="order-progress"></span>
       </div>
-      <div class="survey-bar" aria-hidden="true"><i id="order-bar"></i></div>
-      <p class="survey-step" id="order-task" aria-live="polite"></p>
-      <p class="order-state" id="order-state" aria-live="polite"></p>
-      <div class="survey-checks" id="order-checks"></div>
-      <p class="survey-intro" id="order-text"></p>
-      <div class="btn-row">
-        <button id="order-back" class="btn primary" type="button" hidden></button>
-        <button id="order-action" class="btn primary" type="button" hidden></button>
-        <button id="order-action2" class="btn ghost" type="button" hidden></button>
-        <button id="order-prev" class="btn ghost" type="button" data-i18n="order.prev">Previous</button>
-        <button id="order-next" class="btn ghost" type="button" data-i18n="order.next">Next</button>
-        <button id="order-skip" class="btn ghost" type="button" data-i18n="order.nextStep">Next step</button>
-        <button id="order-close" class="btn ghost" type="button" data-i18n="order.close">Close</button>
-      </div>
-    </div>
 
-    <div class="dial">
-      <canvas id="dial" data-fluid aria-hidden="true"></canvas>
-      <button id="btn-prev" class="btn icon nav prev" type="button" aria-label="Previous key" title="Previous key (←)" data-i18n-aria-label="tuner.prev" data-i18n-title="tuner.prevTitle">‹</button>
-      <div class="hub" id="hub" data-s="idle">
-        <div class="cents" id="cents"><span id="cents-num">–</span><span class="unit" data-i18n="unit.cents">cents</span></div>
-        <div class="note-name" id="note-name">A4</div>
+      <div class="survey-panel" id="survey-panel" hidden>
+        <div class="survey-head">
+          <b data-i18n="survey.title">Survey</b>
+          <div class="modes plan-modes" role="group" aria-label="Scope" data-i18n-aria-label="survey.scope">
+            <button class="seg" type="button" data-plan="quick" aria-pressed="true" data-i18n="survey.quick">All A, 8 keys</button>
+            <button class="seg" type="button" data-plan="full" aria-pressed="false" data-i18n="survey.full">All keys</button>
+          </div>
+          <span id="survey-progress"></span>
+        </div>
+        <div class="survey-bar" aria-hidden="true"><i id="survey-bar"></i></div>
+        <p class="survey-step" id="survey-step" aria-live="polite"></p>
+        <div class="survey-checks">
+          <span class="chk" id="survey-chk-pitch"></span>
+          <span class="chk" id="survey-chk-b"></span>
+        </div>
+        <p class="survey-intro" data-i18n-html="survey.intro"></p>
+        <div class="btn-row">
+          <button id="survey-skip" class="btn ghost" type="button" data-i18n="survey.skip">Skip</button>
+          <button id="survey-redo" class="btn ghost" type="button" data-i18n="survey.redo">Measure again</button>
+          <button id="survey-stop" class="btn ghost" type="button" data-i18n="survey.stop">Finish</button>
+        </div>
       </div>
-      <button id="btn-next" class="btn icon nav next" type="button" aria-label="Next key" title="Next key (→)" data-i18n-aria-label="tuner.next" data-i18n-title="tuner.nextTitle">›</button>
+
+      <div class="survey-panel order-panel" id="order-panel" hidden>
+        <div class="survey-head">
+          <b data-i18n="order.title">Tuning order</b>
+          <label class="sr-only" for="order-step" data-i18n="order.step">Step</label>
+          <select id="order-step"></select>
+          <span id="order-progress"></span>
+        </div>
+        <div class="survey-bar" aria-hidden="true"><i id="order-bar"></i></div>
+        <p class="survey-step" id="order-task" aria-live="polite"></p>
+        <p class="order-state" id="order-state" aria-live="polite"></p>
+        <div class="survey-checks" id="order-checks"></div>
+        <p class="survey-intro" id="order-text"></p>
+        <div class="btn-row">
+          <button id="order-back" class="btn primary" type="button" hidden></button>
+          <button id="order-action" class="btn primary" type="button" hidden></button>
+          <button id="order-action2" class="btn ghost" type="button" hidden></button>
+          <button id="order-prev" class="btn ghost" type="button" data-i18n="order.prev">Previous</button>
+          <button id="order-next" class="btn ghost" type="button" data-i18n="order.next">Next</button>
+          <button id="order-skip" class="btn ghost" type="button" data-i18n="order.nextStep">Next step</button>
+          <button id="order-close" class="btn ghost" type="button" data-i18n="order.close">Close</button>
+        </div>
+      </div>
+
     </div>
-    <p class="status" id="status" data-s="idle"></p>
-    <p class="keyline"><span id="note-sub"></span><span id="targetline"></span><span id="measured"></span></p>
-    <div class="hint-slot"><p class="unison-hint" id="unison-hint" role="status" hidden></p></div>
 
     <div class="keys-block" role="group" aria-label="Keyboard" data-i18n-aria-label="kb.label">
       <div class="kb-frame">
