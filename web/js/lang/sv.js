@@ -155,7 +155,7 @@ export default {
   'order.pitch.task': 'Kartlägg alla A för att se hur pianot ligger.',
   'order.pitch.text': 'Ställ in referensen under Stämning först: 440 Hz, eller 442 om pianot ska spela med orkester. Kartläggningen mäter A0–A7, eftersom diskanten och basen ofta ligger längre ifrån än A4.',
   'order.pitch.unknown': 'Inte mätt än.',
-  'order.pitch.off': 'Mitten ligger {c} cent från målet: grovstäm först.',
+  'order.pitch.off': 'Mitten ligger {c} cent från målet: grovstäm först, eller behåll pianots nuvarande tonhöjd. På ett gammalt piano med sköra strängar kan det vara säkrast att behålla den.',
   'order.pitch.near': 'Mitten ligger {c} cent från målet: ingen grovstämning behövs, gå vidare till filten.',
   'order.raise': 'Grovstämning',
   'order.raise.task': 'Grovstämning.',
