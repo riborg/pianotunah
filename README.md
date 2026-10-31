@@ -11,7 +11,7 @@ Piano tuner in the browser. Listens through the computer's microphone, computes 
 
 - Key detection A0–C8 and measurement to a hundredth of a cent. In the bass, partial 6, 4 or 2 is measured. Keys measured in the pass are recognised where they sound, even far from the target.
 - Survey: *All A* (A0–A7) or *All keys*. Measures inharmonicity and the current pitch.
-- Tuning order, optional: pitch check, pitch raise, felt strip, temperament by fourths and fifths, treble, bass, key by key. Each key lists intervals to check by ear with the beat rates the targets give, and the order moves on after two strikes in a row in tune.
+- Tuning order, optional: pitch check, pitch raise, felt strip, temperament by fourths and fifths, treble, bass, key by key. Each key lists intervals to check by ear with the beat rates the targets give, and the order moves on after two strikes in a row in tune. Step by step: [docs/tuning.md](docs/tuning.md) ([svenska](docs/tuning.sv.md)).
 - Stretch with octave type 2:1–8:4 per register, Railsback curve and extra stretch at the ends.
 - Temperaments: equal, Werckmeister III, Kirnberger III, Vallotti, Young II, ¼- and ⅙-comma meantone.
 - Reference A4 380–480 Hz, or set from the piano's current pitch. Overpull for pitch raises, with a recommended amount when the piano is flat.
