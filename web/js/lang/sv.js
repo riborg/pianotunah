@@ -162,7 +162,7 @@ export default {
   'order.raise.text': 'Bara när pianot ligger 10 cent fel eller mer. En snabb omgång över alla tangenter och alla strängar, utan filt, från mitten upp till toppen och sedan ner till botten, inom några cent. Överdraget stämmer varje tangent förbi målet så att pianot sätter sig nära det. Mer än 50 cent lågt: två grovstämningar. Gamla strängar kan brista; höj i etapper. Finstämningen kan göras samma dag.',
   'order.strip': 'Filt {lo}–{hi}',
   'order.strip.task': 'Dämpa de yttre strängarna i {lo}–{hi} med filten.',
-  'order.strip.text': 'Bara mittensträngen i varje tangent ska klinga. På ett pianino: håll högerpedalen nere när du sätter i filten eller en kil, så att dämmarna inte böjs. Filten ska ligga fritt från hammarnas anslagspunkt: tryck fram några hammare och kontrollera. Tryck Nästa när den sitter.',
+  'order.strip.text': 'Bara mittensträngen i varje tangent ska klinga. På ett pianino: håll högerpedalen nere när du sätter i filten eller en kil, så att dämparna inte böjs. Filten ska ligga fritt från hammarnas anslagspunkt: tryck fram några hammare och kontrollera. Tryck Nästa när den sitter.',
   'order.middle': 'A4 och A3',
   'order.middle.text': 'A4 till målet, sedan A3 som oktav under. Decimen F3–A4 ska sväva lika fort som tersen F3–A3 (oktav 4:2) eller något snabbare; svävar tersen snabbast ligger A3 för högt. F3 är inte stämd än, men jämförelsen håller ändå.',
   'order.temperament': 'Temperering {lo}–{hi}',

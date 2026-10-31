@@ -43,8 +43,8 @@ En snabb omgång över alla tangenter och alla strängar, utan filt: från A4 up
 
 Tryck ner filten i mellanrummen mellan grantangenternas strängar, så att den pressar undan och dämpar yttersträngarna i varje tangent. Mittensträngen går fri.
 
-- Pianino: mellan tryckstången och hammarna. Håll högerpedalen nere medan filten sätts i, så att dämmarna inte böjs.
-- Flygel: mellan dämmarna och strängarnas främre ände.
+- Pianino: mellan tryckstången och hammarna. Håll högerpedalen nere medan filten sätts i, så att dämparna inte böjs.
+- Flygel: mellan dämparna och strängarnas främre ände.
 - Håll den fri från hammarnas anslagspunkt: tryck fram några hammare och titta.
 - Slå an varje tangent. Den ska låta som en ren, ensam sträng.
 
