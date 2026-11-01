@@ -37,7 +37,7 @@ Kartläggningen visar hur långt mitten ligger från målet. Mindre än 10 cent 
 
 ### 2. Grovstämning
 
-En snabb omgång över alla tangenter och alla strängar, utan filt: från A4 upp till toppen, sedan ner till botten, inom några cent. Överdraget stämmer varje tangent förbi målet så att pianot sätter sig nära det. Mer än 50 cent lågt: gör två grovstämningar. Gamla strängar brister lättast vid stämskruven medan de dras upp, så höj i etapper.
+En snabb omgång över alla tangenter och alla strängar, utan filt: från A3 upp till toppen, sedan från A♭3 ner till botten, inom några cent. Överdraget stämmer varje tangent förbi målet så att pianot sätter sig nära det. Mer än 50 cent lågt: gör två grovstämningar. Gamla strängar brister lättast vid stämskruven medan de dras upp, så höj i etapper.
 
 ### 3. Filt F3–A4
 
@@ -74,11 +74,11 @@ Kvarter något vida, kvinter något trånga. Jämför varje nytt intervall med s
 
 ### 6. Oktaver F4–A♭4
 
-Låt filten sitta kvar. Stäm varje tangent som oktav mot tempereringen. Kontrollera med ters och decima, och med kvart och kvint.
+Låt filten sitta kvar. Stäm varje tangent som oktav mot tempereringen. Kontrollera oktaven som 2:1 och 4:2, med ters och decima, med kvart och kvint, och med dubbeloktaven.
 
 ### 7. Diskant B♭4 till toppen
 
-För varje tangent: sätt en kil mellan sträng 2 och 3 så att sträng 1 klingar ensam. Stäm den som oktav nedifrån, ta bort kilen och stäm de andra strängarna rena mot den. Högt upp: korta, kraftiga anslag, lyssna direkt efter anslaget och kontrollera mot tangenter två–tre oktaver ner.
+För varje tangent: sätt en kil mellan sträng 2 och 3 så att sträng 1 klingar ensam. Stäm den som oktav nedifrån. Flytta kilen så att sträng 1 och 2 klingar och stäm 2 ren mot 1, ta sedan bort kilen och stäm 3 mot båda. Högt upp: korta, kraftiga anslag, lyssna direkt efter anslaget. Samma kontroller som i steg 6, och mot tangenter två–tre oktaver ner.
 
 ### 8. Ta ur filten, A4 ner till F3
 
@@ -86,7 +86,7 @@ En tangent i taget: frigör yttersträngarna och stäm dem rena mot den mitterst
 
 ### 9. Bas, E3 ner till A0
 
-Två tangenter i taget. Kila så att en sträng klingar, stäm den som oktav uppifrån och stäm sedan de andra strängarna mot den. Tangenter med en sträng har ingen unison att stämma. Längre anslag; låt tonen klinga. I djupbasen säger duodecima och dubbeloktav mer än oktaven, och svävningarna blir långsammare ju längre ner.
+Två tangenter i taget. Kila så att en sträng klingar, stäm den som oktav uppifrån och stäm sedan de andra strängarna mot den. Tangenter med en sträng har ingen unison att stämma. Längre anslag; låt tonen klinga. Kontrollera oktaven som 2:1, 4:2 och 6:3, och med decima, duodecima, dubbeloktav och septdecima. I djupbasen säger duodecima och dubbeloktav mer än oktaven, och svävningarna blir långsammare ju längre ner.
 
 ### 10. Avslut
 
