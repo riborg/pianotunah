@@ -37,7 +37,7 @@ The survey shows how far the middle is from the target. Less than 10 cents off: 
 
 ### 2. Pitch raise
 
-A quick pass over every key and all its strings, without the strip: from A4 up to the top, then down to the bottom, to within a few cents. Overpull tunes each key past the target so the piano settles near it. More than 50 cents flat: do two pitch raises. Old strings break most easily at the pin while they are being raised, so raise them in stages.
+A quick pass over every key and all its strings, without the strip: from A3 up to the top, then from A♭3 down to the bottom, to within a few cents. Overpull tunes each key past the target so the piano settles near it. More than 50 cents flat: do two pitch raises. Old strings break most easily at the pin while they are being raised, so raise them in stages.
 
 ### 3. Felt strip F3–A4
 

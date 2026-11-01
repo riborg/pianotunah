@@ -37,7 +37,7 @@ Kartläggningen visar hur långt mitten ligger från målet. Mindre än 10 cent 
 
 ### 2. Grovstämning
 
-En snabb omgång över alla tangenter och alla strängar, utan filt: från A4 upp till toppen, sedan ner till botten, inom några cent. Överdraget stämmer varje tangent förbi målet så att pianot sätter sig nära det. Mer än 50 cent lågt: gör två grovstämningar. Gamla strängar brister lättast vid stämskruven medan de dras upp, så höj i etapper.
+En snabb omgång över alla tangenter och alla strängar, utan filt: från A3 upp till toppen, sedan från A♭3 ner till botten, inom några cent. Överdraget stämmer varje tangent förbi målet så att pianot sätter sig nära det. Mer än 50 cent lågt: gör två grovstämningar. Gamla strängar brister lättast vid stämskruven medan de dras upp, så höj i etapper.
 
 ### 3. Filt F3–A4
 
