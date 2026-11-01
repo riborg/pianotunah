@@ -78,7 +78,7 @@ Låt filten sitta kvar. Stäm varje tangent som oktav mot tempereringen. Kontrol
 
 ### 7. Diskant B♭4 till toppen
 
-För varje tangent: sätt en kil mellan sträng 2 och 3 så att sträng 1 klingar ensam. Stäm den som oktav nedifrån, ta bort kilen och stäm de andra strängarna rena mot den. Högt upp: korta, kraftiga anslag, lyssna direkt efter anslaget och kontrollera mot tangenter två–tre oktaver ner.
+För varje tangent: sätt en kil mellan sträng 2 och 3 så att sträng 1 klingar ensam. Stäm den som oktav nedifrån. Flytta kilen så att sträng 1 och 2 klingar och stäm 2 ren mot 1, ta sedan bort kilen och stäm 3 mot båda. Högt upp: korta, kraftiga anslag, lyssna direkt efter anslaget och kontrollera mot tangenter två–tre oktaver ner.
 
 ### 8. Ta ur filten, A4 ner till F3
 
