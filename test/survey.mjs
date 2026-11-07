@@ -1,7 +1,7 @@
 // End-to-end test of the survey: headless Chrome with a synthetic piano as
 // the microphone that plays whatever key the app asks for. Creates a
 // temporary tuning and deletes it afterwards.
-//   docker run --rm --network container:pianotunah -v "$PWD":/usr/src/app/pt zenika/alpine-chrome:with-puppeteer \
+//   docker run --rm --network container:pianotunah -v "$PWD":/home/pptruser/pt ghcr.io/puppeteer/puppeteer \
 //     node pt/test/survey.mjs http://localhost:8080 [full]
 import puppeteer from 'puppeteer';
 import { computeTargets, partialFreq, DEFAULT_SETTINGS } from '../web/js/theory.js';
