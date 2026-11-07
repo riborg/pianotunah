@@ -6,7 +6,7 @@ Node and Go are not needed on the host; everything runs in containers.
 
 ```sh
 # Unit tests (theory and signal processing)
-docker run --rm -v "$PWD":/app -w /app node:22-alpine npm test
+docker run --rm -v "$PWD":/app -w /app node:26-alpine npm test
 
 # End-to-end: headless Chrome with a synthetic piano tone as the microphone,
 # against the running container. With a directory as the second argument,
