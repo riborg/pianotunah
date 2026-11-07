@@ -6,22 +6,24 @@ Node and Go are not needed on the host; everything runs in containers.
 
 ```sh
 # Unit tests (theory and signal processing)
-docker run --rm -v "$PWD":/app -w /app node:22-alpine npm test
+docker run --rm -v "$PWD":/app -w /app node:26-alpine npm test
 
 # End-to-end: headless Chrome with a synthetic piano tone as the microphone,
 # against the running container. With a directory as the second argument,
 # the screenshots in docs/ are retaken.
-docker run --rm --network container:pianotunah -v "$PWD":/usr/src/app/pt zenika/alpine-chrome:with-puppeteer \
+# Runs as your user so the screenshots can be written.
+docker run --rm --network container:pianotunah -v "$PWD":/home/pptruser/pt \
+  --user "$(id -u):$(id -g)" -e PUPPETEER_CACHE_DIR=/home/pptruser/.cache/puppeteer ghcr.io/puppeteer/puppeteer \
   node pt/test/e2e.mjs http://localhost:8080 [pt/docs]
 
 # Survey: a synthetic piano plays the keys the app asks for, including wrong
 # keys and a skip. "full" adds a survey of all keys (about 2 minutes).
-docker run --rm --network container:pianotunah -v "$PWD":/usr/src/app/pt zenika/alpine-chrome:with-puppeteer \
+docker run --rm --network container:pianotunah -v "$PWD":/home/pptruser/pt ghcr.io/puppeteer/puppeteer \
   node pt/test/survey.mjs http://localhost:8080 [full]
 
 # Tuning order: the synthetic piano plays the keys the order asks for, in tune
 # and off, through the temperament and into the treble.
-docker run --rm --network container:pianotunah -v "$PWD":/usr/src/app/pt zenika/alpine-chrome:with-puppeteer \
+docker run --rm --network container:pianotunah -v "$PWD":/home/pptruser/pt ghcr.io/puppeteer/puppeteer \
   node pt/test/order.mjs http://localhost:8080
 ```
 
