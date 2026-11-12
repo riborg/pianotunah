@@ -200,7 +200,7 @@ var noteNames = []string{"C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭"
 // Key 1 = A0, as in theory.js.
 func noteName(key string) string {
 	k, err := strconv.Atoi(key)
-	if err != nil {
+	if err != nil || k < 1 || k > 88 {
 		return key
 	}
 	return noteNames[(k+8)%12] + strconv.Itoa((k+8)/12)
