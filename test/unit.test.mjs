@@ -7,6 +7,8 @@ import {
 } from '../web/js/theory.js';
 import { Analyzer } from '../web/js/dsp.js';
 import { wavBlob } from '../web/js/mic.js';
+import { Saver } from '../web/js/saver.js';
+import { fmtC } from '../web/js/format.js';
 import { newRun, nextPending, handled, wrongKey } from '../web/js/survey.js';
 import { buildOrder, nextPos, prevPos, clampPos, taskAt, progress, newConfirm, confirmReading, checkRows } from '../web/js/order.js';
 
@@ -306,4 +308,41 @@ test('recording: mono 32-bit float WAV', async () => {
   assert.deepEqual([v.getUint16(20, true), v.getUint16(22, true), v.getUint32(24, true), v.getUint16(34, true)], [3, 1, 44100, 32]);
   assert.equal(v.getUint32(40, true), 12);
   assert.deepEqual([0, 1, 2].map((i) => v.getFloat32(44 + i * 4, true)), [0.5, -0.25, 1]);
+});
+
+test('saver: a conflict is handed over without blocking the queue', async () => {
+  let status = 409;
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({ ok: status === 200, status, json: async () => ({ rev: 5 }) });
+  try {
+    let cur = { id: 'a', rev: 1 };
+    let conflicts = 0;
+    const saver = new Saver({
+      current: () => cur,
+      onState() {},
+      onSaved() {},
+      // As the app does: wait for the queue, then show the server's version.
+      async onConflict() {
+        conflicts++;
+        await saver.flush();
+        cur = { id: 'a', rev: 4 };
+      },
+    });
+    const soon = (p) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('the save queue hangs')), 500))]);
+    saver.markDirty();
+    await soon(saver.flush());
+    await new Promise((r) => setTimeout(r, 10));
+    assert.equal(conflicts, 1);
+    status = 200;
+    saver.markDirty();
+    await soon(saver.flush());
+    assert.equal(cur.rev, 5);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test('format: the sign of a cent value follows what is shown', () => {
+  assert.deepEqual([1.23, -0.44, 0.04, -0.04, NaN].map((c) => fmtC(c)), ['+1.2', '−0.4', '±0.0', '±0.0', '–']);
+  assert.deepEqual([0.3, -0.3, 0.6, -12.4].map((c) => fmtC(c, 0)), ['±0', '±0', '+1', '−12']);
 });

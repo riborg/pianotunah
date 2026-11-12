@@ -215,6 +215,7 @@ function renderTuningSelect() {
 
 async function openTuning(t) {
   await saver.flush();
+  const other = state.tuning?.id !== t.id;
   state.tuning = normalize(t);
   state.orderRecheck = null;
   try { localStorage.setItem(LS.tuning, t.id); } catch { /* optional */ }
@@ -223,6 +224,7 @@ async function openTuning(t) {
   renderSettings();
   renderTuningSelect();
   setSaveState('idle');
+  if (other && state.mode === 'survey') setMode('survey'); // the run belongs to the piano it started on
   followOrder();
 }
 
@@ -600,7 +602,20 @@ function setMode(m) {
 // ---------------------------------------------------------------------------
 // Measuring
 
+// One start at a time: a second click while the permission prompt is open
+// would start a second stream and analysis timer that are never stopped.
+let micStarting = false;
 async function startMic() {
+  if (micStarting || mic.running) return;
+  micStarting = true;
+  try {
+    await openMic();
+  } finally {
+    micStarting = false;
+  }
+}
+
+async function openMic() {
   try {
     try {
       await mic.start(state.micId);
@@ -631,6 +646,13 @@ function watchMic() {
   diag(`mic on: ${mic.label || 'default input'}, ${mic.sampleRate} Hz, audio ${mic.ctx.state}`);
   mic.ctx.addEventListener('statechange', () => diag(`audio ${mic.ctx?.state}`));
   for (const ev of ['mute', 'unmute', 'ended']) track?.addEventListener(ev, () => diag(`mic track ${ev}`));
+  // Unplugged, or the browser took the input back: the analyser would go on
+  // reading silence.
+  track?.addEventListener('ended', () => {
+    if (mic.stream?.getAudioTracks()[0] !== track) return;
+    stopMic();
+    message(tr('mic.ended'), 'warn', 0);
+  });
 }
 
 // Every 5 s while the microphone runs: frames analysed, readings, and why the
@@ -1693,10 +1715,10 @@ function bindEvents() {
   on('btn-measure-b', 'click', () => {
     if (!mic.running) return message(tr('msg.micFirst'), 'warn');
     state.bReadings = [];
-    state.measureB = { k: state.key, until: performance.now() + 4000 };
+    const run = (state.measureB = { k: state.key, until: performance.now() + 4000 });
     $('btn-measure-b').disabled = true;
     message(tr('msg.strikeB', { name: kName(state.key) }), 'info', 4000);
-    setTimeout(() => state.measureB && finishMeasureB(), 6000); // in case the note dies away first
+    setTimeout(() => state.measureB === run && finishMeasureB(), 6000); // in case the note dies away first
   });
 
   // Reference

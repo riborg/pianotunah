@@ -1,7 +1,8 @@
 // Autosave of the current tuning.
 // - Changes are collected for 2.5 s before saving.
 // - Saves run in order, so a slow one cannot overwrite a later one.
-// - 409 (saved from another tab/device since it was loaded) goes to onConflict.
+// - 409 (saved from another tab/device since it was loaded) goes to onConflict;
+//   that tuning is not saved again, the caller shows the server's version.
 // - Network errors retry after 10 s.
 
 import { saveTuning } from './store.js';
@@ -13,6 +14,7 @@ export class Saver {
   dirty = false;
   #timer = 0;
   #chain = Promise.resolve();
+  #conflict = null;
 
   // current(): the tuning shown now. onState('idle'|'dirty'|'saving'|'error').
   constructor({ current, onState, onSaved, onConflict }) {
@@ -44,7 +46,7 @@ export class Saver {
 
   async #save() {
     const t = this.current();
-    if (!this.dirty || !t) return;
+    if (!this.dirty || !t || t === this.#conflict) return;
     this.dirty = false;
     t.updatedAt = new Date().toISOString();
     this.onState('saving');
@@ -55,7 +57,12 @@ export class Saver {
       if (t === this.current()) this.onState(this.dirty ? 'dirty' : 'idle');
     } catch (e) {
       if (t !== this.current()) return;
-      if (e.status === 409) return this.onConflict(t);
+      if (e.status === 409) {
+        // Not awaited: the reload waits for this queue.
+        this.#conflict = t;
+        this.onConflict(t);
+        return;
+      }
       this.dirty = true;
       this.onState('error');
       this.#timer = setTimeout(() => this.flush(), RETRY_MS);

@@ -200,7 +200,7 @@ var noteNames = []string{"C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭"
 // Key 1 = A0, as in theory.js.
 func noteName(key string) string {
 	k, err := strconv.Atoi(key)
-	if err != nil {
+	if err != nil || k < 1 || k > 88 {
 		return key
 	}
 	return noteNames[(k+8)%12] + strconv.Itoa((k+8)/12)
@@ -389,9 +389,12 @@ func main() {
 	mux.HandleFunc("DELETE /api/tunings/{id}", s.del)
 	mux.Handle("GET /", http.FileServerFS(web))
 
+	// The API has no login of its own; behind a proxy that adds one, the
+	// browser sends the session along with requests from any site. Writes
+	// from other origins are refused.
 	srv := &http.Server{
 		Addr:              addr,
-		Handler:           headers(mux),
+		Handler:           headers(http.NewCrossOriginProtection().Handler(mux)),
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      30 * time.Second,

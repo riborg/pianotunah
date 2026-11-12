@@ -20,16 +20,16 @@ function check(ok, text) {
   if (!ok) failed++;
 }
 
-await api('/' + id, {
-  method: 'PUT',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ id, name: 'Survey test', rev: 0, settings: DEFAULT_SETTINGS, keys: {}, inharmonicity: {}, partials: {}, history: [] }),
-});
-
 const browser = await puppeteer.launch({
   args: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required',
     // The microphone needs a secure context; the test server is reached over http.
     `--unsafely-treat-insecure-origin-as-secure=${base}`, '--user-data-dir=/tmp/survey-profile'],
+});
+// After the launch: if Chrome does not start, no tuning is left behind.
+await api('/' + id, {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ id, name: 'Survey test', rev: 0, settings: DEFAULT_SETTINGS, keys: {}, inharmonicity: {}, partials: {}, history: [] }),
 });
 const page = await browser.newPage();
 const errors = [];

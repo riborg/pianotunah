@@ -50,7 +50,6 @@ async function run({ key, detune, unison = 0, theme = 'light', shot, seed, recor
     id, name: seed?.name || 'E2E-test', rev: 0, updatedAt: new Date().toISOString(),
     settings: { ...settings, ...(seed?.settings || {}) }, keys: seed?.keys || {}, inharmonicity: seed?.inharmonicity || {}, partials: {}, history: [],
   };
-  await api('/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(tuning) });
   const browser = await puppeteer.launch({
     args: ['--no-sandbox', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream',
       `--use-file-for-fake-audio-capture=${file}`, '--autoplay-policy=no-user-gesture-required',
@@ -58,6 +57,8 @@ async function run({ key, detune, unison = 0, theme = 'light', shot, seed, recor
       `--unsafely-treat-insecure-origin-as-secure=${base}`, '--user-data-dir=/tmp/e2e-profile'],
   });
   try {
+    // After the launch: if Chrome does not start, no tuning is left behind.
+    await api('/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(tuning) });
     const page = await browser.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
