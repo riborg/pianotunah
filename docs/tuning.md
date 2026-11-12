@@ -37,7 +37,7 @@ The survey shows how far the middle is from the target. Less than 10 cents off: 
 
 ### 2. Pitch raise
 
-A quick pass over every key and all its strings, without the strip: from A3 up to the top, then from A♭3 down to the bottom, to within a few cents. Overpull tunes each key past the target so the piano settles near it. More than 50 cents flat: do two pitch raises. Old strings break most easily at the pin while they are being raised, so raise them in stages.
+A quick pass over every key and all its strings, without the strip: from A3 up to the top, then from A♭3 down to the bottom, to within a few cents. Overpull tunes each key past the target so the piano settles near it. More than 25 cents flat on an old piano, or 50 on a newer one: do two pitch raises. Old strings break most easily at the pin while they are being raised, so raise them in stages.
 
 ### 3. Felt strip F3–A4
 
@@ -78,7 +78,7 @@ Keep the strip in. Tune each key as an octave from the temperament. Check it as 
 
 ### 7. Treble B♭4 to the top
 
-For each key, put a wedge between strings 2 and 3 so string 1 sounds alone. Tune it as an octave from below. Move the wedge so strings 1 and 2 sound and tune 2 pure against 1, then pull the wedge and tune 3 against both. High up, use short, firm strikes, listen right after the attack. Same checks as in step 6, and against keys two or three octaves down.
+For each key, put a wedge between strings 2 and 3 so string 1 sounds alone. Tune it as an octave from below. Move the wedge so strings 1 and 2 sound and tune 2 pure against 1, then pull the wedge and tune 3 against both. High up, use short, firm strikes, listen right after the attack. If a unison at the top is hard to hear, pluck the strings one after the other. Same checks as in step 6, and against keys two or three octaves down.
 
 ### 8. Pull the strip, A4 down to F3
 
@@ -96,5 +96,6 @@ Firm strikes across the keyboard, then play through the circle of fifths and lis
 
 - Bring each string up to pitch from below. If you overshoot, go below the target and come up again.
 - Set the pin so the string stays put: strike firmly a few times and check that the reading holds.
+- Hold the key down while a wedge goes in, so its damper is not bent.
 - If the dial jumps on a key, its strings beat against each other. Mute all but one.
 - Pins that turn too easily or jump point to a worn pin block. That is a job for a piano technician.

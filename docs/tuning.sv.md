@@ -37,7 +37,7 @@ Kartläggningen visar hur långt mitten ligger från målet. Mindre än 10 cent 
 
 ### 2. Grovstämning
 
-En snabb omgång över alla tangenter och alla strängar, utan filt: från A3 upp till toppen, sedan från A♭3 ner till botten, inom några cent. Överdraget stämmer varje tangent förbi målet så att pianot sätter sig nära det. Mer än 50 cent lågt: gör två grovstämningar. Gamla strängar brister lättast vid stämskruven medan de dras upp, så höj i etapper.
+En snabb omgång över alla tangenter och alla strängar, utan filt: från A3 upp till toppen, sedan från A♭3 ner till botten, inom några cent. Överdraget stämmer varje tangent förbi målet så att pianot sätter sig nära det. Mer än 25 cent lågt på ett gammalt piano, eller 50 på ett nyare: gör två grovstämningar. Gamla strängar brister lättast vid stämskruven medan de dras upp, så höj i etapper.
 
 ### 3. Filt F3–A4
 
@@ -78,7 +78,7 @@ Låt filten sitta kvar. Stäm varje tangent som oktav mot tempereringen. Kontrol
 
 ### 7. Diskant B♭4 till toppen
 
-För varje tangent: sätt en kil mellan sträng 2 och 3 så att sträng 1 klingar ensam. Stäm den som oktav nedifrån. Flytta kilen så att sträng 1 och 2 klingar och stäm 2 ren mot 1, ta sedan bort kilen och stäm 3 mot båda. Högt upp: korta, kraftiga anslag, lyssna direkt efter anslaget. Samma kontroller som i steg 6, och mot tangenter två–tre oktaver ner.
+För varje tangent: sätt en kil mellan sträng 2 och 3 så att sträng 1 klingar ensam. Stäm den som oktav nedifrån. Flytta kilen så att sträng 1 och 2 klingar och stäm 2 ren mot 1, ta sedan bort kilen och stäm 3 mot båda. Högt upp: korta, kraftiga anslag, lyssna direkt efter anslaget. Är ett kor längst upp svårt att höra: knäpp på strängarna en i taget. Samma kontroller som i steg 6, och mot tangenter två–tre oktaver ner.
 
 ### 8. Ta ur filten, A4 ner till F3
 
@@ -96,5 +96,6 @@ Kraftiga anslag över hela klaviaturen, spela sedan igenom kvintcirkeln och lyss
 
 - Dra upp varje sträng till tonen underifrån. Hamnar du för högt: gå under målet och kom upp igen.
 - Sätt stämskruven så att strängen ligger kvar: slå an kraftigt några gånger och se att avläsningen håller.
+- Håll tangenten nere när en kil sätts i, så att dämparen inte böjs.
 - Hoppar ratten på en tangent svävar dess strängar mot varandra. Dämpa alla utom en.
 - Stämskruvar som vrids för lätt eller hoppar tyder på en sliten stämstock. Det är ett jobb för en pianotekniker.
