@@ -1713,10 +1713,10 @@ function bindEvents() {
   on('btn-measure-b', 'click', () => {
     if (!mic.running) return message(tr('msg.micFirst'), 'warn');
     state.bReadings = [];
-    state.measureB = { k: state.key, until: performance.now() + 4000 };
+    const run = (state.measureB = { k: state.key, until: performance.now() + 4000 });
     $('btn-measure-b').disabled = true;
     message(tr('msg.strikeB', { name: kName(state.key) }), 'info', 4000);
-    setTimeout(() => state.measureB && finishMeasureB(), 6000); // in case the note dies away first
+    setTimeout(() => state.measureB === run && finishMeasureB(), 6000); // in case the note dies away first
   });
 
   // Reference
