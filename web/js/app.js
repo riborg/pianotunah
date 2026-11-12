@@ -600,7 +600,20 @@ function setMode(m) {
 // ---------------------------------------------------------------------------
 // Measuring
 
+// One start at a time: a second click while the permission prompt is open
+// would start a second stream and analysis timer that are never stopped.
+let micStarting = false;
 async function startMic() {
+  if (micStarting || mic.running) return;
+  micStarting = true;
+  try {
+    await openMic();
+  } finally {
+    micStarting = false;
+  }
+}
+
+async function openMic() {
   try {
     try {
       await mic.start(state.micId);
