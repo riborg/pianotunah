@@ -18,15 +18,15 @@ function check(ok, text) {
   if (!ok) failed++;
 }
 
+const browser = await puppeteer.launch({
+  args: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required',
+    `--unsafely-treat-insecure-origin-as-secure=${base}`, '--user-data-dir=/tmp/order-profile'],
+});
+// After the launch: if Chrome does not start, no tuning is left behind.
 await api('/' + id, {
   method: 'PUT',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ id, name: 'Order test', rev: 0, settings: DEFAULT_SETTINGS, keys: {}, inharmonicity: {}, partials: {}, history: [] }),
-});
-
-const browser = await puppeteer.launch({
-  args: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required',
-    `--unsafely-treat-insecure-origin-as-secure=${base}`, '--user-data-dir=/tmp/order-profile'],
 });
 const page = await browser.newPage();
 const errors = [];
