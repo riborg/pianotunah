@@ -5,10 +5,14 @@ import { DEFAULT_SETTINGS, migrateSettings } from './theory.js';
 const API = 'api/tunings';
 
 async function call(method, path = '', body) {
+  const json = body ? JSON.stringify(body) : undefined;
   const res = await fetch(API + path, {
     method,
-    headers: body ? { 'Content-Type': 'application/json' } : {},
-    body: body ? JSON.stringify(body) : undefined,
+    headers: json ? { 'Content-Type': 'application/json' } : {},
+    body: json,
+    // A save started as the tab closes is otherwise cancelled. Browsers allow
+    // 64 KiB of such requests at a time; a tuning is 10–15.
+    keepalive: !!json && json.length < 30000,
   });
   if (!res.ok) {
     const err = new Error(`${method} ${API}${path}: ${res.status}`);
