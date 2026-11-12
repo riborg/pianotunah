@@ -644,6 +644,13 @@ function watchMic() {
   diag(`mic on: ${mic.label || 'default input'}, ${mic.sampleRate} Hz, audio ${mic.ctx.state}`);
   mic.ctx.addEventListener('statechange', () => diag(`audio ${mic.ctx?.state}`));
   for (const ev of ['mute', 'unmute', 'ended']) track?.addEventListener(ev, () => diag(`mic track ${ev}`));
+  // Unplugged, or the browser took the input back: the analyser would go on
+  // reading silence.
+  track?.addEventListener('ended', () => {
+    if (mic.stream?.getAudioTracks()[0] !== track) return;
+    stopMic();
+    message(tr('mic.ended'), 'warn', 0);
+  });
 }
 
 // Every 5 s while the microphone runs: frames analysed, readings, and why the
