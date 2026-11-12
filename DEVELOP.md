@@ -48,7 +48,7 @@ UI strings are in `web/js/lang/en.js` and `sv.js`. Static markup uses `data-i18n
 
 ## API
 
-`GET /api/tunings`, `GET|PUT|DELETE /api/tunings/{id}`, `GET /api/version`, `GET /healthz`. `PUT` requires the document's `rev` and answers 409 if someone else has saved since.
+`GET /api/tunings`, `GET|PUT|DELETE /api/tunings/{id}`, `GET /api/version`, `GET /healthz`. `PUT` requires the document's `rev` and answers 409 if someone else has saved since. Writes from another origin are refused (403).
 
 ## Code
 
