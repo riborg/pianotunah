@@ -78,7 +78,7 @@ Keep the strip in. Tune each key as an octave from the temperament. Check it as 
 
 ### 7. Treble B♭4 to the top
 
-For each key, put a wedge between strings 2 and 3 so string 1 sounds alone. Tune it as an octave from below. Move the wedge so strings 1 and 2 sound and tune 2 pure against 1, then pull the wedge and tune 3 against both. High up, use short, firm strikes, listen right after the attack. Same checks as in step 6, and against keys two or three octaves down.
+For each key, put a wedge between strings 2 and 3 so string 1 sounds alone. Tune it as an octave from below. Move the wedge so strings 1 and 2 sound and tune 2 pure against 1, then pull the wedge and tune 3 against both. High up, use short, firm strikes, listen right after the attack. If a unison at the top is hard to hear, pluck the strings one after the other. Same checks as in step 6, and against keys two or three octaves down.
 
 ### 8. Pull the strip, A4 down to F3
 

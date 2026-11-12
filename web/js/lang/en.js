@@ -171,7 +171,7 @@ export default {
   'order.upper': 'Octaves {lo}–{hi}',
   'order.upper.text': 'Keep the strip in. Each key as an octave from the temperament, checked with the third and tenth (M3–M10) and with the fourth and fifth.',
   'order.treble': 'Treble {lo}–{hi}',
-  'order.treble.text': 'A wedge between strings 2 and 3 of the key leaves string 1; hold the key down while it goes in, so the damper is not bent. Tune it as an octave from below, then the other strings pure against it. High up: short, firm strikes, listen right after the attack, and check against two or three octaves down.',
+  'order.treble.text': 'A wedge between strings 2 and 3 of the key leaves string 1; hold the key down while it goes in, so the damper is not bent. Tune it as an octave from below, then the other strings pure against it. High up: short, firm strikes, listen right after the attack, and check against two or three octaves down. If a unison at the top is hard to hear, pluck the strings one after the other.',
   'order.pull': 'Pull the strip {lo}–{hi}',
   'order.pull.text': 'One key at a time from {lo} down to {hi}: the outer strings pure against the middle one.',
   'order.bass': 'Bass {lo}–{hi}',

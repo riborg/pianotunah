@@ -171,7 +171,7 @@ export default {
   'order.upper': 'Oktaver {lo}–{hi}',
   'order.upper.text': 'Låt filten sitta kvar. Varje tangent som oktav mot tempereringen, kontrollerad med ters och decima (M3–M10) och med kvart och kvint.',
   'order.treble': 'Diskant {lo}–{hi}',
-  'order.treble.text': 'En kil mellan sträng 2 och 3 i tangenten lämnar sträng 1; håll tangenten nere när den sätts i, så att dämparen inte böjs. Stäm den som oktav nedifrån, sedan de andra strängarna rena mot den. Högt upp: korta, kraftiga anslag, lyssna direkt efter anslaget och kontrollera mot två–tre oktaver ner.',
+  'order.treble.text': 'En kil mellan sträng 2 och 3 i tangenten lämnar sträng 1; håll tangenten nere när den sätts i, så att dämparen inte böjs. Stäm den som oktav nedifrån, sedan de andra strängarna rena mot den. Högt upp: korta, kraftiga anslag, lyssna direkt efter anslaget och kontrollera mot två–tre oktaver ner. Är ett kor längst upp svårt att höra: knäpp på strängarna en i taget.',
   'order.pull': 'Ta ur filten {lo}–{hi}',
   'order.pull.text': 'En tangent i taget från {lo} ner till {hi}: de yttre strängarna rena mot den mittersta.',
   'order.bass': 'Bas {lo}–{hi}',
