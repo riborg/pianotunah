@@ -96,5 +96,6 @@ Kraftiga anslag över hela klaviaturen, spela sedan igenom kvintcirkeln och lyss
 
 - Dra upp varje sträng till tonen underifrån. Hamnar du för högt: gå under målet och kom upp igen.
 - Sätt stämskruven så att strängen ligger kvar: slå an kraftigt några gånger och se att avläsningen håller.
+- Håll tangenten nere när en kil sätts i, så att dämparen inte böjs.
 - Hoppar ratten på en tangent svävar dess strängar mot varandra. Dämpa alla utom en.
 - Stämskruvar som vrids för lätt eller hoppar tyder på en sliten stämstock. Det är ett jobb för en pianotekniker.

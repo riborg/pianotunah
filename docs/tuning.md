@@ -96,5 +96,6 @@ Firm strikes across the keyboard, then play through the circle of fifths and lis
 
 - Bring each string up to pitch from below. If you overshoot, go below the target and come up again.
 - Set the pin so the string stays put: strike firmly a few times and check that the reading holds.
+- Hold the key down while a wedge goes in, so its damper is not bent.
 - If the dial jumps on a key, its strings beat against each other. Mute all but one.
 - Pins that turn too easily or jump point to a worn pin block. That is a job for a piano technician.
