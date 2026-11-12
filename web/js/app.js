@@ -215,6 +215,7 @@ function renderTuningSelect() {
 
 async function openTuning(t) {
   await saver.flush();
+  const other = state.tuning?.id !== t.id;
   state.tuning = normalize(t);
   state.orderRecheck = null;
   try { localStorage.setItem(LS.tuning, t.id); } catch { /* optional */ }
@@ -223,6 +224,7 @@ async function openTuning(t) {
   renderSettings();
   renderTuningSelect();
   setSaveState('idle');
+  if (other && state.mode === 'survey') setMode('survey'); // the run belongs to the piano it started on
   followOrder();
 }
 
