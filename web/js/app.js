@@ -363,7 +363,7 @@ function renderRef() {
   if (p) {
     const o = (-p / 100) * m;
     text += tr('ref.overpull', { p, c: fmtC(m, 0), o: fmtC(o, 0), hz: fmtHz(ref * 2 ** (o / 1200), 1) });
-    if (m < -50) text += ' ' + tr('ref.overpullBig');
+    if (m < -25) text += ' ' + tr('ref.overpullBig');
     $('btn-overpull').textContent = tr('ref.useOverpull', { p });
     $('btn-overpull').dataset.p = p;
     $('btn-overpull').hidden = Number(S().overpull) === p;
