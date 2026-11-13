@@ -1284,6 +1284,21 @@ function renderOrderPanel() {
   $('order-next').textContent = tr(t ? 'order.nextKey' : 'order.next');
   $('order-skip').hidden = !t;
   renderOrderState();
+  fitOrderText();
+}
+
+// "Show more" under a clamped explanation; not needed when it all fits or
+// the panel is beside the dial (style.css).
+const orderWide = matchMedia('(min-width: 960px)');
+function fitOrderText() {
+  const panel = $('order-panel');
+  if (panel.hidden) return;
+  const open = panel.classList.contains('text-open');
+  const el = $('order-text');
+  const b = $('order-more');
+  b.hidden = orderWide.matches || (!open && el.scrollHeight <= el.clientHeight + 1);
+  b.textContent = tr(open ? 'order.less' : 'order.more');
+  b.setAttribute('aria-expanded', open);
 }
 
 // ---------------------------------------------------------------------------
@@ -1667,6 +1682,10 @@ function bindEvents() {
   onAll('[data-plan]', (b) => setSurveyPlan(b.dataset.plan));
   on('btn-order', 'click', () => setOrderOn(!state.orderOn));
   on('order-close', 'click', () => setOrderOn(false));
+  on('order-more', 'click', () => {
+    $('order-panel').classList.toggle('text-open');
+    fitOrderText();
+  });
   on('order-step', 'change', (e) => goOrder({ step: Number(e.target.value), i: 0 }));
   on('order-prev', 'click', () => goOrder(order.prevPos(state.order, state.orderPos) || state.orderPos));
   on('order-next', 'click', () => {
@@ -1883,6 +1902,7 @@ function bindEvents() {
 
   // Window
   window.addEventListener('resize', () => {
+    fitOrderText();
     renderKeyboard();
     renderChart();
   });

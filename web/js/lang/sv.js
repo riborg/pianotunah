@@ -122,6 +122,8 @@ export default {
   'order.nextStep': 'Nästa steg',
   'order.close': 'Stäng arbetsordningen',
   'order.closeTitle': 'Stäng arbetsordningen (O)',
+  'order.more': 'Visa mer',
+  'order.less': 'Visa mindre',
   'order.progress': 'tangent {i} av {n}',
   'order.back': 'Tillbaka till {name}',
   'order.confirm': 'I stäm. Slå an kraftigt en gång till för att se att den ligger kvar.',

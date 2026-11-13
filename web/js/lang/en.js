@@ -122,6 +122,8 @@ export default {
   'order.nextStep': 'Next step',
   'order.close': 'Close tuning order',
   'order.closeTitle': 'Close tuning order (O)',
+  'order.more': 'Show more',
+  'order.less': 'Show less',
   'order.progress': 'key {i} of {n}',
   'order.back': 'Back to {name}',
   'order.confirm': 'In tune. Strike firmly once more to check that it holds.',

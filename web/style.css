@@ -414,6 +414,12 @@ select:disabled { opacity: 0.55; }
 .order-state { margin: -4px 0 0; font-size: 14px; color: var(--good); }
 .order-state:empty { display: none; }
 .chk.main { border-color: var(--accent); color: var(--ink); }
+/* Under the dial the explanation shows two lines until it is opened, so the
+   buttons stay close to the dial. Beside it there is room for all of it. */
+.order-panel .fold { align-self: flex-start; font-size: 13px; }
+@media (max-width: 959px) {
+  .order-panel:not(.text-open) #order-text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+}
 
 /* Settings drawer */
 body.drawer-open { overflow: hidden; }
