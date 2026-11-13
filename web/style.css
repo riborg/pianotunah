@@ -668,6 +668,8 @@ details > .form { margin-top: 10px; }
   .seg, .tab { min-height: 44px; justify-content: center; }
   .brand { min-height: 44px; }
   .fold, summary { padding-block: 12px; margin-block: -12px; }
+  /* iOS zooms the page into a field with text under 16 px. */
+  select, textarea, input[type="text"], input[type="number"]:not(#set-ref), .order-panel select { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .key.flash, .drawer { animation: none; }
