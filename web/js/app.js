@@ -1578,8 +1578,13 @@ function closeRefPop(focusChip = false) {
   if (focusChip) $('btn-ref-chip').focus();
 }
 
+// The page behind the drawer is inert, so Tab stays in the drawer. The toast
+// stays reachable; it is drawn above the drawer.
+const setPageInert = (on) => document.querySelectorAll('.top, main').forEach((el) => (el.inert = on));
+
 function openDrawer(tab) {
   closeRefPop();
+  setPageInert(true);
   $('drawer').hidden = $('drawer-backdrop').hidden = false;
   document.body.classList.add('drawer-open');
   $('btn-settings').setAttribute('aria-expanded', 'true');
@@ -1591,6 +1596,7 @@ function openDrawer(tab) {
 
 function closeDrawer() {
   $('drawer').hidden = $('drawer-backdrop').hidden = true;
+  setPageInert(false);
   document.body.classList.remove('drawer-open');
   $('btn-settings').setAttribute('aria-expanded', 'false');
   $('btn-settings').focus();
@@ -1869,7 +1875,8 @@ function bindEvents() {
       t: playCurrent,
       s: () => ($('drawer').hidden ? openDrawer() : closeDrawer()),
     }[e.key.length === 1 ? e.key.toLowerCase() : e.key];
-    if (!action) return;
+    // Only S works while the drawer is open; the rest act on the page behind it.
+    if (!action || (!$('drawer').hidden && e.key.toLowerCase() !== 's')) return;
     action();
     e.preventDefault();
   });
