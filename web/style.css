@@ -658,6 +658,17 @@ details > .form { margin-top: 10px; }
   .tuner, .tuner-main, .dial-col { gap: 8px; }
   .dial { max-width: 320px; }
 }
+/* Touch screens: controls at least 44 px high. Text links keep their look;
+   padding with a negative margin enlarges what can be tapped. */
+@media (pointer: coarse) {
+  .btn, .ref-chip, .chip-btn, .menu button,
+  select, input[type="text"], input[type="number"] { min-height: 44px; }
+  .btn.close, .btn.icon, .nav { min-width: 44px; }
+  .nav { width: 44px; height: 44px; }
+  .seg, .tab { min-height: 44px; justify-content: center; }
+  .brand { min-height: 44px; }
+  .fold, summary { padding-block: 12px; margin-block: -12px; }
+}
 @media (prefers-reduced-motion: reduce) {
   .key.flash, .drawer { animation: none; }
   .kb-marker, .mic-level, .survey-bar i, .tuner-main { transition: none; }
