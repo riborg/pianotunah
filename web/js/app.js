@@ -1617,6 +1617,7 @@ const setPageInert = (on) => document.querySelectorAll('.top, main').forEach((el
 
 function openDrawer(tab) {
   closeRefPop();
+  setToneMenuOpen(false);
   setPageInert(true);
   $('drawer').hidden = $('drawer-backdrop').hidden = false;
   document.body.classList.add('drawer-open');
