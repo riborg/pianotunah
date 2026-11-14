@@ -707,6 +707,8 @@ details > .form { margin-top: 10px; }
   .seg { flex: 1; }
   .tabs { gap: 0; padding: 0 4px; }
   .tab { padding: 8px 5px; font-size: 14px; }
+  /* Under the dial the head is narrow: progress beside the title, the step below. */
+  .order-panel .survey-head select { order: 1; }
 }
 /* Reference and tone do not fit on one row: the reference shares its row
    with Auto/Lock instead, so the toolbar takes three rows, not four. */
