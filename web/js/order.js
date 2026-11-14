@@ -36,16 +36,37 @@ const up = (k) => [[k - 12, k, [2, 1]], [k - 12, k, [4, 2]], [k - 16, k - 12], [
 // Downwards from k + 12: in the bass also the twelfth and the seventeenth.
 const down = (k) => [[k, k + 12, [2, 1]], [k, k + 12, [4, 2]], [k, k + 12, [6, 3]], [k + 12, k + 16], [k, k + 16], [k, k + 19], [k, k + 24], [k, k + 28]];
 
-// strings: { top, twoStringsTo, oneStringTo } from the settings. recheck:
-// keys to go over again in the last step.
-export function buildOrder({ top, twoStringsTo = 0, oneStringTo = 0 }, recheck = []) {
-  const strings = (k) => (k <= oneStringTo ? 1 : k <= twoStringsTo ? 2 : 3);
-  const bass = [];
-  for (let k = STRIP[0] - 1; k >= 1; k -= 2) {
-    const pair = k > 1 ? [k, k - 1] : [k];
-    bass.push(...pair.map((x) => ({ k: x, from: x + 12, what: 'one', checks: down(x) })));
-    bass.push(...pair.filter((x) => strings(x) > 1).map((x) => ({ k: x, what: 'unison' })));
+// Outside the felt strip, two keys at a time from `first` towards `last`.
+// One string first: a wedge leaves one string of each key, tuned from its
+// octave, then the unisons. Double string unison (dsu): one wedge between the
+// two keys mutes one string of each; the two free strings of each key are
+// tuned pure and on pitch together (`pair`), then the wedge comes out and the
+// third string is tuned to them (`third`). A key with two strings needs no
+// wedge: its pair is its unison. A single string is tuned as in `one`.
+function outside(first, last, { strings, dsu, octave }) {
+  const tasks = [];
+  const dir = Math.sign(last - first);
+  for (let k = first; dir * (last - k) >= 0; k += 2 * dir) {
+    const keys = dir * (last - k) >= 1 ? [k, k + dir] : [k];
+    const tuned = (x) => ({ k: x, ...octave(x), what: dsu && strings(x) > 1 ? 'pair' : 'one' });
+    tasks.push(...keys.map(tuned));
+    if (dsu) tasks.push(...keys.filter((x) => strings(x) > 2).map((x) => ({ k: x, what: 'third' })));
+    else tasks.push(...keys.filter((x) => strings(x) > 1).map((x) => ({ k: x, what: 'unison' })));
   }
+  return tasks;
+}
+
+// strings: { top, twoStringsTo, oneStringTo } from the settings; dsu: tune
+// the unisons outside the felt strip as double string unisons. recheck: keys
+// to go over again in the last step.
+export function buildOrder({ top, twoStringsTo = 0, oneStringTo = 0, dsu = false }, recheck = []) {
+  const strings = (k) => (k <= oneStringTo ? 1 : k <= twoStringsTo ? 2 : 3);
+  const bass = outside(STRIP[0] - 1, 1, { strings, dsu, octave: (k) => ({ from: k + 12, checks: down(k) }) });
+  // The treble keeps one key at a time with one string first: a wedge in the
+  // key, then its unison.
+  const treble = dsu
+    ? outside(STRIP[1] + 1, top, { strings, dsu, octave: (k) => ({ from: k - 12, checks: up(k) }) })
+    : range(STRIP[1] + 1, top).flatMap((k) => [{ k, from: k - 12, what: 'one', checks: up(k) }, { k, what: 'unison' }]);
   return [
     { id: 'pitch', tasks: [] },
     // From the middle up, then down: all strings, within a few cents.
@@ -54,7 +75,7 @@ export function buildOrder({ top, twoStringsTo = 0, oneStringTo = 0 }, recheck =
     { id: 'middle', tasks: [{ k: 49, what: 'middle' }, { k: 37, from: 49, what: 'middle', checks: [[37, 49, [4, 2]], [33, 37], [33, 49]] }] },
     { id: 'temperament', tasks: TEMPERAMENT.map(([k, from, checks]) => ({ k, from, what: 'middle', checks })) },
     { id: 'upper', tasks: range(45, STRIP[1] - 1).map((k) => ({ k, from: k - 12, what: 'middle', checks: up(k) })) },
-    { id: 'treble', tasks: range(STRIP[1] + 1, top).flatMap((k) => [{ k, from: k - 12, what: 'one', checks: up(k) }, { k, what: 'unison' }]) },
+    { id: 'treble', tasks: treble },
     { id: 'pull', tasks: range(STRIP[1], STRIP[0]).map((k) => ({ k, what: 'pull' })) },
     { id: 'bass', tasks: bass },
     { id: 'finish', tasks: recheck.map((k) => ({ k, what: 'recheck' })) },
