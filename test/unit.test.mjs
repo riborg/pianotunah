@@ -297,6 +297,11 @@ test('tuning order: a three-string bass key with double string unisons gets its 
   const bass = buildOrder({ top: 88, twoStringsTo: 20, oneStringTo: 0, dsu: true }).find((s) => s.id === 'bass').tasks;
   assert.deepEqual(bass.slice(0, 4).map((t) => `${t.k}${t.what[0]}`), ['32p', '31p', '32t', '31t']);
   assert.ok(!bass.some((t) => t.what === 'third' && t.k <= 20));
+  // Where the count changes, the keys are not paired: 22 has three strings, 21 two.
+  const mixed = buildOrder({ top: 88, twoStringsTo: 21, oneStringTo: 0, dsu: true }).find((s) => s.id === 'bass').tasks;
+  const at = (k) => mixed.findIndex((t) => t.k === k);
+  assert.deepEqual(mixed.slice(at(22), at(22) + 3).map((t) => `${t.k}${t.what[0]}`), ['22p', '22t', '21p']);
+  assert.ok(!mixed.some((t) => t.what === 'third' && t.k <= 21));
 });
 
 test('tuning order: positions step through and back, empty steps count once', () => {

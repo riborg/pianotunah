@@ -46,8 +46,12 @@ const down = (k) => [[k, k + 12, [2, 1]], [k, k + 12, [4, 2]], [k, k + 12, [6, 3
 function outside(first, last, { strings, dsu, octave }) {
   const tasks = [];
   const dir = Math.sign(last - first);
-  for (let k = first; dir * (last - k) >= 0; k += 2 * dir) {
-    const keys = dir * (last - k) >= 1 ? [k, k + dir] : [k];
+  // With dsu two keys share a wedge only if they have as many strings: a
+  // wedge beside a key with two strings would leave it one.
+  const together = (k) => dir * (last - k) >= 1 && (!dsu || strings(k) === strings(k + dir));
+  for (let k = first; dir * (last - k) >= 0; ) {
+    const keys = together(k) ? [k, k + dir] : [k];
+    k += keys.length * dir;
     const tuned = (x) => ({ k: x, ...octave(x), what: dsu && strings(x) > 1 ? 'pair' : 'one' });
     tasks.push(...keys.map(tuned));
     if (dsu) tasks.push(...keys.filter((x) => strings(x) > 2).map((x) => ({ k: x, what: 'third' })));
