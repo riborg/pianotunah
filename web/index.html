@@ -213,14 +213,14 @@
     <button id="drawer-close" class="btn ghost close" type="button" aria-label="Close settings" data-i18n-aria-label="drawer.close">×</button>
   </div>
   <nav class="tabs" role="tablist" aria-label="Settings" data-i18n-aria-label="top.settings">
-    <button class="tab" type="button" role="tab" data-tab="piano" data-i18n="tab.piano">Piano</button>
-    <button class="tab" type="button" role="tab" data-tab="tuning" data-i18n="tab.tuning">Tuning</button>
-    <button class="tab" type="button" role="tab" data-tab="pass" data-i18n="tab.pass">Pass</button>
-    <button class="tab" type="button" role="tab" data-tab="help" data-i18n="tab.help">Help</button>
-    <button class="tab" type="button" role="tab" data-tab="app" data-i18n="tab.app">App</button>
+    <button id="tab-piano" class="tab" type="button" role="tab" aria-controls="panel-piano" data-tab="piano" data-i18n="tab.piano">Piano</button>
+    <button id="tab-tuning" class="tab" type="button" role="tab" aria-controls="panel-tuning" data-tab="tuning" data-i18n="tab.tuning">Tuning</button>
+    <button id="tab-pass" class="tab" type="button" role="tab" aria-controls="panel-pass" data-tab="pass" data-i18n="tab.pass">Pass</button>
+    <button id="tab-help" class="tab" type="button" role="tab" aria-controls="panel-help" data-tab="help" data-i18n="tab.help">Help</button>
+    <button id="tab-app" class="tab" type="button" role="tab" aria-controls="panel-app" data-tab="app" data-i18n="tab.app">App</button>
   </nav>
 
-  <section class="panel" role="tabpanel" data-panel="piano">
+  <section id="panel-piano" class="panel" role="tabpanel" aria-labelledby="tab-piano" data-panel="piano">
     <div class="form">
       <label for="set-name" data-i18n="piano.name">Name</label>
       <input id="set-name" type="text" maxlength="80">
@@ -266,7 +266,7 @@
     </div>
   </section>
 
-  <section class="panel" role="tabpanel" data-panel="tuning" hidden>
+  <section id="panel-tuning" class="panel" role="tabpanel" aria-labelledby="tab-tuning" data-panel="tuning" hidden>
     <!-- The reference moves to the popover at the A4 chip while it is open. -->
     <div id="ref-home"><div id="ref-box" class="ref-box">
     <h3 id="ref-h" data-i18n="ref.title">Reference A4</h3>
@@ -342,7 +342,7 @@
     </details>
   </section>
 
-  <section class="panel" role="tabpanel" data-panel="pass" hidden>
+  <section id="panel-pass" class="panel" role="tabpanel" aria-labelledby="tab-pass" data-panel="pass" hidden>
     <div class="pass-stats" id="pass-stats"></div>
     <button id="btn-new-pass" class="btn ghost" type="button" data-i18n="pass.new">New pass</button>
     <div id="confirm-pass" class="confirm" hidden>
@@ -354,9 +354,9 @@
     <ol class="history" id="history"></ol>
   </section>
 
-  <section class="panel help" role="tabpanel" data-panel="help" data-i18n-html="help" hidden></section>
+  <section id="panel-help" class="panel help" role="tabpanel" aria-labelledby="tab-help" data-panel="help" data-i18n-html="help" hidden></section>
 
-  <section class="panel" role="tabpanel" data-panel="app" hidden>
+  <section id="panel-app" class="panel" role="tabpanel" aria-labelledby="tab-app" data-panel="app" hidden>
     <h3><label for="set-mic" data-i18n="app.mic">Microphone</label></h3>
     <select id="set-mic"></select>
     <p class="desc" id="mic-desc"></p>

@@ -1631,7 +1631,10 @@ function closeDrawer() {
 
 function showTab(tab) {
   if (!document.querySelector(`[data-panel="${tab}"]`)) tab = 'piano';
-  document.querySelectorAll('[data-tab]').forEach((b) => b.setAttribute('aria-selected', b.dataset.tab === tab));
+  document.querySelectorAll('[data-tab]').forEach((b) => {
+    b.setAttribute('aria-selected', b.dataset.tab === tab);
+    b.tabIndex = b.dataset.tab === tab ? 0 : -1; // only the selected tab is in the Tab order
+  });
   document.querySelectorAll('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== tab));
   try { localStorage.setItem(LS.tab, tab); } catch { /* optional */ }
 }
@@ -1666,6 +1669,18 @@ function bindEvents() {
     if (!e.target.closest('.ref-anchor')) closeRefPop();
   });
   onAll('[data-tab]', (b) => showTab(b.dataset.tab));
+  // Arrow keys, Home and End move between the tabs and select them.
+  document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
+    const tabs = [...document.querySelectorAll('[data-tab]')];
+    const i = tabs.indexOf(e.target);
+    const to = { ArrowLeft: i - 1, ArrowRight: i + 1, Home: 0, End: tabs.length - 1 }[e.key];
+    if (i < 0 || to === undefined || e.metaKey || e.ctrlKey || e.altKey) return;
+    const t = tabs[(to + tabs.length) % tabs.length];
+    showTab(t.dataset.tab);
+    t.focus();
+    e.preventDefault();
+    e.stopPropagation(); // not the page's previous/next key
+  });
   on('btn-mic', 'click', () => (mic.running ? stopMic() : startMic()));
   on('btn-rec', 'click', toggleRecording);
   on('btn-rec-stop', 'click', finishRecording);
