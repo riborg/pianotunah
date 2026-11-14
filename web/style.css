@@ -445,7 +445,7 @@ select:disabled { opacity: 0.55; }
 .menu #tone-on-key { margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0 0 5px 5px; padding-top: 9px; }
 /* Mic button: the level is a line along its bottom edge. Both labels share
    one grid cell, so the width stays when it switches between start and stop. */
-.mic-btn { position: relative; overflow: hidden; display: inline-grid; }
+.mic-btn { position: relative; overflow: hidden; display: inline-grid; align-items: center; }
 .mic-btn > span { grid-area: 1 / 1; }
 #mic-alt { visibility: hidden; }
 .mic-level { position: absolute; left: 0; bottom: 0; height: 3px; width: 0; background: var(--accent); transition: width 80ms linear; }
