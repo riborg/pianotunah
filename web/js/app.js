@@ -627,7 +627,15 @@ async function openMic() {
     }
   } catch (e) {
     diag(`mic failed: ${e.name} ${e.message}`);
-    const key = { insecure: 'mic.insecure', NotAllowedError: 'mic.denied' }[e.name];
+    const key = {
+      insecure: 'mic.insecure',
+      NotAllowedError: 'mic.denied',
+      NotFoundError: 'mic.notFound',
+      NotReadableError: 'mic.notReadable',
+      OverconstrainedError: 'mic.unavailable',
+      AbortError: 'mic.aborted',
+      SecurityError: 'mic.blocked',
+    }[e.name];
     message(key ? tr(key) : tr('mic.failed', { err: e.message }), 'error', 0);
     return;
   }
