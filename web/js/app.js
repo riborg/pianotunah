@@ -1361,9 +1361,15 @@ function setToneOnKey(on) {
   try { localStorage.setItem(LS.toneOnKey, on ? 'on' : 'off'); } catch { /* optional */ }
 }
 
+// Opening focuses the checked tone; closing gives focus back to the button if
+// it was in the menu.
 function setToneMenuOpen(open) {
-  $('tone-menu').hidden = !open;
+  const menu = $('tone-menu');
+  if (open === !menu.hidden) return;
+  if (!open && menu.contains(document.activeElement)) $('btn-tone-menu').focus();
+  menu.hidden = !open;
   $('btn-tone-menu').setAttribute('aria-expanded', open);
+  if (open) menu.querySelector('[data-tone][aria-checked="true"]').focus();
 }
 
 // The sine sounds at the measured partial, in the bass and tenor an octave or
@@ -1741,6 +1747,24 @@ function bindEvents() {
   });
   on('btn-tone', 'click', playCurrent);
   on('btn-tone-menu', 'click', () => setToneMenuOpen($('tone-menu').hidden));
+  on('btn-tone-menu', 'keydown', (e) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    setToneMenuOpen(true);
+    e.preventDefault();
+  });
+  // Up/Down, Home and End move among the items; Tab closes the menu and moves
+  // on from its button.
+  on('tone-menu', 'keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'Tab') return setToneMenuOpen(false);
+    const items = [...$('tone-menu').querySelectorAll('[role^="menuitem"]')];
+    const i = items.indexOf(document.activeElement);
+    const to = { ArrowUp: i - 1, ArrowDown: i + 1, Home: 0, End: items.length - 1 }[e.key];
+    if (to !== undefined) items[(to + items.length) % items.length].focus();
+    else if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    e.stopPropagation(); // not the page's previous/next key
+  });
   onAll('[data-tone]', (b) => {
     setToneMode(b.dataset.tone);
     setToneMenuOpen(false);
