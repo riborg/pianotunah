@@ -1291,7 +1291,11 @@ function renderOrderPanel() {
       setSetting('overpull', 0);
       goOrder({ step: orderStepIndex('strip'), i: 0 });
     });
+  } else if (step.id === 'finish') {
+    // The main action once no key is left to go over.
+    orderButton(t ? 'order-action2' : 'order-action', tr('pass.new'), () => ($('order-confirm-pass').hidden = false));
   }
+  if (step.id !== 'finish') $('order-confirm-pass').hidden = true;
   $('order-prev').disabled = !order.prevPos(o, pos);
   $('order-next').textContent = tr(t ? 'order.nextKey' : 'order.next');
   $('order-skip').hidden = !t;
@@ -1900,6 +1904,11 @@ function bindEvents() {
   on('confirm-pass-no', 'click', show('confirm-pass', false));
   on('confirm-pass-yes', 'click', () => {
     $('confirm-pass').hidden = true;
+    newPass();
+  });
+  on('order-confirm-pass-no', 'click', show('order-confirm-pass', false));
+  on('order-confirm-pass-yes', 'click', () => {
+    $('order-confirm-pass').hidden = true;
     newPass();
   });
   on('btn-export', 'click', exportTuning);
