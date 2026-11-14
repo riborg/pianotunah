@@ -254,6 +254,11 @@
       <input id="set-two" class="num-in" type="number" min="0" max="88" step="1" inputmode="numeric">
       <label for="set-one"><span data-i18n="piano.oneString">One string up to key</span> <output id="out-one"></output></label>
       <input id="set-one" class="num-in" type="number" min="0" max="88" step="1" inputmode="numeric">
+      <label for="set-unisons" data-i18n="piano.unisons">Unisons</label>
+      <select id="set-unisons">
+        <option value="one" data-i18n="piano.unisonsOne">One string first</option>
+        <option value="dsu" data-i18n="piano.unisonsDsu">Double string unison (DSU)</option>
+      </select>
       <p class="desc" data-i18n="piano.stringsDesc">Counted from A0 = 1; 0 = none. The tuning order uses it for which keys need a wedge and which have no unison to tune.</p>
 
       <label for="set-notes" data-i18n="piano.notes">Notes</label>

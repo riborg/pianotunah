@@ -345,6 +345,7 @@ function renderSettings() {
   $('set-keys').value = String(top());
   $('set-two').value = s.twoStringsTo;
   $('set-one').value = s.oneStringTo;
+  $('set-unisons').value = s.unisons;
   $('set-temperament').value = s.temperament;
   $('set-root').value = s.root;
   if (s.temperament !== 'et') $('temper-details').open = true; // never hide an active historical temperament
@@ -1174,7 +1175,7 @@ function rebuildOrder() {
   if (!state.tuning) return;
   const s = S();
   const build = () => {
-    state.order = order.buildOrder({ top: top(), twoStringsTo: Number(s.twoStringsTo) || 0, oneStringTo: Number(s.oneStringTo) || 0 }, state.orderRecheck || []);
+    state.order = order.buildOrder({ top: top(), twoStringsTo: Number(s.twoStringsTo) || 0, oneStringTo: Number(s.oneStringTo) || 0, dsu: s.unisons === 'dsu' }, state.orderRecheck || []);
     state.orderPos = order.clampPos(state.order, state.tuning.order);
   };
   build();
@@ -1226,7 +1227,8 @@ function trackOrder(k) {
   const t = orderTask();
   if (!t || t.k !== k || refPlaying()) return;
   const s = statusClass(state.display);
-  const unison = t.what === 'unison' || t.what === 'pull';
+  // Tasks with more than one string sounding must also be clean, not only on pitch.
+  const unison = ['unison', 'pull', 'pair', 'third'].includes(t.what);
   const ok = state.order[state.orderPos.step].loose ? s !== 'bad' : s === 'good' && !(unison && (state.beating || state.unison.length < 8));
   const done = order.confirmReading(state.orderConfirm, state.attacks, ok);
   renderOrderState();
@@ -1265,6 +1267,7 @@ function taskText(t) {
   if (t.what === 'middle') return tr(t.from ? 'order.task.middleFrom' : 'order.task.middle', p);
   if (t.what === 'one') return tr(strings(t.k) === 1 ? 'order.task.single' : 'order.task.one', p);
   if (t.what === 'unison') return tr(strings(t.k) === 2 ? 'order.task.unison2' : 'order.task.unison3', p);
+  if (t.what === 'pair') return tr(strings(t.k) === 2 ? 'order.task.pair2' : 'order.task.pair', p);
   if (t.what === 'recheck') return tr('order.task.recheck', { ...p, c: fmtC(statusDev(t.k)) });
   return tr('order.task.' + t.what, p);
 }
@@ -1310,7 +1313,8 @@ function renderOrderPanel() {
   );
   $('order-checks').hidden = !rows.length;
 
-  let text = tr(`order.${step.id}.text`, stepParams(step.id));
+  const dsuStep = S().unisons === 'dsu' && (step.id === 'treble' || step.id === 'bass');
+  let text = tr(`order.${step.id}.${dsuStep ? 'dsuText' : 'text'}`, stepParams(step.id));
   if (step.id === 'pitch' || step.id === 'raise') text += ' ' + pitchAdvice();
   if (t && t.what !== 'raise') text += ' ' + tr('order.how');
   $('order-text').textContent = text;
@@ -1909,6 +1913,15 @@ function bindEvents() {
   };
   on('set-two', 'change', setStrings);
   on('set-one', 'change', setStrings);
+  // The treble and the bass get other tasks: the order stays on the key it was on.
+  on('set-unisons', 'change', (e) => {
+    const k = orderTask()?.k;
+    const { step } = state.orderPos;
+    S().unisons = e.target.value;
+    rebuildOrder();
+    const i = state.order[step].tasks.findIndex((t) => t.k === k);
+    goOrder({ step, i: Math.max(0, i) });
+  });
   bindSetting('set-temperament', 'temperament');
   bindSetting('set-root', 'root', Number);
   bindSetting('set-stretch', 'stretch');

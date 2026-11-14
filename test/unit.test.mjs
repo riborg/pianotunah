@@ -243,10 +243,12 @@ test('survey: wrong key is recognised, a flat piano is not', () => {
   assert.equal(wrongKey(clear(25), 37, 0, 0, new Set([25])), 0);
 });
 
+const pitched = (t) => ['middle', 'one', 'pair'].includes(t.what); // the task that sets the key's pitch
+
 test('tuning order: every key is tuned once, the temperament covers F3–E4', () => {
-  for (const top of [85, 88]) {
-    const order = buildOrder({ top, twoStringsTo: 32, oneStringTo: 8 });
-    const tuned = order.filter((s) => s.id !== 'raise').flatMap((s) => s.tasks).filter((t) => t.what === 'middle' || t.what === 'one').map((t) => t.k);
+  for (const [top, dsu] of [[85, false], [88, false], [85, true], [88, true]]) {
+    const order = buildOrder({ top, twoStringsTo: 32, oneStringTo: 8, dsu });
+    const tuned = order.filter((s) => s.id !== 'raise').flatMap((s) => s.tasks).filter(pitched).map((t) => t.k);
     assert.deepEqual([...tuned].sort((a, b) => a - b), Array.from({ length: top }, (_, i) => i + 1));
     const temper = order.find((s) => s.id === 'temperament').tasks.map((t) => t.k);
     assert.deepEqual([...temper].sort((a, b) => a - b), [33, 34, 35, 36, 38, 39, 40, 41, 42, 43, 44]); // F3–E4 but A3
@@ -254,7 +256,7 @@ test('tuning order: every key is tuned once, the temperament covers F3–E4', ()
     const done = new Set();
     for (const t of order.filter((s) => s.id !== 'raise').flatMap((s) => s.tasks)) {
       if (t.from) assert.ok(done.has(t.from), `${t.k} from ${t.from}`);
-      if (t.what === 'middle' || t.what === 'one') done.add(t.k);
+      if (pitched(t)) done.add(t.k);
     }
     assert.equal(order.find((s) => s.id === 'raise').tasks.length, top);
   }
@@ -265,6 +267,41 @@ test('tuning order: the bass goes two keys at a time, single strings have no uni
   assert.deepEqual(bass.slice(0, 4).map((t) => `${t.k}${t.what[0]}`), ['32o', '31o', '32u', '31u']);
   assert.ok(!bass.some((t) => t.what === 'unison' && t.k <= 8));
   assert.equal(bass.filter((t) => t.what === 'one').length, 32);
+});
+
+test('tuning order: double string unisons, a wedge between two keys', () => {
+  const order = buildOrder({ top: 88, twoStringsTo: 32, oneStringTo: 8, dsu: true });
+  const code = (t) => `${t.k}${t.what[0]}`;
+  const treble = order.find((s) => s.id === 'treble').tasks;
+  // Both pairs with the wedge in, then both third strings with it out.
+  assert.deepEqual(treble.slice(0, 4).map(code), ['50p', '51p', '50t', '51t']);
+  // 50–88 is an odd count: C8 is on its own.
+  assert.deepEqual(treble.slice(-2).map(code), ['88p', '88t']);
+  assert.equal(treble.filter((t) => t.what === 'pair').length, 88 - 49);
+  assert.equal(treble.filter((t) => t.what === 'third').length, 88 - 49);
+  assert.ok(treble.every((t) => t.what !== 'pair' || (t.from === t.k - 12 && t.checks.length)));
+  const bass = order.find((s) => s.id === 'bass').tasks;
+  // Two strings: the pair is the unison, no wedge and no third string.
+  assert.deepEqual(bass.slice(0, 2).map(code), ['32p', '31p']);
+  assert.ok(!bass.some((t) => t.what === 'third' || t.what === 'unison'));
+  // Single strings are tuned as before.
+  assert.deepEqual(bass.filter((t) => t.k <= 8).map((t) => t.what), Array(8).fill('one'));
+  // The temperament and the strip are the same either way.
+  const plain = buildOrder({ top: 88, twoStringsTo: 32, oneStringTo: 8 });
+  for (const id of ['middle', 'temperament', 'upper', 'pull']) {
+    assert.deepEqual(order.find((s) => s.id === id), plain.find((s) => s.id === id));
+  }
+});
+
+test('tuning order: a three-string bass key with double string unisons gets its third string', () => {
+  const bass = buildOrder({ top: 88, twoStringsTo: 20, oneStringTo: 0, dsu: true }).find((s) => s.id === 'bass').tasks;
+  assert.deepEqual(bass.slice(0, 4).map((t) => `${t.k}${t.what[0]}`), ['32p', '31p', '32t', '31t']);
+  assert.ok(!bass.some((t) => t.what === 'third' && t.k <= 20));
+  // Where the count changes, the keys are not paired: 22 has three strings, 21 two.
+  const mixed = buildOrder({ top: 88, twoStringsTo: 21, oneStringTo: 0, dsu: true }).find((s) => s.id === 'bass').tasks;
+  const at = (k) => mixed.findIndex((t) => t.k === k);
+  assert.deepEqual(mixed.slice(at(22), at(22) + 3).map((t) => `${t.k}${t.what[0]}`), ['22p', '22t', '21p']);
+  assert.ok(!mixed.some((t) => t.what === 'third' && t.k <= 21));
 });
 
 test('tuning order: positions step through and back, empty steps count once', () => {

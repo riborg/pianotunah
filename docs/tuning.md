@@ -11,7 +11,7 @@ How to tune a piano with Piano Tunah, following the tuning order (**O**). [Svens
 
 ## Before you start
 
-1. **Piano tab:** instrument, size, keys (85 or 88) and strings per key. To find the string counts, press the keys slowly from the bass end and count the strings in front of each hammer that moves. Enter the last key with one string and the last key with two. One example: one string up to A1 (key 13), two up to E♭3 (key 31), three above that.
+1. **Piano tab:** instrument, size, keys (85 or 88) and strings per key. To find the string counts, press the keys slowly from the bass end and count the strings in front of each hammer that moves. Enter the last key with one string and the last key with two. One example: one string up to A1 (key 13), two up to E♭3 (key 31), three above that. Under *Unisons*, choose *One string first* (the default) or *Double string unison (DSU)*; see steps 7 and 9.
 2. **Survey** *All A* or *All keys*. Nothing is tuned yet. The survey measures the strings' inharmonicity and where the piano stands.
 3. **Reference:** 440 Hz, or the piano's current pitch if it is old and far flat.
 
@@ -80,6 +80,8 @@ Keep the strip in. Tune each key as an octave from the temperament. Check it as 
 
 For each key, put a wedge between strings 2 and 3 so string 1 sounds alone. Tune it as an octave from below. Move the wedge so strings 1 and 2 sound and tune 2 pure against 1, then pull the wedge and tune 3 against both. High up, use short, firm strikes, listen right after the attack. If a unison at the top is hard to hear, pluck the strings one after the other. Same checks as in step 6, and against keys two or three octaves down.
 
+With double string unison (DSU): two neighbouring keys at a time (one where the number of strings changes). Hold both keys down and put one wedge between them, where there is more room than inside a key, so it mutes one string of each. Tune each key's two free strings pure together and onto pitch as an octave from below, with the same checks. To move the pair, turn one string the way the pitch should go, then make the pair pure again with the other. Repeat until it is pure and on pitch: the app accepts the pair only when it is on target and not beating. Then pull the wedge and tune the third string of each key pure against the two. DSU needs one wedge per two keys, in and out once, sets the pitch on what will actually sound instead of on one string the others then pull, and puts the wedge where there is room, which helps on birdcage actions. The slow beats of the checks are a little harder to hear with two strings sounding, so get the pair really pure first.
+
 ### 8. Pull the strip, A4 down to F3
 
 One key at a time: free the outer strings and tune them pure against the middle one.
@@ -87,6 +89,8 @@ One key at a time: free the outer strings and tune them pure against the middle 
 ### 9. Bass, E3 down to A0
 
 Two keys at a time. Wedge so one string sounds, tune it as an octave from above, then tune the other strings against it. Keys with one string have no unison to tune. Use longer strikes and let the note ring. Check the octave as 2:1, 4:2 and 6:3, and with the tenth, twelfth, double octave and seventeenth. In the deep bass the twelfth and the double octave tell more than the octave, and the beats get slower further down.
+
+With double string unison (DSU): one wedge between the two keys mutes one string of each. Tune each key's two free strings pure and on pitch together as an octave from above, with the same checks, moving the pair as in step 7. Then pull the wedge and tune the third string against them. Keys with two strings need no wedge: the pair is the whole unison. Keys with one string are tuned as before.
 
 ### 10. Finish
 

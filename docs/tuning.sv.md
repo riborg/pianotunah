@@ -11,7 +11,7 @@ Så stämmer du ett piano med Piano Tunah enligt arbetsordningen (**O**). [Engli
 
 ## Innan du börjar
 
-1. **Fliken Piano:** instrument, storlek, tangenter (85 eller 88) och strängar per tangent. Antalet strängar hittar du så här: tryck långsamt på tangenterna från basen och räkna strängarna framför varje hammare som rör sig. Fyll i sista tangenten med en sträng och sista tangenten med två. Ett exempel: en sträng t.o.m. A1 (tangent 13), två t.o.m. E♭3 (tangent 31), tre därovanför.
+1. **Fliken Piano:** instrument, storlek, tangenter (85 eller 88) och strängar per tangent. Antalet strängar hittar du så här: tryck långsamt på tangenterna från basen och räkna strängarna framför varje hammare som rör sig. Fyll i sista tangenten med en sträng och sista tangenten med två. Ett exempel: en sträng t.o.m. A1 (tangent 13), två t.o.m. E♭3 (tangent 31), tre därovanför. Under *Unisoner* väljer du *En sträng först* (standard) eller *Dubbelsträngsunison (DSU)*, se steg 7 och 9.
 2. **Kartläggning** *Alla A* eller *Alla tangenter*. Ingenting stäms än. Kartläggningen mäter strängarnas inharmonicitet och var pianot ligger.
 3. **Referens:** 440 Hz, eller pianots nuvarande tonhöjd om det är gammalt och ligger långt under.
 
@@ -80,6 +80,8 @@ Låt filten sitta kvar. Stäm varje tangent som oktav mot tempereringen. Kontrol
 
 För varje tangent: sätt en kil mellan sträng 2 och 3 så att sträng 1 klingar ensam. Stäm den som oktav nedifrån. Flytta kilen så att sträng 1 och 2 klingar och stäm 2 ren mot 1, ta sedan bort kilen och stäm 3 mot båda. Högt upp: korta, kraftiga anslag, lyssna direkt efter anslaget. Är ett kor längst upp svårt att höra: knäpp på strängarna en i taget. Samma kontroller som i steg 6, och mot tangenter två–tre oktaver ner.
 
+Med dubbelsträngsunison (DSU): två granntangenter i taget (en där antalet strängar skiftar). Håll ner båda tangenterna och sätt en kil mellan dem, där det är mer plats än inne i en tangent, så att den dämpar en sträng i varje. Stäm de två fria strängarna i varje tangent rena mot varandra och till tonen som oktav nedifrån, med samma kontroller. För att flytta paret: dra en sträng åt det håll tonen ska, och gör sedan paret rent igen med den andra. Upprepa tills det är rent och på tonen: appen godkänner paret först när det ligger på målet och inte svävar. Ta sedan bort kilen och stäm den tredje strängen i varje tangent ren mot de två. DSU kräver en kil per två tangenter, i och ur en gång, tonhöjden sätts på det som faktiskt ska klinga i stället för på en sträng som de andra sedan drar med sig, och kilen hamnar där det finns plats, vilket hjälper på pianon med överdämpare (fågelbur). De långsamma svävningarna i kontrollerna hörs lite sämre när två strängar klingar, så paret måste vara riktigt rent först.
+
 ### 8. Ta ur filten, A4 ner till F3
 
 En tangent i taget: frigör yttersträngarna och stäm dem rena mot den mittersta.
@@ -87,6 +89,8 @@ En tangent i taget: frigör yttersträngarna och stäm dem rena mot den mitterst
 ### 9. Bas, E3 ner till A0
 
 Två tangenter i taget. Kila så att en sträng klingar, stäm den som oktav uppifrån och stäm sedan de andra strängarna mot den. Tangenter med en sträng har ingen unison att stämma. Längre anslag; låt tonen klinga. Kontrollera oktaven som 2:1, 4:2 och 6:3, och med decima, duodecima, dubbeloktav och septdecima. I djupbasen säger duodecima och dubbeloktav mer än oktaven, och svävningarna blir långsammare ju längre ner.
+
+Med dubbelsträngsunison (DSU): en kil mellan de två tangenterna dämpar en sträng i varje. Stäm de två fria strängarna i varje tangent rena och till tonen tillsammans som oktav uppifrån, med samma kontroller, och flytta paret som i steg 7. Ta sedan bort kilen och stäm den tredje strängen mot dem. Tangenter med två strängar behöver ingen kil: paret är hela unisonen. Tangenter med en sträng stäms som förut.
 
 ### 10. Avslut
 

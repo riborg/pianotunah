@@ -256,6 +256,9 @@ export const DEFAULT_SETTINGS = {
   // oneStringTo one (0 = none), the rest three. Used by the tuning order.
   twoStringsTo: 32,
   oneStringTo: 0,
+  // Unisons outside the felt strip: 'one' string first with a wedge in the
+  // key, or 'dsu', double string unison with a wedge between two keys.
+  unisons: 'one',
 };
 
 // The temperament octave A3–A4 (keys 37–49) is tuned first. From there the
