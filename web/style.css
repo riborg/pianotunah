@@ -142,8 +142,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
   #btn-settings span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   #btn-settings .ico { margin-right: 0; }
 }
-/* Narrow: the buttons on the first row and the tuning on the second. */
+/* Narrow: the buttons on the first row and the tuning on the second. Not
+   sticky: two rows would cover the dial and the tuning order's buttons when
+   scrolling, and they are needed when starting, not between keys. */
 @media (max-width: 620px) {
+  .top { position: static; padding-block: 8px; gap: 8px; }
   .tuning-bar { order: 5; width: 100%; }
   .tuning-bar select { min-width: 0; flex: 1 1 auto; max-width: none; }
 }
