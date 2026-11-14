@@ -353,7 +353,7 @@ function showRefField() {
 function renderRef() {
   const ref = Number(S().refA4);
   if (document.activeElement !== $('set-ref')) showRefField();
-  $('btn-ref-chip').textContent = `A4 = ${fmtHz(ref, 1)}`;
+  $('ref-hz').textContent = fmtHz(ref, 1);
   const c = centsBetween(ref, 440);
   $('ref-cents').textContent = Math.abs(c) < 0.05 ? tr('ref.standard') : tr('ref.vs440', { c: fmtC(c) });
   for (const b of $('ref-presets').children) b.classList.toggle('on', Number(b.dataset.hz) === ref);

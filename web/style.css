@@ -734,16 +734,22 @@ details > .form { margin-top: 10px; }
 @media (max-height: 560px) {
   .top { position: static; padding-block: 6px; }
   .layout { margin-top: 6px; }
-  .tuner.card { padding-top: 8px; }
+  .tuner.card { padding: 8px 12px 12px; }
   .tuner, .tuner-main, .dial-col { gap: 8px; }
-  .head-left, .head-right { gap: 6px 8px; }
-  .head-right .seg, .flows .btn { padding-inline: 9px; }
+  .tuner-head { gap: 6px 8px; }
+  .head-left, .head-right { gap: 6px; }
+  .head-right .seg, .flows .btn { padding-inline: 7px; }
   .dial {
     max-width: min(560px, max(200px, (100vh - 216px) / 0.7));
     max-width: min(560px, max(200px, (100svh - 216px) / 0.7));
   }
   .status { margin-top: 0; line-height: 1.25; }
   .keyline { line-height: 1.35; }
+}
+/* The tuner's toolbar on one row from 667 px: the reference without "A4 =",
+   which is kept for screen readers. */
+@media (max-height: 560px) and (max-width: 719px) {
+  .ref-a4 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 }
 /* Landscape phones: the top bar stays on one row; the piano may narrow
    further than on a tablet. */
