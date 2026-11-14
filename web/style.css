@@ -746,14 +746,11 @@ details > .form { margin-top: 10px; }
   .status { margin-top: 0; line-height: 1.25; }
   .keyline { line-height: 1.35; }
 }
-/* Landscape phones: the top bar on one row, Settings as its icon. */
+/* Landscape phones: the top bar stays on one row; the piano may narrow
+   further than on a tablet. */
 @media (max-height: 560px) and (min-width: 621px) and (max-width: 959px) {
   .top { flex-wrap: nowrap; }
   .tuning-bar { min-width: 0; }
-  .tuning-bar select { min-width: 0; }
-  #save-status { flex-shrink: 0; }
-  #btn-settings span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  #btn-settings .ico { margin-right: 0; }
 }
 /* Touch screens: controls at least 44 px high. Text links keep their look;
    padding with a negative margin enlarges what can be tapped. */
