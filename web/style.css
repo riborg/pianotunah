@@ -483,7 +483,9 @@ select:disabled { opacity: 0.55; }
 .key.plan { outline: 2px dashed var(--accent); outline-offset: -5px; }
 /* Tuning order: the panel of the survey, plus checks and a toggle. */
 .order-panel select { font-size: 13px; padding-block: 3px; max-width: 100%; }
-.order-state { margin: -4px 0 0; font-size: 14px; color: var(--good); }
+/* Under the buttons: it comes and goes while a key is confirmed, and the
+   buttons stay in place as it does. */
+.order-state { margin: 0; font-size: 14px; color: var(--good); }
 .order-state:empty { display: none; }
 .chk.main { border-color: var(--accent); color: var(--ink); }
 /* Under the dial the explanation shows two lines until it is opened, so the
