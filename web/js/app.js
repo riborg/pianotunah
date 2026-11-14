@@ -155,6 +155,10 @@ function clearMessage(tag) {
   if (!$('message').hidden && $('message').dataset.tag === tag) $('message').hidden = true;
 }
 
+// The toast's height, for the room the page and the drawer keep free under
+// their content while it shows (style.css).
+new ResizeObserver(() => document.documentElement.style.setProperty('--msg-h', `${$('message').offsetHeight}px`)).observe($('message'));
+
 // ---------------------------------------------------------------------------
 // Saving
 

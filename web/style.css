@@ -236,6 +236,15 @@ select:disabled { opacity: 0.55; }
 .message[data-kind="ok"] { border-left-color: var(--good); }
 .message[data-kind="warn"] { border-left-color: var(--warn); }
 .message[data-kind="error"] { border-left-color: var(--bad); }
+/* While a message shows, the page and the drawer's panels keep room for it
+   under their content, so everything can be scrolled clear of it.
+   --msg-h is the toast's height, set in app.js. */
+:root:has(#message:not([hidden])) {
+  --msg-room: calc(var(--msg-h, 0px) + 24px + env(safe-area-inset-bottom, 0px));
+  scroll-padding-bottom: var(--msg-room);
+}
+:root:has(#message:not([hidden])) :is(body, .panel) { padding-bottom: var(--msg-room); }
+:root:has(#message:not([hidden])) .panel { scroll-padding-bottom: var(--msg-room); }
 
 /* Layout: tuner and keyboard in one column, everything else in the settings
    drawer. The tuner comes first so it is visible without scrolling. */
