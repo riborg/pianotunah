@@ -1,6 +1,6 @@
 # Development
 
-Node and Go are not needed on the host; everything runs in containers.
+The host needs neither Node nor Go. Everything runs in containers.
 
 ## Tests
 
@@ -34,7 +34,7 @@ docker run --rm --network container:pianotunah -v "$PWD":/home/pptruser/pt ghcr.
 
 The end-to-end tests share the app container's network, so they work with any reverse proxy. They create and delete their own tuning.
 
-CI (`.github/workflows/ci.yml`) runs the unit tests, `go vet`, a test build for amd64 and arm64, and govulncheck on the binary in the image. `vuln.yml` scans the published `latest` image every Monday; a red run means it is time for a release built with the latest Go patch.
+CI in `.github/workflows/ci.yml` runs the unit tests, `go vet`, a test build for amd64 and arm64, and govulncheck on the binary in the image. `vuln.yml` scans the published `latest` image every Monday. A red run means it is time for a release built with the latest Go patch.
 
 ## Release
 
@@ -43,17 +43,17 @@ git tag -a v1.2.0 -m v1.2.0
 git push origin v1.2.0
 ```
 
-GitHub Actions runs CI and publishes `ghcr.io/riborg/pianotunah` with the tags `1.2.0`, `1.2`, `1` and `latest`. A GitHub Release is then created with the commits since the previous tag. Pre-releases (`v1.2.0-rc.1`) do not get `latest`.
+GitHub Actions runs CI and publishes `ghcr.io/riborg/pianotunah` with the tags `1.2.0`, `1.2`, `1` and `latest`. The workflow then creates a GitHub Release with the commits since the previous tag. Pre-releases such as `v1.2.0-rc.1` do not get `latest`.
 
 Moving an existing tag triggers the release again and overwrites `latest`. Disable the Release workflow first.
 
 ## Translations
 
-UI strings are in `web/js/lang/en.js` and `sv.js`. Static markup uses `data-i18n` attributes, code uses `tr('key', { param })`. A new string goes in both files; missing keys fall back to English.
+UI strings are in `web/js/lang/en.js` and `sv.js`. Static markup uses `data-i18n` attributes, and code uses `tr('key', { param })`. A new string goes in both files. Missing keys fall back to English.
 
 ## API
 
-`GET /api/tunings`, `GET|PUT|DELETE /api/tunings/{id}`, `GET /api/version`, `GET /healthz`. `PUT` requires the document's `rev` and answers 409 if someone else has saved since. Writes from another origin are refused (403).
+The server answers `GET /api/tunings`, `GET|PUT|DELETE /api/tunings/{id}`, `GET /api/version` and `GET /healthz`. `PUT` requires the document's `rev` and answers 409 if someone else has saved since. The server refuses writes from another origin with 403.
 
 ## Code
 
