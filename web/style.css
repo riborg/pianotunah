@@ -378,6 +378,7 @@ select:disabled { opacity: 0.55; }
 .hint-slot { font-size: 13px; line-height: 1.5; min-height: 1.5em; margin-top: -6px; }
 .unison-hint { margin: 0; text-align: center; color: var(--warn); text-wrap: balance; }
 @media (max-width: 620px) { .hint-slot { min-height: 3em; } }
+@media (max-width: 359px) { .hint-slot { min-height: 4.5em; } }
 
 .spectro, .beatstrip, .chart { display: block; width: 100%; }
 .spectro, .beatstrip { border-radius: 6px; }
