@@ -175,10 +175,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
   }
 }
 @media (max-width: 480px) { .brand-name { display: none; } }
-/* Too narrow for the mark beside the buttons: it goes before the tuning. */
+/* Too narrow for the mark beside the buttons, and a row of its own costs
+   the tuning order's buttons. */
 @media (max-width: 359px) {
-  .brand { order: 4; margin-right: 0; }
-  .tuning-bar { width: auto; flex: 1 1 0; min-width: 0; }
+  .brand { display: none; }
   #btn-help { margin-left: auto; }
 }
 
