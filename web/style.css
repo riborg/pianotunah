@@ -326,7 +326,7 @@ select:disabled { opacity: 0.55; }
 .hub[data-s="good"] { border-color: var(--good); }
 .cents { white-space: nowrap; font: 600 clamp(15px, 5.4cqw, 26px)/1 var(--f-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 .cents[data-live="0"] { color: var(--muted); }
-.cents .unit { font: 500 clamp(10px, 2.2cqw, 12px) var(--f-body); letter-spacing: 0; margin-left: 3px; color: var(--muted); }
+.cents .unit { font: 500 clamp(11px, 2.2cqw, 12px) var(--f-body); letter-spacing: 0; margin-left: 3px; color: var(--muted); }
 .hub[data-s="good"] .cents { color: var(--good); }
 .hub[data-s="warn"] .cents { color: var(--warn); }
 .hub[data-s="bad"] .cents { color: var(--bad); }
@@ -568,9 +568,10 @@ body.drawer-open { overflow: hidden; }
   z-index: 2;
 }
 .key.black:hover { background: var(--ebony-hi); }
-.klabel { font: 9px var(--f-mono); color: var(--key-label); margin-bottom: 3px; position: relative; z-index: 1; }
-/* Too narrow for labels; the flag names the current key. */
-@media (max-width: 620px) { .klabel { display: none; } }
+.klabel { font: 11px/1 var(--f-mono); color: var(--key-label); margin-bottom: 3px; position: relative; z-index: 1; }
+/* An 11 px label needs a key 14 px wide: 52 white keys fit from 820 px.
+   Narrower, the flag names the current key. */
+@media (max-width: 819px) { .klabel { display: none; } }
 
 /* Measured inharmonicity: small dot at the top. */
 .key.has-b::after { content: ""; position: absolute; top: 4px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--accent); opacity: 0.8; }
