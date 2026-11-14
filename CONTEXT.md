@@ -93,7 +93,7 @@ _Avoid_: guide, wizard, mode
 One part of the tuning order, such as the temperament or the bass. Most steps have tasks; some are only an instruction.
 
 **Task**:
-One key and what to do with it in a step: tune its free string, tune one string with a wedge, or tune the unison pure. Done after two strikes in a row within tolerance.
+One key and what to do with it in a step: tune its free string, tune one string with a wedge, tune two strings pure and on pitch together or the third string against them, or tune the unison pure. Done after two strikes in a row within tolerance.
 
 **Pitch raise** [grovstämning]:
 A quick pass over every key with overpull, before the fine tuning, when the piano is 10 cents or more off.
@@ -102,7 +102,10 @@ A quick pass over every key with overpull, before the fine tuning, when the pian
 Mutes the outer strings of F3–A4 so one string per key sounds during the temperament.
 
 **Wedge** [kil]:
-Mutes strings outside the felt strip.
+Mutes strings outside the felt strip: inside one key, or between two keys so it mutes one string of each.
+
+**Double string unison (DSU)** [dubbelsträngsunison]:
+A per-piano choice under Unisons [Unisoner], instead of One string first [En sträng först]: outside the felt strip each key's two free strings are tuned pure and on pitch together, then the third string against them.
 
 **Check** [kontroll]:
 An interval played by ear to confirm a tuned key, shown with the beat rate the targets give.
