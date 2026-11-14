@@ -197,6 +197,7 @@ export default {
   'save.errorTitle': 'The server is not responding. Retrying.',
 
   'msg.conflict': 'This piano was saved from another tab or device. The latest version is loaded; the changes here were not saved.',
+  'msg.synced': 'Loaded the latest from another tab or device.',
   'msg.conflictFailed': 'This piano was changed elsewhere but could not be reloaded. Reload the page.',
   'msg.noServer': 'Cannot reach the server. Measurements are not saved until it responds.',
   'msg.jump': '{name} sounded {c} cents from its last reading. Not saved; strike it again to save it.',
