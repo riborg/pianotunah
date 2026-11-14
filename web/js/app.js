@@ -217,6 +217,16 @@ function renderTuningSelect() {
   if (state.tuning) sel.value = state.tuning.id;
 }
 
+// On phones the piano is chosen at the top of the Piano tab: the top bar
+// keeps one row, so more of the tuning order fits on the first screen.
+const phoneTop = matchMedia('(max-width: 620px)');
+function placeTuningSelect() {
+  const label = $('tuning-label');
+  label.classList.toggle('sr-only', !phoneTop.matches);
+  const home = phoneTop.matches ? document.querySelector('#panel-piano .form') : document.querySelector('.tuning-bar');
+  home.prepend(label, $('tuning-select'));
+}
+
 async function openTuning(t) {
   await saver.flush();
   const other = state.tuning?.id !== t.id;
@@ -2027,6 +2037,8 @@ function bindEvents() {
 async function boot() {
   try { state.micId = localStorage.getItem(LS.mic) || ''; } catch { /* optional */ }
   buildStaticUi();
+  placeTuningSelect();
+  phoneTop.addEventListener('change', placeTuningSelect);
   state.colors = readColors();
   try {
     await refreshList();

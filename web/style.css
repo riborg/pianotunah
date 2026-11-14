@@ -150,13 +150,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
   #save-status { flex-shrink: 0; }
 }
 @media (min-width: 621px) and (max-width: 739px) { .brand-name { display: none; } }
-/* Narrow: the buttons on the first row and the tuning on the second. Not
-   sticky: two rows would cover the dial and the tuning order's buttons when
-   scrolling, and they are needed when starting, not between keys. */
+/* Narrow: the piano is chosen in the Piano tab (app.js). Not sticky: the bar
+   would cover the tuning order's buttons when scrolling, and it is needed
+   when starting, not between keys. */
 @media (max-width: 620px) {
   .top { position: static; padding-block: 8px; gap: 8px; }
-  .tuning-bar { order: 5; width: 100%; }
-  .tuning-bar select { min-width: 0; flex: 1 1 auto; max-width: none; }
 }
 @media (max-width: 480px) { .brand-name { display: none; } }
 /* Too narrow for the mark beside the buttons: it goes before the tuning. */
