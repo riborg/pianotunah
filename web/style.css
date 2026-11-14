@@ -692,6 +692,7 @@ details > .form { margin-top: 10px; }
 @media (max-width: 520px) {
   /* Phones: a little less padding, for width in the tuner's toolbar. */
   .card { padding: 12px; }
+  .tuner, .tuner-main { gap: 10px; }
   .tuner-head { position: relative; }
   .ref-anchor { position: static; }
   .ref-pop { width: auto; right: 0; }
