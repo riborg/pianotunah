@@ -25,6 +25,11 @@ docker run --rm --network container:pianotunah -v "$PWD":/home/pptruser/pt ghcr.
 # and off, through the temperament and into the treble.
 docker run --rm --network container:pianotunah -v "$PWD":/home/pptruser/pt ghcr.io/puppeteer/puppeteer \
   node pt/test/order.mjs http://localhost:8080
+
+# Coming back to a tab: two devices on one tuning; the one left behind shows
+# where the other got to, or the conflict warning if it had unsaved changes.
+docker run --rm --network container:pianotunah -v "$PWD":/home/pptruser/pt ghcr.io/puppeteer/puppeteer \
+  node pt/test/sync.mjs http://localhost:8080
 ```
 
 The end-to-end tests share the app container's network, so they work with any reverse proxy. They create and delete their own tuning.

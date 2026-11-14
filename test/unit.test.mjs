@@ -329,10 +329,15 @@ test('saver: a conflict is handed over without blocking the queue', async () => 
       },
     });
     const soon = (p) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('the save queue hangs')), 500))]);
+    const stale = cur;
     saver.markDirty();
     await soon(saver.flush());
+    // Told before onConflict has shown the server's version, so a sync on
+    // return (app.js) leaves the reload and its message to it.
+    assert.ok(saver.conflicted(stale));
     await new Promise((r) => setTimeout(r, 10));
     assert.equal(conflicts, 1);
+    assert.ok(!saver.conflicted(cur));
     status = 200;
     saver.markDirty();
     await soon(saver.flush());

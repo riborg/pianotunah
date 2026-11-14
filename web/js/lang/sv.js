@@ -197,6 +197,7 @@ export default {
   'save.errorTitle': 'Servern svarar inte. Försöker igen.',
 
   'msg.conflict': 'Pianot har sparats från en annan flik eller enhet. Den senaste versionen är laddad; ändringarna här sparades inte.',
+  'msg.synced': 'Hämtade det senaste från en annan flik eller enhet.',
   'msg.conflictFailed': 'Pianot har ändrats någon annanstans men kunde inte laddas om. Ladda om sidan.',
   'msg.noServer': 'Kunde inte nå servern. Mätningar sparas inte förrän den svarar.',
   'msg.jump': '{name} lät {c} cent från förra avläsningen. Sparas inte; slå an igen för att spara.',

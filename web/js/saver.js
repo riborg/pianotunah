@@ -36,6 +36,11 @@ export class Saver {
     return this.#chain;
   }
 
+  // The tuning's save ended in a 409 and onConflict is showing the server's version.
+  conflicted(t) {
+    return t === this.#conflict;
+  }
+
   // Drop unsaved changes (e.g. before deleting) and wait for a save in progress.
   discard() {
     clearTimeout(this.#timer);

@@ -204,6 +204,30 @@ async function reloadAfterConflict(t) {
   }
 }
 
+// A tab in the background shows the tuning as it was loaded, also when the
+// piano has been tuned on from another tab or device since: on return, and
+// when the tuning order is opened, the server's version is shown if it is
+// newer. Changes here are saved first; if the server has moved on, that save
+// ends in reloadAfterConflict instead, which says the changes were not saved.
+let syncing = null;
+function syncTuning() {
+  if (!state.tuning || syncing) return syncing;
+  syncing = (async () => {
+    try {
+      const t = state.tuning;
+      await saver.flush();
+      const skip = () => state.tuning !== t || saver.dirty || saver.conflicted(t);
+      if (skip()) return;
+      const latest = await getTuning(t.id);
+      if (skip() || !(latest.rev > t.rev)) return;
+      diag(`synced ${t.id} rev ${t.rev} → ${latest.rev}`);
+      await openTuning(latest);
+      message(tr('msg.synced'), 'info');
+    } catch { /* offline: keep what is shown; the saver reports errors */ }
+  })().finally(() => (syncing = null));
+  return syncing;
+}
+
 // ---------------------------------------------------------------------------
 // Saved tunings
 
@@ -1176,6 +1200,7 @@ function setOrderOn(on) {
   diag(`tuning order ${on ? 'on' : 'off'}`);
   if (on && state.mode === 'auto') setMode('lock');
   followOrder();
+  if (on) syncTuning();
 }
 
 // Move to a position and select its key. The last step lists the keys
@@ -2015,13 +2040,18 @@ function bindEvents() {
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', refreshColors);
   document.addEventListener('visibilitychange', () => {
     diag(`page ${document.visibilityState}`);
-    if (document.visibilityState === 'visible') checkVersion();
+    if (document.visibilityState === 'visible') {
+      checkVersion();
+      syncTuning();
+    }
     if (document.visibilityState === 'hidden') saver.flush();
     else if (mic.running) {
       mic.resume();
       if (!state.wakeLock || state.wakeLock.released) requestWakeLock(); // released by the browser when the page was hidden
     }
   });
+  // A window behind another one is not hidden, but it gets the focus back.
+  window.addEventListener('focus', () => syncTuning());
   // Last chance to save when the tab closes.
   window.addEventListener('pagehide', () => {
     if (!saver.dirty || !state.tuning) return;
