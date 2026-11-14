@@ -153,7 +153,7 @@ export function drawDial(canvas, { display, signal, bands, live, tol }, C, dt, p
     if (t === 0) tick(t, w * 0.045, C.ink, 2);
     else tick(t, w * 0.026, C.muted);
     if (Math.abs(t) === 1 && w <= 450) continue;
-    // ±50 is kept inside the canvas on a narrow phone.
+    // ±50 is kept inside the canvas on a narrow phone and a small dial.
     const [x, y] = at(ang(t), R + w * 0.065);
     const half = ctx.measureText(signed(t)).width / 2;
     ctx.fillText(signed(t), Math.max(half, Math.min(w - half, x)), y);

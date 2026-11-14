@@ -690,11 +690,32 @@ details > .form { margin-top: 10px; }
   .tabs { gap: 0; padding: 0 4px; }
   .tab { padding: 8px 5px; font-size: 14px; }
 }
-/* Landscape phones: a sticky top bar would take a fifth of the height. */
+/* Landscape phones: a sticky top bar would take a fifth of the height. The
+   dial follows the height, so the status and key line show under it; 216 px:
+   the rest of the page down to the key line, and a small margin. The status
+   keeps clear of the arrows, which reach below a small dial. */
 @media (max-height: 560px) {
-  .top { position: static; padding-block: 8px; }
+  .top { position: static; padding-block: 6px; }
+  .layout { margin-top: 6px; }
+  .tuner.card { padding-top: 8px; }
   .tuner, .tuner-main, .dial-col { gap: 8px; }
-  .dial { max-width: 320px; }
+  .head-left, .head-right { gap: 6px 8px; }
+  .head-right .seg, .flows .btn { padding-inline: 9px; }
+  .dial {
+    max-width: min(560px, max(200px, (100vh - 216px) / 0.7));
+    max-width: min(560px, max(200px, (100svh - 216px) / 0.7));
+  }
+  .status { margin-top: 0; line-height: 1.25; }
+  .keyline { line-height: 1.35; }
+}
+/* Landscape phones: the top bar on one row, Settings as its icon. */
+@media (max-height: 560px) and (min-width: 621px) and (max-width: 959px) {
+  .top { flex-wrap: nowrap; }
+  .tuning-bar { min-width: 0; }
+  .tuning-bar select { min-width: 0; }
+  #save-status { flex-shrink: 0; }
+  #btn-settings span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #btn-settings .ico { margin-right: 0; }
 }
 /* Touch screens: controls at least 44 px high. Text links keep their look;
    padding with a negative margin enlarges what can be tapped. */
