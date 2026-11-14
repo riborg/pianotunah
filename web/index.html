@@ -27,6 +27,9 @@
     <select id="tuning-select"></select>
     <span id="save-status" class="chip" data-state="idle">–</span>
   </div>
+  <button id="btn-help" class="btn ghost" type="button" aria-controls="drawer" aria-expanded="false" aria-label="Help" title="Help (H)" data-i18n-aria-label="top.help" data-i18n-title="top.helpTitle">
+    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.6 9.6a2.4 2.4 0 1 1 3.3 2.2c-.6.3-.9.8-.9 1.4v.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16.6" r="1.2" fill="currentColor"/></svg>
+  </button>
   <button id="btn-settings" class="btn ghost" type="button" aria-controls="drawer" aria-expanded="false" title="Settings (S)" data-i18n-title="top.settingsTitle">
     <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
     <span data-i18n="top.settings">Settings</span>
@@ -39,6 +42,7 @@
 </header>
 
 <main class="layout">
+  <h1 class="sr-only">Piano Tunah</h1>
   <section class="tuner card" aria-label="Tuner" data-i18n-aria-label="tuner.label">
     <div class="tuner-head">
       <div class="head-left">
@@ -54,9 +58,9 @@
             <span class="stack"><span data-tone-label="piano" data-i18n="tone.piano">Piano</span><span data-tone-label="sine" data-i18n="tone.sine">Sine</span></span>
           </button>
           <div id="tone-menu" class="menu" role="menu" hidden>
-            <button type="button" role="menuitemradio" data-tone="piano" aria-checked="true"><b data-i18n="tone.pianoItem">Piano tone</b><small data-i18n="tone.pianoTitle">Short piano-like tone</small></button>
-            <button type="button" role="menuitemradio" data-tone="sine" aria-checked="false"><b data-i18n="tone.sineItem">Sine tone</b><small data-i18n="tone.sineTitle">Pure, sustained sine tone at the target frequency</small></button>
-            <button id="tone-on-key" type="button" role="menuitemcheckbox" aria-checked="false"><b data-i18n="tone.onKey">Also play when a key is clicked</b></button>
+            <button type="button" tabindex="-1" role="menuitemradio" data-tone="piano" aria-checked="true"><b data-i18n="tone.pianoItem">Piano tone</b><small data-i18n="tone.pianoTitle">Short piano-like tone</small></button>
+            <button type="button" tabindex="-1" role="menuitemradio" data-tone="sine" aria-checked="false"><b data-i18n="tone.sineItem">Sine tone</b><small data-i18n="tone.sineTitle">Pure, sustained sine tone at the target frequency</small></button>
+            <button id="tone-on-key" type="button" tabindex="-1" role="menuitemcheckbox" aria-checked="false"><b data-i18n="tone.onKey">Also play when a key is clicked</b></button>
           </div>
         </div>
       </div>
@@ -93,7 +97,7 @@
 
       <div class="survey-panel" id="survey-panel" hidden>
         <div class="survey-head">
-          <b data-i18n="survey.title">Survey</b>
+          <h2 data-i18n="survey.title">Survey</h2>
           <div class="modes plan-modes" role="group" aria-label="Scope" data-i18n-aria-label="survey.scope">
             <button class="seg" type="button" data-plan="quick" aria-pressed="true" data-i18n="survey.quick">All A, 8 keys</button>
             <button class="seg" type="button" data-plan="full" aria-pressed="false" data-i18n="survey.full">All keys</button>
@@ -116,16 +120,16 @@
 
       <div class="survey-panel order-panel" id="order-panel" hidden>
         <div class="survey-head">
-          <b data-i18n="order.title">Tuning order</b>
+          <h2 data-i18n="order.title">Tuning order</h2>
           <label class="sr-only" for="order-step" data-i18n="order.step">Step</label>
           <select id="order-step"></select>
           <span id="order-progress"></span>
+          <button id="order-close" class="btn ghost close" type="button" aria-label="Close tuning order" title="Close tuning order (O)" data-i18n-aria-label="order.close" data-i18n-title="order.closeTitle">×</button>
         </div>
         <div class="survey-bar" aria-hidden="true"><i id="order-bar"></i></div>
         <p class="survey-step" id="order-task" aria-live="polite"></p>
         <p class="order-state" id="order-state" aria-live="polite"></p>
         <div class="survey-checks" id="order-checks"></div>
-        <p class="survey-intro" id="order-text"></p>
         <div class="btn-row">
           <button id="order-back" class="btn primary" type="button" hidden></button>
           <button id="order-action" class="btn primary" type="button" hidden></button>
@@ -133,8 +137,14 @@
           <button id="order-prev" class="btn ghost" type="button" data-i18n="order.prev">Previous</button>
           <button id="order-next" class="btn ghost" type="button" data-i18n="order.next">Next</button>
           <button id="order-skip" class="btn ghost" type="button" data-i18n="order.nextStep">Next step</button>
-          <button id="order-close" class="btn ghost" type="button" data-i18n="order.close">Close</button>
         </div>
+        <div id="order-confirm-pass" class="confirm" hidden>
+          <span data-i18n="pass.confirm">Save the pass to the history and start over?</span>
+          <button id="order-confirm-pass-yes" class="btn primary" type="button" data-i18n="pass.new">New pass</button>
+          <button id="order-confirm-pass-no" class="btn ghost" type="button" data-i18n="cancel">Cancel</button>
+        </div>
+        <p class="survey-intro" id="order-text"></p>
+        <button id="order-more" class="fold" type="button" aria-controls="order-text" aria-expanded="false" hidden></button>
       </div>
 
     </div>
@@ -168,7 +178,7 @@
 
     <div class="fold-box">
       <div class="fold-head">
-        <button id="beats-toggle" class="fold" type="button" aria-controls="beats-row" aria-expanded="false" data-i18n="beats.label">Beats around the target, ±30 cents</button>
+        <h2><button id="beats-toggle" class="fold" type="button" aria-controls="beats-row" aria-expanded="false" data-i18n="beats.label">Beats around the target, ±30 cents</button></h2>
         <span class="beat-rate" id="beat-rate">–</span>
       </div>
       <div class="fold-row" id="beats-row" hidden>
@@ -178,7 +188,7 @@
     </div>
 
     <div class="fold-box">
-      <button id="partials-toggle" class="fold" type="button" aria-controls="partials-row" aria-expanded="false" data-i18n="measure.partials">Partials vs target</button>
+      <h2><button id="partials-toggle" class="fold" type="button" aria-controls="partials-row" aria-expanded="false" data-i18n="measure.partials">Partials vs target</button></h2>
       <div class="fold-row partials-row" id="partials-row" hidden>
         <p class="desc" data-i18n="measure.partialsDesc">Deviation per partial for the sounding key. Highlighted = the one being measured.</p>
         <div class="partials" id="partials"></div>
@@ -212,14 +222,14 @@
     <button id="drawer-close" class="btn ghost close" type="button" aria-label="Close settings" data-i18n-aria-label="drawer.close">×</button>
   </div>
   <nav class="tabs" role="tablist" aria-label="Settings" data-i18n-aria-label="top.settings">
-    <button class="tab" type="button" role="tab" data-tab="piano" data-i18n="tab.piano">Piano</button>
-    <button class="tab" type="button" role="tab" data-tab="tuning" data-i18n="tab.tuning">Tuning</button>
-    <button class="tab" type="button" role="tab" data-tab="pass" data-i18n="tab.pass">Pass</button>
-    <button class="tab" type="button" role="tab" data-tab="help" data-i18n="tab.help">Help</button>
-    <button class="tab" type="button" role="tab" data-tab="app" data-i18n="tab.app">App</button>
+    <button id="tab-piano" class="tab" type="button" role="tab" aria-controls="panel-piano" data-tab="piano" data-i18n="tab.piano">Piano</button>
+    <button id="tab-tuning" class="tab" type="button" role="tab" aria-controls="panel-tuning" data-tab="tuning" data-i18n="tab.tuning">Tuning</button>
+    <button id="tab-pass" class="tab" type="button" role="tab" aria-controls="panel-pass" data-tab="pass" data-i18n="tab.pass">Pass</button>
+    <button id="tab-help" class="tab" type="button" role="tab" aria-controls="panel-help" data-tab="help" data-i18n="tab.help">Help</button>
+    <button id="tab-app" class="tab" type="button" role="tab" aria-controls="panel-app" data-tab="app" data-i18n="tab.app">App</button>
   </nav>
 
-  <section class="panel" role="tabpanel" data-panel="piano">
+  <section id="panel-piano" class="panel" role="tabpanel" aria-labelledby="tab-piano" data-panel="piano">
     <div class="form">
       <label for="set-name" data-i18n="piano.name">Name</label>
       <input id="set-name" type="text" maxlength="80">
@@ -265,7 +275,7 @@
     </div>
   </section>
 
-  <section class="panel" role="tabpanel" data-panel="tuning" hidden>
+  <section id="panel-tuning" class="panel" role="tabpanel" aria-labelledby="tab-tuning" data-panel="tuning" hidden>
     <!-- The reference moves to the popover at the A4 chip while it is open. -->
     <div id="ref-home"><div id="ref-box" class="ref-box">
     <h3 id="ref-h" data-i18n="ref.title">Reference A4</h3>
@@ -341,7 +351,7 @@
     </details>
   </section>
 
-  <section class="panel" role="tabpanel" data-panel="pass" hidden>
+  <section id="panel-pass" class="panel" role="tabpanel" aria-labelledby="tab-pass" data-panel="pass" hidden>
     <div class="pass-stats" id="pass-stats"></div>
     <button id="btn-new-pass" class="btn ghost" type="button" data-i18n="pass.new">New pass</button>
     <div id="confirm-pass" class="confirm" hidden>
@@ -353,9 +363,9 @@
     <ol class="history" id="history"></ol>
   </section>
 
-  <section class="panel help" role="tabpanel" data-panel="help" data-i18n-html="help" hidden></section>
+  <section id="panel-help" class="panel help" role="tabpanel" aria-labelledby="tab-help" data-panel="help" data-i18n-html="help" hidden></section>
 
-  <section class="panel" role="tabpanel" data-panel="app" hidden>
+  <section id="panel-app" class="panel" role="tabpanel" aria-labelledby="tab-app" data-panel="app" hidden>
     <h3><label for="set-mic" data-i18n="app.mic">Microphone</label></h3>
     <select id="set-mic"></select>
     <p class="desc" id="mic-desc"></p>

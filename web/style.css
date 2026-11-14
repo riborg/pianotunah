@@ -31,6 +31,7 @@
   --ebony-hi: #3a3d42;
   --key-label: #6d6a60;
   --key-current: #dcebf8;
+  --key-current-ink: #2c5a85;
   --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%235a6463' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 
   --f-display: Accidentals, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif;
@@ -65,6 +66,7 @@
     --ebony-hi: #2a2d31;
     --key-label: #55534c;
     --key-current: #b9d3ec;
+    --key-current-ink: #234d75;
     --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%2393a09d' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     color-scheme: dark;
   }
@@ -92,6 +94,7 @@
   --ebony-hi: #2a2d31;
   --key-label: #55534c;
   --key-current: #b9d3ec;
+  --key-current-ink: #234d75;
   --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%2393a09d' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   color-scheme: dark;
 }
@@ -123,7 +126,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
   gap: 10px;
   padding-block: 12px;
   margin-inline: -16px;
-  padding-inline: 16px;
+  /* Full width, with the content over the 1100 px of .layout. */
+  padding-inline: max(16px, 16px + (100% - 1100px) / 2);
   background: var(--bg);
   border-bottom: 1px solid var(--line);
 }
@@ -133,15 +137,34 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tuning-bar { display: flex; align-items: center; gap: 6px; }
 .tuning-bar select { min-width: 220px; max-width: 360px; }
 .ico { width: 18px; height: 18px; vertical-align: -4px; margin-right: 4px; }
-/* Narrow: Settings as an icon and the brand as its mark, so both buttons fit
-   on the first row and the tuning gets the second. */
-@media (max-width: 620px) {
-  .tuning-bar { order: 5; width: 100%; }
-  .tuning-bar select { min-width: 0; flex: 1 1 auto; max-width: none; }
+#btn-help .ico { margin-right: 0; }
+/* Under 960 px Settings is an icon, so the buttons fit beside the tuning. */
+@media (max-width: 959px) {
   #btn-settings span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   #btn-settings .ico { margin-right: 0; }
 }
+/* Tablets: one row; the piano narrows before the microphone wraps. */
+@media (min-width: 621px) and (max-width: 959px) {
+  .tuning-bar { flex: 1 1 0; min-width: 200px; max-width: max-content; }
+  .tuning-bar select { width: 220px; min-width: 0; }
+  #save-status { flex-shrink: 0; }
+}
+@media (min-width: 621px) and (max-width: 739px) { .brand-name { display: none; } }
+/* Narrow: the buttons on the first row and the tuning on the second. Not
+   sticky: two rows would cover the dial and the tuning order's buttons when
+   scrolling, and they are needed when starting, not between keys. */
+@media (max-width: 620px) {
+  .top { position: static; padding-block: 8px; gap: 8px; }
+  .tuning-bar { order: 5; width: 100%; }
+  .tuning-bar select { min-width: 0; flex: 1 1 auto; max-width: none; }
+}
 @media (max-width: 480px) { .brand-name { display: none; } }
+/* Too narrow for the mark beside the buttons: it goes before the tuning. */
+@media (max-width: 359px) {
+  .brand { order: 4; margin-right: 0; }
+  .tuning-bar { width: auto; flex: 1 1 0; min-width: 0; }
+  #btn-help { margin-left: auto; }
+}
 
 /* Controls */
 select, input[type="text"], input[type="number"], textarea {
@@ -236,6 +259,15 @@ select:disabled { opacity: 0.55; }
 .message[data-kind="ok"] { border-left-color: var(--good); }
 .message[data-kind="warn"] { border-left-color: var(--warn); }
 .message[data-kind="error"] { border-left-color: var(--bad); }
+/* While a message shows, the page and the drawer's panels keep room for it
+   under their content, so everything can be scrolled clear of it.
+   --msg-h is the toast's height, set in app.js. */
+:root:has(#message:not([hidden])) {
+  --msg-room: calc(var(--msg-h, 0px) + 24px + env(safe-area-inset-bottom, 0px));
+  scroll-padding-bottom: var(--msg-room);
+}
+:root:has(#message:not([hidden])) :is(body, .panel) { padding-bottom: var(--msg-room); }
+:root:has(#message:not([hidden])) .panel { scroll-padding-bottom: var(--msg-room); }
 
 /* Layout: tuner and keyboard in one column, everything else in the settings
    drawer. The tuner comes first so it is visible without scrolling. */
@@ -297,6 +329,15 @@ select:disabled { opacity: 0.55; }
 /* Dial: canvas with scale, needle and strobe rings (drawDial), and the note
    hub on top. The hub's centre (54cqw) and size (30cqw) follow DIAL in draw.js. */
 .dial { position: relative; width: 100%; max-width: 560px; margin: 0 auto; aspect-ratio: 1 / 0.7; container-type: inline-size; }
+/* Not on phones: the dial also follows the window's height, so the keyboard
+   and its legend fit under it on a laptop. 520 px: the rest of the page down
+   to the legend, and a small margin. */
+@media (min-width: 621px) {
+  .dial {
+    max-width: min(560px, max(280px, (100vh - 520px) / 0.7));
+    max-width: min(560px, max(280px, (100svh - 520px) / 0.7));
+  }
+}
 .dial canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .hub {
   position: absolute;
@@ -317,7 +358,7 @@ select:disabled { opacity: 0.55; }
 .hub[data-s="good"] { border-color: var(--good); }
 .cents { white-space: nowrap; font: 600 clamp(15px, 5.4cqw, 26px)/1 var(--f-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 .cents[data-live="0"] { color: var(--muted); }
-.cents .unit { font: 500 clamp(10px, 2.2cqw, 12px) var(--f-body); letter-spacing: 0; margin-left: 3px; color: var(--muted); }
+.cents .unit { font: 500 clamp(11px, 2.2cqw, 12px) var(--f-body); letter-spacing: 0; margin-left: 3px; color: var(--muted); }
 .hub[data-s="good"] .cents { color: var(--good); }
 .hub[data-s="warn"] .cents { color: var(--warn); }
 .hub[data-s="bad"] .cents { color: var(--bad); }
@@ -336,7 +377,7 @@ select:disabled { opacity: 0.55; }
 /* One line each, so the height does not change with the length of the target text. */
 .keyline { margin: -8px 0 0; display: flex; flex-direction: column; align-items: center; text-align: center; font-size: 13px; color: var(--muted); }
 /* On a phone the target line wraps in the bass (partial and overpull); keep room for that. */
-@media (max-width: 480px) { .keyline { line-height: 1.5; min-height: 6em; } }
+@media (max-width: 520px) { .keyline { line-height: 1.5; min-height: 6em; } }
 /* Words in the body face, values in mono. */
 .keyline .v { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
 #measured[data-live="1"] { color: var(--ink); }
@@ -345,6 +386,7 @@ select:disabled { opacity: 0.55; }
 .hint-slot { font-size: 13px; line-height: 1.5; min-height: 1.5em; margin-top: -6px; }
 .unison-hint { margin: 0; text-align: center; color: var(--warn); text-wrap: balance; }
 @media (max-width: 620px) { .hint-slot { min-height: 3em; } }
+@media (max-width: 359px) { .hint-slot { min-height: 4.5em; } }
 
 .spectro, .beatstrip, .chart { display: block; width: 100%; }
 .spectro, .beatstrip { border-radius: 6px; }
@@ -355,6 +397,8 @@ select:disabled { opacity: 0.55; }
 .fold-box .fold { align-self: flex-start; font-size: 14px; text-align: left; }
 .fold-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .fold-row { display: flex; flex-direction: column; gap: 6px; }
+/* The folds are headings for screen readers; they keep the look of the button. */
+.fold-box h2 { display: flex; align-self: flex-start; margin: 0; font: inherit; letter-spacing: normal; text-transform: none; color: inherit; }
 .beat-rate { font: 600 14px var(--f-mono); font-variant-numeric: tabular-nums; }
 .mini-label { font-size: 12px; color: var(--muted); }
 
@@ -398,6 +442,7 @@ select:disabled { opacity: 0.55; }
 /* Survey */
 .survey-panel { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 8px; background: var(--sunk); border: 1px solid var(--accent); }
 .survey-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.survey-head h2 { margin: 0; font: inherit; font-weight: bolder; letter-spacing: normal; text-transform: none; color: inherit; }
 .survey-head span { margin-left: auto; font: 13px var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
 .plan-modes .seg { padding: 3px 10px; font-size: 13px; }
 .survey-bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
@@ -414,6 +459,16 @@ select:disabled { opacity: 0.55; }
 .order-state { margin: -4px 0 0; font-size: 14px; color: var(--good); }
 .order-state:empty { display: none; }
 .chk.main { border-color: var(--accent); color: var(--ink); }
+/* Under the dial the explanation shows two lines until it is opened, so the
+   buttons stay close to the dial. Beside it there is room for all of it. */
+.order-panel .fold { align-self: flex-start; font-size: 13px; }
+/* × stays top right when the head wraps. */
+.order-panel { position: relative; }
+.order-panel .survey-head { padding-right: 36px; }
+#order-close { position: absolute; top: 6px; right: 6px; }
+@media (max-width: 959px) {
+  .order-panel:not(.text-open) #order-text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+}
 
 /* Settings drawer */
 body.drawer-open { overflow: hidden; }
@@ -460,7 +515,9 @@ body.drawer-open { overflow: hidden; }
 /* Reference */
 .ref-row { display: flex; align-items: center; justify-content: center; gap: 4px; }
 .ref-input { display: flex; align-items: baseline; gap: 4px; }
-.ref-input input { width: 92px; font: 600 22px var(--f-mono); text-align: right; padding: 4px 6px; }
+/* Room for "444.5" without spin buttons; the ±0.1 and ±1 buttons step. */
+.ref-input input { width: calc(5ch + 24px); font: 600 22px var(--f-mono); text-align: right; padding: 4px 6px; -moz-appearance: textfield; appearance: textfield; }
+.ref-input input::-webkit-inner-spin-button, .ref-input input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .ref-cents { text-align: center; font: 12px var(--f-mono); color: var(--muted); }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
 .chip-btn { border: 1px solid var(--line); background: transparent; border-radius: 99px; padding: 2px 10px; cursor: pointer; font: 13px var(--f-mono); }
@@ -544,9 +601,10 @@ body.drawer-open { overflow: hidden; }
   z-index: 2;
 }
 .key.black:hover { background: var(--ebony-hi); }
-.klabel { font: 9px var(--f-mono); color: var(--key-label); margin-bottom: 3px; position: relative; z-index: 1; }
-/* Too narrow for labels; the flag names the current key. */
-@media (max-width: 620px) { .klabel { display: none; } }
+.klabel { font: 11px/1 var(--f-mono); color: var(--key-label); margin-bottom: 3px; position: relative; z-index: 1; }
+/* An 11 px label needs a key 14 px wide: 52 white keys fit from 820 px.
+   Narrower, the flag names the current key. */
+@media (max-width: 819px) { .klabel { display: none; } }
 
 /* Measured inharmonicity: small dot at the top. */
 .key.has-b::after { content: ""; position: absolute; top: 4px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--accent); opacity: 0.8; }
@@ -554,7 +612,7 @@ body.drawer-open { overflow: hidden; }
 
 /* Current key: filled with the accent. */
 .key.white.current { background: var(--key-current); box-shadow: inset 0 0 0 2px var(--accent); }
-.key.white.current .klabel { color: var(--accent); font-weight: 700; }
+.key.white.current .klabel { color: var(--key-current-ink); font-weight: 700; }
 .key.black.current { background: var(--accent); }
 .key.flash { animation: flash 700ms ease-out; }
 @keyframes flash { from { filter: brightness(1.5) saturate(1.4); } to { filter: none; } }
@@ -622,8 +680,9 @@ summary { cursor: pointer; color: var(--accent); font-size: 14px; }
 details > .form { margin-top: 10px; }
 /* Folds the curve under the keyboard. */
 .fold { padding: 0; border: 0; background: none; font: inherit; color: var(--accent); cursor: pointer; }
-.fold::before { content: "▾ "; }
-.fold[aria-expanded="false"]::before { content: "▸ "; }
+/* The triangle is not read aloud; aria-expanded says the same. */
+.fold::before { content: "▾ "; content: "▾ " / ""; }
+.fold[aria-expanded="false"]::before { content: "▸ "; content: "▸ " / ""; }
 .table-wrap { overflow-x: auto; max-height: 420px; overflow-y: auto; margin-top: 8px; }
 .ktable { border-collapse: collapse; width: 100%; font: 12px var(--f-mono); font-variant-numeric: tabular-nums; }
 .ktable th, .ktable td { text-align: right; padding: 4px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
@@ -640,23 +699,71 @@ details > .form { margin-top: 10px; }
 .keys-hint { font-size: 12px; color: var(--muted); }
 
 @media (max-width: 520px) {
+  /* Phones: a little less padding, for width in the tuner's toolbar. */
+  .card { padding: 12px; }
+  .tuner, .tuner-main { gap: 10px; }
   .tuner-head { position: relative; }
   .ref-anchor { position: static; }
   .ref-pop { width: auto; right: 0; }
-  .head-left, .head-right { width: 100%; justify-content: space-between; gap: 8px; }
-  .head-right .seg, .flows .btn { padding-inline: 9px; }
+  /* One row of controls that wraps where it must: two rows at 390 px. */
+  .tuner-head { gap: 8px 6px; }
+  .head-left, .head-right { display: contents; }
+  .head-right .seg { padding-inline: 7px; }
+  .flows .btn { padding-inline: 8px; }
   .menu { left: auto; right: 0; }
   .plan-modes { order: 1; width: 100%; }
   .seg { white-space: nowrap; }
   .seg { flex: 1; }
   .tabs { gap: 0; padding: 0 4px; }
   .tab { padding: 8px 5px; font-size: 14px; }
+  /* Under the dial the head is narrow: progress beside the title, the step below. */
+  .order-panel .survey-head select { order: 1; }
+  /* A long action such as "Done: new pass for the fine tuning" wraps instead of sticking out. */
+  .order-panel .btn-row .btn { white-space: normal; }
 }
-/* Landscape phones: a sticky top bar would take a fifth of the height. */
+/* Reference and tone do not fit on one row: the reference shares its row
+   with Auto/Lock instead, so the toolbar takes three rows, not four. */
+@media (max-width: 369px) {
+  .tuner-head .mode-pick { order: 1; }
+  .tuner-head .split { order: 2; }
+  .tuner-head .flows { order: 3; }
+}
+/* Landscape phones: a sticky top bar would take a fifth of the height. The
+   dial follows the height, so the status and key line show under it; 216 px:
+   the rest of the page down to the key line, and a small margin. The status
+   keeps clear of the arrows, which reach below a small dial. */
 @media (max-height: 560px) {
-  .top { position: static; padding-block: 8px; }
+  .top { position: static; padding-block: 6px; }
+  .layout { margin-top: 6px; }
+  .tuner.card { padding-top: 8px; }
   .tuner, .tuner-main, .dial-col { gap: 8px; }
-  .dial { max-width: 320px; }
+  .head-left, .head-right { gap: 6px 8px; }
+  .head-right .seg, .flows .btn { padding-inline: 9px; }
+  .dial {
+    max-width: min(560px, max(200px, (100vh - 216px) / 0.7));
+    max-width: min(560px, max(200px, (100svh - 216px) / 0.7));
+  }
+  .status { margin-top: 0; line-height: 1.25; }
+  .keyline { line-height: 1.35; }
+}
+/* Landscape phones: the top bar stays on one row; the piano may narrow
+   further than on a tablet. */
+@media (max-height: 560px) and (min-width: 621px) and (max-width: 959px) {
+  .top { flex-wrap: nowrap; }
+  .tuning-bar { min-width: 0; }
+}
+/* Touch screens: controls at least 44 px high. Text links keep their look;
+   padding with a negative margin enlarges what can be tapped. */
+@media (pointer: coarse) {
+  .btn, .ref-chip, .chip-btn, .menu button,
+  select, input[type="text"], input[type="number"] { min-height: 44px; }
+  .btn.close, .btn.icon, .nav { min-width: 44px; }
+  .nav { width: 44px; height: 44px; }
+  .seg, .tab { min-height: 44px; justify-content: center; }
+  .brand { min-height: 44px; }
+  .fold, summary { padding-block: 12px; margin-block: -12px; }
+  /* iOS zooms the page into a field with text under 16 px. */
+  select, textarea, input[type="text"], input[type="number"]:not(#set-ref), .order-panel select { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .key.flash, .drawer { animation: none; }

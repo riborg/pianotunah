@@ -8,6 +8,8 @@ export default {
   'top.tuning': 'Piano',
   'top.settings': 'Settings',
   'top.settingsTitle': 'Settings (S)',
+  'top.help': 'Help',
+  'top.helpTitle': 'Help (H)',
   'drawer.close': 'Close settings',
   'msg.close': 'Close message',
   'msg.update': 'Version {v} is available.',
@@ -72,6 +74,11 @@ export default {
   'mic.insecure': 'The microphone requires https. Open the app over https.',
   'mic.denied': 'Microphone access was denied. Allow it for this page via the icon in the address bar and try again.',
   'mic.failed': 'Could not start the microphone: {err}',
+  'mic.notFound': 'No microphone was found. Connect one and try again.',
+  'mic.notReadable': 'The microphone is in use by another app or blocked by the system. Close the other app or allow the microphone in the system settings, then try again.',
+  'mic.unavailable': 'The chosen microphone is not available. Choose another under Settings → App.',
+  'mic.aborted': 'The microphone was interrupted while starting. Try again.',
+  'mic.blocked': 'The browser does not allow the microphone on this page. Check the site settings in the browser.',
   'mic.default': 'System default',
   'mic.n': 'Microphone {n}',
   'mic.notConnected': 'Chosen microphone (not connected)',
@@ -120,7 +127,10 @@ export default {
   'order.next': 'Next',
   'order.nextKey': 'Next key',
   'order.nextStep': 'Next step',
-  'order.close': 'Close',
+  'order.close': 'Close tuning order',
+  'order.closeTitle': 'Close tuning order (O)',
+  'order.more': 'Show more',
+  'order.less': 'Show less',
   'order.progress': 'key {i} of {n}',
   'order.back': 'Back to {name}',
   'order.confirm': 'In tune. Strike firmly once more to check that it holds.',
@@ -387,5 +397,5 @@ export default {
 <p><strong>Strobe:</strong> one ring per partial behind the needle, numbered at the right end: innermost the measured one, then the two octaves above it. Still = in tune, turning clockwise = too high. If the inner ring stands still but the others turn, the string's inharmonicity differs from the model; measure its inharmonicity under <em>Partials vs target</em>.</p>
 <p><strong>Sine tone:</strong> choose <em>Sine tone</em> in the menu next to ▶ and play it. Tune until the beats disappear.</p>
 <p><strong>Temperament:</strong> how the fifths are distributed within the octave. Equal temperament is the standard for pianos; the historical ones under Tuning are for early music.</p>
-<p class="keys-hint">Keyboard: ← → change key, L locks, A auto, O tuning order, T plays or stops the target tone, S opens settings.</p>`,
+<p class="keys-hint">Keyboard: ← → change key, L locks, A auto, O tuning order, T plays or stops the target tone, S opens settings, H help.</p>`,
 };

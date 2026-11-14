@@ -155,6 +155,10 @@ function clearMessage(tag) {
   if (!$('message').hidden && $('message').dataset.tag === tag) $('message').hidden = true;
 }
 
+// The toast's height, for the room the page and the drawer keep free under
+// their content while it shows (style.css).
+new ResizeObserver(() => document.documentElement.style.setProperty('--msg-h', `${$('message').offsetHeight}px`)).observe($('message'));
+
 // ---------------------------------------------------------------------------
 // Saving
 
@@ -627,7 +631,15 @@ async function openMic() {
     }
   } catch (e) {
     diag(`mic failed: ${e.name} ${e.message}`);
-    const key = { insecure: 'mic.insecure', NotAllowedError: 'mic.denied' }[e.name];
+    const key = {
+      insecure: 'mic.insecure',
+      NotAllowedError: 'mic.denied',
+      NotFoundError: 'mic.notFound',
+      NotReadableError: 'mic.notReadable',
+      OverconstrainedError: 'mic.unavailable',
+      AbortError: 'mic.aborted',
+      SecurityError: 'mic.blocked',
+    }[e.name];
     message(key ? tr(key) : tr('mic.failed', { err: e.message }), 'error', 0);
     return;
   }
@@ -1279,11 +1291,30 @@ function renderOrderPanel() {
       setSetting('overpull', 0);
       goOrder({ step: orderStepIndex('strip'), i: 0 });
     });
+  } else if (step.id === 'finish') {
+    // The main action once no key is left to go over.
+    orderButton(t ? 'order-action2' : 'order-action', tr('pass.new'), () => ($('order-confirm-pass').hidden = false));
   }
+  if (step.id !== 'finish') $('order-confirm-pass').hidden = true;
   $('order-prev').disabled = !order.prevPos(o, pos);
   $('order-next').textContent = tr(t ? 'order.nextKey' : 'order.next');
   $('order-skip').hidden = !t;
   renderOrderState();
+  fitOrderText();
+}
+
+// "Show more" under a clamped explanation; not needed when it all fits or
+// the panel is beside the dial (style.css).
+const orderWide = matchMedia('(min-width: 960px)');
+function fitOrderText() {
+  const panel = $('order-panel');
+  if (panel.hidden) return;
+  const open = panel.classList.contains('text-open');
+  const el = $('order-text');
+  const b = $('order-more');
+  b.hidden = orderWide.matches || (!open && el.scrollHeight <= el.clientHeight + 1);
+  b.textContent = tr(open ? 'order.less' : 'order.more');
+  b.setAttribute('aria-expanded', open);
 }
 
 // ---------------------------------------------------------------------------
@@ -1334,9 +1365,15 @@ function setToneOnKey(on) {
   try { localStorage.setItem(LS.toneOnKey, on ? 'on' : 'off'); } catch { /* optional */ }
 }
 
+// Opening focuses the checked tone; closing gives focus back to the button if
+// it was in the menu.
 function setToneMenuOpen(open) {
-  $('tone-menu').hidden = !open;
+  const menu = $('tone-menu');
+  if (open === !menu.hidden) return;
+  if (!open && menu.contains(document.activeElement)) $('btn-tone-menu').focus();
+  menu.hidden = !open;
   $('btn-tone-menu').setAttribute('aria-expanded', open);
+  if (open) menu.querySelector('[data-tone][aria-checked="true"]').focus();
 }
 
 // The sine sounds at the measured partial, in the bass and tenor an octave or
@@ -1578,11 +1615,22 @@ function closeRefPop(focusChip = false) {
   if (focusChip) $('btn-ref-chip').focus();
 }
 
-function openDrawer(tab) {
+// The page behind the drawer is inert, so Tab stays in the drawer. The toast
+// stays reachable; it is drawn above the drawer.
+const setPageInert = (on) => document.querySelectorAll('.top, main').forEach((el) => (el.inert = on));
+
+// Focus goes back to the button that opened the drawer.
+let drawerOpener = 'btn-settings';
+const setDrawerExpanded = (v) => ['btn-settings', 'btn-help'].forEach((id) => $(id).setAttribute('aria-expanded', v));
+
+function openDrawer(tab, opener = 'btn-settings') {
+  drawerOpener = opener;
   closeRefPop();
+  setToneMenuOpen(false);
+  setPageInert(true);
   $('drawer').hidden = $('drawer-backdrop').hidden = false;
   document.body.classList.add('drawer-open');
-  $('btn-settings').setAttribute('aria-expanded', 'true');
+  setDrawerExpanded(true);
   let last = 'piano';
   try { last = localStorage.getItem(LS.tab) || last; } catch { /* optional */ }
   showTab(tab || last);
@@ -1591,14 +1639,25 @@ function openDrawer(tab) {
 
 function closeDrawer() {
   $('drawer').hidden = $('drawer-backdrop').hidden = true;
+  setPageInert(false);
   document.body.classList.remove('drawer-open');
-  $('btn-settings').setAttribute('aria-expanded', 'false');
-  $('btn-settings').focus();
+  setDrawerExpanded(false);
+  $(drawerOpener).focus();
+}
+
+// H: Help, or back to the page when Help is already showing.
+function toggleHelp() {
+  if ($('drawer').hidden) openDrawer('help', 'btn-help');
+  else if (document.querySelector('[data-panel="help"]').hidden) showTab('help');
+  else closeDrawer();
 }
 
 function showTab(tab) {
   if (!document.querySelector(`[data-panel="${tab}"]`)) tab = 'piano';
-  document.querySelectorAll('[data-tab]').forEach((b) => b.setAttribute('aria-selected', b.dataset.tab === tab));
+  document.querySelectorAll('[data-tab]').forEach((b) => {
+    b.setAttribute('aria-selected', b.dataset.tab === tab);
+    b.tabIndex = b.dataset.tab === tab ? 0 : -1; // only the selected tab is in the Tab order
+  });
   document.querySelectorAll('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== tab));
   try { localStorage.setItem(LS.tab, tab); } catch { /* optional */ }
 }
@@ -1625,6 +1684,7 @@ function bindEvents() {
     window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   });
   on('btn-settings', 'click', () => ($('drawer').hidden ? openDrawer() : closeDrawer()));
+  on('btn-help', 'click', toggleHelp);
   on('drawer-close', 'click', closeDrawer);
   on('drawer-backdrop', 'click', closeDrawer);
   on('btn-ref-chip', 'click', () => ($('ref-pop').hidden ? openRefPop() : closeRefPop()));
@@ -1633,6 +1693,18 @@ function bindEvents() {
     if (!e.target.closest('.ref-anchor')) closeRefPop();
   });
   onAll('[data-tab]', (b) => showTab(b.dataset.tab));
+  // Arrow keys, Home and End move between the tabs and select them.
+  document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
+    const tabs = [...document.querySelectorAll('[data-tab]')];
+    const i = tabs.indexOf(e.target);
+    const to = { ArrowLeft: i - 1, ArrowRight: i + 1, Home: 0, End: tabs.length - 1 }[e.key];
+    if (i < 0 || to === undefined || e.metaKey || e.ctrlKey || e.altKey) return;
+    const t = tabs[(to + tabs.length) % tabs.length];
+    showTab(t.dataset.tab);
+    t.focus();
+    e.preventDefault();
+    e.stopPropagation(); // not the page's previous/next key
+  });
   on('btn-mic', 'click', () => (mic.running ? stopMic() : startMic()));
   on('btn-rec', 'click', toggleRecording);
   on('btn-rec-stop', 'click', finishRecording);
@@ -1661,6 +1733,10 @@ function bindEvents() {
   onAll('[data-plan]', (b) => setSurveyPlan(b.dataset.plan));
   on('btn-order', 'click', () => setOrderOn(!state.orderOn));
   on('order-close', 'click', () => setOrderOn(false));
+  on('order-more', 'click', () => {
+    $('order-panel').classList.toggle('text-open');
+    fitOrderText();
+  });
   on('order-step', 'change', (e) => goOrder({ step: Number(e.target.value), i: 0 }));
   on('order-prev', 'click', () => goOrder(order.prevPos(state.order, state.orderPos) || state.orderPos));
   on('order-next', 'click', () => {
@@ -1689,6 +1765,24 @@ function bindEvents() {
   });
   on('btn-tone', 'click', playCurrent);
   on('btn-tone-menu', 'click', () => setToneMenuOpen($('tone-menu').hidden));
+  on('btn-tone-menu', 'keydown', (e) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    setToneMenuOpen(true);
+    e.preventDefault();
+  });
+  // Up/Down, Home and End move among the items; Tab closes the menu and moves
+  // on from its button.
+  on('tone-menu', 'keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'Tab') return setToneMenuOpen(false);
+    const items = [...$('tone-menu').querySelectorAll('[role^="menuitem"]')];
+    const i = items.indexOf(document.activeElement);
+    const to = { ArrowUp: i - 1, ArrowDown: i + 1, Home: 0, End: items.length - 1 }[e.key];
+    if (to !== undefined) items[(to + items.length) % items.length].focus();
+    else if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    e.stopPropagation(); // not the page's previous/next key
+  });
   onAll('[data-tone]', (b) => {
     setToneMode(b.dataset.tone);
     setToneMenuOpen(false);
@@ -1812,6 +1906,11 @@ function bindEvents() {
     $('confirm-pass').hidden = true;
     newPass();
   });
+  on('order-confirm-pass-no', 'click', show('order-confirm-pass', false));
+  on('order-confirm-pass-yes', 'click', () => {
+    $('order-confirm-pass').hidden = true;
+    newPass();
+  });
   on('btn-export', 'click', exportTuning);
   on('file-import', 'change', (e) => {
     const f = e.target.files[0];
@@ -1868,14 +1967,17 @@ function bindEvents() {
       o: () => setOrderOn(!state.orderOn),
       t: playCurrent,
       s: () => ($('drawer').hidden ? openDrawer() : closeDrawer()),
+      h: toggleHelp,
     }[e.key.length === 1 ? e.key.toLowerCase() : e.key];
-    if (!action) return;
+    // Only S and H work while the drawer is open; the rest act on the page behind it.
+    if (!action || (!$('drawer').hidden && !['s', 'h'].includes(e.key.toLowerCase()))) return;
     action();
     e.preventDefault();
   });
 
   // Window
   window.addEventListener('resize', () => {
+    fitOrderText();
     renderKeyboard();
     renderChart();
   });

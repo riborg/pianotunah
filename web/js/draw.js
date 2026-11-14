@@ -108,7 +108,7 @@ export function drawDial(canvas, { display, signal, bands, live, tol }, C, dt, p
   ctx.restore();
 
   // Partial number at the right end of each ring.
-  ctx.font = `600 ${Math.max(10, w * 0.022)}px ${MONO}`;
+  ctx.font = `600 ${Math.max(11, w * 0.022)}px ${MONO}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   DIAL.rings.forEach(([f0, f1], i) => {
@@ -116,7 +116,7 @@ export function drawDial(canvas, { display, signal, bands, live, tol }, C, dt, p
     const [x, y] = at((84 * Math.PI) / 180, (w * (f0 + f1)) / 2);
     ctx.fillStyle = C.surface;
     ctx.beginPath();
-    ctx.arc(x, y - 2, Math.max(8, w * 0.018), 0, 2 * Math.PI);
+    ctx.arc(x, y - 2, Math.max(9, w * 0.018), 0, 2 * Math.PI);
     ctx.fill();
     ctx.fillStyle = C.muted;
     ctx.fillText(bands[i].p, x, y - 1.5);
@@ -147,12 +147,16 @@ export function drawDial(canvas, { display, signal, bands, live, tol }, C, dt, p
     tick(t, w * 0.014, C.faint);
     tick(-t, w * 0.014, C.faint);
   }
-  ctx.font = `${Math.max(10, Math.min(12, w * 0.022))}px ${MONO}`;
+  ctx.font = `${Math.max(11, Math.min(12, w * 0.022))}px ${MONO}`;
   ctx.fillStyle = C.muted;
   for (const t of [-50, -20, -10, -5, -2, -1, 0, 1, 2, 5, 10, 20, 50]) {
     if (t === 0) tick(t, w * 0.045, C.ink, 2);
     else tick(t, w * 0.026, C.muted);
-    if (Math.abs(t) !== 1 || w > 450) ctx.fillText(signed(t), ...at(ang(t), R + w * 0.065));
+    if (Math.abs(t) === 1 && w <= 450) continue;
+    // ±50 is kept inside the canvas on a narrow phone and a small dial.
+    const [x, y] = at(ang(t), R + w * 0.065);
+    const half = ctx.measureText(signed(t)).width / 2;
+    ctx.fillText(signed(t), Math.max(half, Math.min(w - half, x)), y);
   }
 
   // Needle, with a halo in the card color so it reads over the rings.
@@ -241,10 +245,10 @@ export function drawSpectro(canvas, cols, { capacity, bins, cents, tol }, C) {
   ctx.stroke();
 
   ctx.fillStyle = C.muted;
-  ctx.font = `10px ${MONO}`;
+  ctx.font = `11px ${MONO}`;
   ctx.textAlign = 'right';
   ctx.fillText('+' + cents, padL - 4, 11);
-  ctx.fillText('0', padL - 4, h / 2 + 3);
+  ctx.fillText('0', padL - 4, h / 2 + 4);
   ctx.fillText('−' + cents, padL - 4, h - 3);
 }
 
@@ -367,15 +371,15 @@ export function drawChart(canvas, { top, target, points, ticks, current, xs }, C
 
   if (xs) {
     // On top of the curve, with a halo so they stay readable where it passes.
-    ctx.font = `10px ${MONO}`;
+    ctx.font = `11px ${MONO}`;
     ctx.textAlign = 'left';
     ctx.lineWidth = 3;
     ctx.strokeStyle = C.surface;
     ctx.fillStyle = C.muted;
     for (let c = yMin; c <= yMax; c += step) {
       if (c === yMin) continue; // no room below the bottom line
-      ctx.strokeText(signed(c), pad.l + 2, yOf(c) + 11);
-      ctx.fillText(signed(c), pad.l + 2, yOf(c) + 11);
+      ctx.strokeText(signed(c), pad.l + 2, yOf(c) + 12);
+      ctx.fillText(signed(c), pad.l + 2, yOf(c) + 12);
     }
   }
 

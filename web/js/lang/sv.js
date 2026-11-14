@@ -8,6 +8,8 @@ export default {
   'top.tuning': 'Piano',
   'top.settings': 'Inställningar',
   'top.settingsTitle': 'Inställningar (S)',
+  'top.help': 'Hjälp',
+  'top.helpTitle': 'Hjälp (H)',
   'drawer.close': 'Stäng inställningar',
   'msg.update': 'Version {v} finns.',
   'msg.reload': 'Ladda om',
@@ -72,6 +74,11 @@ export default {
   'mic.insecure': 'Mikrofonen kräver https. Öppna appen via https.',
   'mic.denied': 'Mikrofonen nekades. Tillåt den för sidan via ikonen i adressfältet och försök igen.',
   'mic.failed': 'Kunde inte starta mikrofonen: {err}',
+  'mic.notFound': 'Ingen mikrofon hittades. Anslut en och försök igen.',
+  'mic.notReadable': 'Mikrofonen används av en annan app eller blockeras av systemet. Stäng den andra appen eller tillåt mikrofonen i systemets inställningar och försök igen.',
+  'mic.unavailable': 'Den valda mikrofonen är inte tillgänglig. Välj en annan under Inställningar → App.',
+  'mic.aborted': 'Mikrofonen avbröts medan den startade. Försök igen.',
+  'mic.blocked': 'Webbläsaren tillåter inte mikrofonen på den här sidan. Kontrollera webbplatsens inställningar i webbläsaren.',
   'mic.default': 'Systemets standard',
   'mic.n': 'Mikrofon {n}',
   'mic.notConnected': 'Vald mikrofon (inte ansluten)',
@@ -120,7 +127,10 @@ export default {
   'order.next': 'Nästa',
   'order.nextKey': 'Nästa tangent',
   'order.nextStep': 'Nästa steg',
-  'order.close': 'Stäng',
+  'order.close': 'Stäng arbetsordningen',
+  'order.closeTitle': 'Stäng arbetsordningen (O)',
+  'order.more': 'Visa mer',
+  'order.less': 'Visa mindre',
   'order.progress': 'tangent {i} av {n}',
   'order.back': 'Tillbaka till {name}',
   'order.confirm': 'I stäm. Slå an kraftigt en gång till för att se att den ligger kvar.',
@@ -387,5 +397,5 @@ export default {
 <p><strong>Strobe:</strong> en ring per deltons bakom visaren, numrerad i högra änden: innerst den uppmätta, sedan de två oktaverna ovanför. Stilla = rent, snurrar medurs = för högt. Står den inre ringen still men de andra snurrar, avviker strängens inharmonicitet från modellen; mät dess inharmonicitet under <em>Deltoner mot mål</em>.</p>
 <p><strong>Sinuston:</strong> välj <em>Sinuston</em> i menyn bredvid ▶ och spela den. Stäm tills svävningarna försvinner.</p>
 <p><strong>Temperatur:</strong> hur kvinterna fördelas inom oktaven. Liksvävande är standard för piano; de historiska under Stämning är för tidig musik.</p>
-<p class="keys-hint">Tangentbord: ← → byter tangent, L låser, A auto, O arbetsordning, T spelar eller stoppar målton, S öppnar inställningar.</p>`,
+<p class="keys-hint">Tangentbord: ← → byter tangent, L låser, A auto, O arbetsordning, T spelar eller stoppar målton, S öppnar inställningar, H hjälp.</p>`,
 };
