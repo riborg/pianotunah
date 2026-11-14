@@ -8,6 +8,8 @@ export default {
   'top.tuning': 'Piano',
   'top.settings': 'Settings',
   'top.settingsTitle': 'Settings (S)',
+  'top.help': 'Help',
+  'top.helpTitle': 'Help (H)',
   'drawer.close': 'Close settings',
   'msg.close': 'Close message',
   'msg.update': 'Version {v} is available.',
@@ -395,5 +397,5 @@ export default {
 <p><strong>Strobe:</strong> one ring per partial behind the needle, numbered at the right end: innermost the measured one, then the two octaves above it. Still = in tune, turning clockwise = too high. If the inner ring stands still but the others turn, the string's inharmonicity differs from the model; measure its inharmonicity under <em>Partials vs target</em>.</p>
 <p><strong>Sine tone:</strong> choose <em>Sine tone</em> in the menu next to ▶ and play it. Tune until the beats disappear.</p>
 <p><strong>Temperament:</strong> how the fifths are distributed within the octave. Equal temperament is the standard for pianos; the historical ones under Tuning are for early music.</p>
-<p class="keys-hint">Keyboard: ← → change key, L locks, A auto, O tuning order, T plays or stops the target tone, S opens settings.</p>`,
+<p class="keys-hint">Keyboard: ← → change key, L locks, A auto, O tuning order, T plays or stops the target tone, S opens settings, H help.</p>`,
 };

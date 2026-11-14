@@ -8,6 +8,8 @@ export default {
   'top.tuning': 'Piano',
   'top.settings': 'Inställningar',
   'top.settingsTitle': 'Inställningar (S)',
+  'top.help': 'Hjälp',
+  'top.helpTitle': 'Hjälp (H)',
   'drawer.close': 'Stäng inställningar',
   'msg.update': 'Version {v} finns.',
   'msg.reload': 'Ladda om',
@@ -395,5 +397,5 @@ export default {
 <p><strong>Strobe:</strong> en ring per deltons bakom visaren, numrerad i högra änden: innerst den uppmätta, sedan de två oktaverna ovanför. Stilla = rent, snurrar medurs = för högt. Står den inre ringen still men de andra snurrar, avviker strängens inharmonicitet från modellen; mät dess inharmonicitet under <em>Deltoner mot mål</em>.</p>
 <p><strong>Sinuston:</strong> välj <em>Sinuston</em> i menyn bredvid ▶ och spela den. Stäm tills svävningarna försvinner.</p>
 <p><strong>Temperatur:</strong> hur kvinterna fördelas inom oktaven. Liksvävande är standard för piano; de historiska under Stämning är för tidig musik.</p>
-<p class="keys-hint">Tangentbord: ← → byter tangent, L låser, A auto, O arbetsordning, T spelar eller stoppar målton, S öppnar inställningar.</p>`,
+<p class="keys-hint">Tangentbord: ← → byter tangent, L låser, A auto, O arbetsordning, T spelar eller stoppar målton, S öppnar inställningar, H hjälp.</p>`,
 };

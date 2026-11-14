@@ -1615,13 +1615,18 @@ function closeRefPop(focusChip = false) {
 // stays reachable; it is drawn above the drawer.
 const setPageInert = (on) => document.querySelectorAll('.top, main').forEach((el) => (el.inert = on));
 
-function openDrawer(tab) {
+// Focus goes back to the button that opened the drawer.
+let drawerOpener = 'btn-settings';
+const setDrawerExpanded = (v) => ['btn-settings', 'btn-help'].forEach((id) => $(id).setAttribute('aria-expanded', v));
+
+function openDrawer(tab, opener = 'btn-settings') {
+  drawerOpener = opener;
   closeRefPop();
   setToneMenuOpen(false);
   setPageInert(true);
   $('drawer').hidden = $('drawer-backdrop').hidden = false;
   document.body.classList.add('drawer-open');
-  $('btn-settings').setAttribute('aria-expanded', 'true');
+  setDrawerExpanded(true);
   let last = 'piano';
   try { last = localStorage.getItem(LS.tab) || last; } catch { /* optional */ }
   showTab(tab || last);
@@ -1632,8 +1637,15 @@ function closeDrawer() {
   $('drawer').hidden = $('drawer-backdrop').hidden = true;
   setPageInert(false);
   document.body.classList.remove('drawer-open');
-  $('btn-settings').setAttribute('aria-expanded', 'false');
-  $('btn-settings').focus();
+  setDrawerExpanded(false);
+  $(drawerOpener).focus();
+}
+
+// H: Help, or back to the page when Help is already showing.
+function toggleHelp() {
+  if ($('drawer').hidden) openDrawer('help', 'btn-help');
+  else if (document.querySelector('[data-panel="help"]').hidden) showTab('help');
+  else closeDrawer();
 }
 
 function showTab(tab) {
@@ -1668,6 +1680,7 @@ function bindEvents() {
     window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   });
   on('btn-settings', 'click', () => ($('drawer').hidden ? openDrawer() : closeDrawer()));
+  on('btn-help', 'click', toggleHelp);
   on('drawer-close', 'click', closeDrawer);
   on('drawer-backdrop', 'click', closeDrawer);
   on('btn-ref-chip', 'click', () => ($('ref-pop').hidden ? openRefPop() : closeRefPop()));
@@ -1945,9 +1958,10 @@ function bindEvents() {
       o: () => setOrderOn(!state.orderOn),
       t: playCurrent,
       s: () => ($('drawer').hidden ? openDrawer() : closeDrawer()),
+      h: toggleHelp,
     }[e.key.length === 1 ? e.key.toLowerCase() : e.key];
-    // Only S works while the drawer is open; the rest act on the page behind it.
-    if (!action || (!$('drawer').hidden && e.key.toLowerCase() !== 's')) return;
+    // Only S and H work while the drawer is open; the rest act on the page behind it.
+    if (!action || (!$('drawer').hidden && !['s', 'h'].includes(e.key.toLowerCase()))) return;
     action();
     e.preventDefault();
   });
