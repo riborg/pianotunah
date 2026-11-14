@@ -2,12 +2,12 @@
 
 ### Issue tracker
 
-GitHub Issues on riborg/pianotunah, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+The issue tracker is GitHub Issues on riborg/pianotunah, used through the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
-Default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+The repo uses the default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 
-Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+The repo is single-context, with `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
