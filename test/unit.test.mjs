@@ -8,7 +8,7 @@ import {
 import { Analyzer } from '../web/js/dsp.js';
 import { wavBlob } from '../web/js/mic.js';
 import { Saver } from '../web/js/saver.js';
-import { fmtC } from '../web/js/format.js';
+import { fmtC, parseNum } from '../web/js/format.js';
 import { newRun, nextPending, handled, wrongKey } from '../web/js/survey.js';
 import { buildOrder, nextPos, prevPos, clampPos, taskAt, progress, newConfirm, confirmReading, checkRows } from '../web/js/order.js';
 
@@ -345,4 +345,9 @@ test('saver: a conflict is handed over without blocking the queue', async () => 
 test('format: the sign of a cent value follows what is shown', () => {
   assert.deepEqual([1.23, -0.44, 0.04, -0.04, NaN].map((c) => fmtC(c)), ['+1.2', '−0.4', '±0.0', '±0.0', '–']);
   assert.deepEqual([0.3, -0.3, 0.6, -12.4].map((c) => fmtC(c, 0)), ['±0', '±0', '+1', '−12']);
+});
+
+test('format: a typed number takes comma or point', () => {
+  assert.deepEqual(['441,5', '441.5', ' 440 ', '440,', ',5'].map(parseNum), [441.5, 441.5, 440, 440, 0.5]);
+  assert.ok(['', 'abc', '441,5,1', '4e2', '441 Hz', '1.2.3'].every((s) => Number.isNaN(parseNum(s))));
 });

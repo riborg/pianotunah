@@ -20,3 +20,6 @@ export function fmtC(c, d = 1) {
 export const fmtHz = (f, d = 2) => dec(f.toFixed(d)) + ' Hz';
 
 export const fmtB = (b) => dec(b.toExponential(2));
+
+// A typed decimal number with comma or point. Anything else is NaN.
+export const parseNum = (s) => (/^\s*-?(\d+([.,]\d*)?|[.,]\d+)\s*$/.test(s) ? Number(s.replace(',', '.')) : NaN);

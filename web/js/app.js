@@ -7,7 +7,7 @@ import {
 } from './theory.js';
 import { Analyzer, rmsDb, median } from './dsp.js';
 import { listTunings, getTuning, saveTuning, deleteTuning, newTuning, normalize, duplicateTuning } from './store.js';
-import { num, short, fmtC, fmtHz, fmtB } from './format.js';
+import { num, short, fmtC, fmtHz, fmtB, parseNum } from './format.js';
 import { tr, trNodes, lang, locale, setLang, translateDom } from './i18n.js';
 import { Mic } from './mic.js';
 import { TonePlayer } from './tone.js';
@@ -343,9 +343,16 @@ function renderSettingDescs() {
   for (const [id, k] of [['out-two', s.twoStringsTo], ['out-one', s.oneStringTo]]) $(id).textContent = k ? kName(k) : tr('piano.stringsNone');
 }
 
+// The field shows the reference with the language's decimal separator.
+function showRefField() {
+  const ref = Number(S().refA4);
+  $('set-ref').value = num(ref, 1);
+  $('set-ref').setAttribute('aria-valuenow', ref);
+}
+
 function renderRef() {
   const ref = Number(S().refA4);
-  if (document.activeElement !== $('set-ref')) $('set-ref').value = ref.toFixed(1);
+  if (document.activeElement !== $('set-ref')) showRefField();
   $('btn-ref-chip').textContent = `A4 = ${fmtHz(ref, 1)}`;
   const c = centsBetween(ref, 440);
   $('ref-cents').textContent = Math.abs(c) < 0.05 ? tr('ref.standard') : tr('ref.vs440', { c: fmtC(c) });
@@ -1816,7 +1823,20 @@ function bindEvents() {
   });
 
   // Reference
-  on('set-ref', 'change', (e) => setRef(parseFloat(e.target.value.replace(',', '.'))));
+  // Invalid input goes back to the current reference.
+  on('set-ref', 'change', (e) => {
+    setRef(parseNum(e.target.value));
+    showRefField();
+  });
+  // Arrow keys step 0.1 Hz, with Shift 1 Hz.
+  on('set-ref', 'keydown', (e) => {
+    const dir = { ArrowUp: 1, ArrowDown: -1 }[e.key];
+    if (!dir) return;
+    e.preventDefault();
+    const typed = parseNum(e.target.value);
+    setRef((Number.isFinite(typed) ? typed : Number(S().refA4)) + dir * (e.shiftKey ? 1 : 0.1));
+    showRefField();
+  });
   onAll('[data-ref]', (b) => setRef(Number(S().refA4) + Number(b.dataset.ref)));
   onAll('[data-hz]', (b) => setRef(Number(b.dataset.hz)));
   on('btn-fit-ref', 'click', fitRefToPiano);

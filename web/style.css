@@ -515,9 +515,8 @@ body.drawer-open { overflow: hidden; }
 /* Reference */
 .ref-row { display: flex; align-items: center; justify-content: center; gap: 4px; }
 .ref-input { display: flex; align-items: baseline; gap: 4px; }
-/* Room for "444.5" without spin buttons; the ±0.1 and ±1 buttons step. */
-.ref-input input { width: calc(5ch + 24px); font: 600 22px var(--f-mono); text-align: right; padding: 4px 6px; -moz-appearance: textfield; appearance: textfield; }
-.ref-input input::-webkit-inner-spin-button, .ref-input input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+/* Room for "444.5"; the ±0.1 and ±1 buttons step. */
+.ref-input input { width: calc(5ch + 24px); font: 600 22px var(--f-mono); text-align: right; padding: 4px 6px; }
 .ref-cents { text-align: center; font: 12px var(--f-mono); color: var(--muted); }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
 .chip-btn { border: 1px solid var(--line); background: transparent; border-radius: 99px; padding: 2px 10px; cursor: pointer; font: 13px var(--f-mono); }
@@ -763,7 +762,7 @@ details > .form { margin-top: 10px; }
   .brand { min-height: 44px; }
   .fold, summary { padding-block: 12px; margin-block: -12px; }
   /* iOS zooms the page into a field with text under 16 px. */
-  select, textarea, input[type="text"], input[type="number"]:not(#set-ref), .order-panel select { font-size: 16px; }
+  select, textarea, input[type="text"]:not(#set-ref), input[type="number"], .order-panel select { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .key.flash, .drawer { animation: none; }
