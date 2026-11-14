@@ -745,10 +745,23 @@ details > .form { margin-top: 10px; }
   .seg { flex: 1; }
   .tabs { gap: 0; padding: 0 4px; }
   .tab { padding: 8px 5px; font-size: 14px; }
-  /* Under the dial the head is narrow: progress beside the title, the step below. */
-  .order-panel .survey-head select { order: 1; }
-  /* A long action such as "Done: new pass for the fine tuning" wraps instead of sticking out. */
-  .order-panel .btn-row .btn { white-space: normal; }
+  /* Under the dial the tuning order is packed so the dial and the buttons fit
+     on the screen together in a 360 × 640 viewport, by a few pixels: not
+     while Back to … takes a row of its own, nor below the address bar of a
+     browser that keeps it, nor at 320 px, where the toolbar takes three
+     rows and the buttons stay below the screen. The step is the head, as the
+     pressed Tuning order button above the dial names the panel; the progress
+     sits on its own line above the bar. */
+  .order-panel { gap: 6px; padding-block: 10px; }
+  .order-panel .survey-head { row-gap: 4px; }
+  .order-panel .survey-head h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .order-panel .survey-head select { flex: 1 1 auto; min-width: 0; }
+  .order-panel .survey-head span:not(:empty) { flex-basis: 100%; text-align: right; }
+  #order-close { top: 10px; }
+  /* Previous, Next key and Next step share a row, wrapping their words; an
+     action such as "Done: new pass for the fine tuning" gets a row of its own. */
+  .order-panel .btn-row .btn { white-space: normal; flex: 1 1 100%; }
+  .order-panel .btn-row :is(#order-prev, #order-next, #order-skip) { flex: 1 1 0; padding-inline: 8px; }
 }
 /* Reference and tone do not fit on one row: the reference shares its row
    with Auto/Lock instead, so the toolbar takes three rows, not four. */
