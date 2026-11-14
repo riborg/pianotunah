@@ -364,6 +364,8 @@ select:disabled { opacity: 0.55; }
 .fold-box .fold { align-self: flex-start; font-size: 14px; text-align: left; }
 .fold-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .fold-row { display: flex; flex-direction: column; gap: 6px; }
+/* The folds are headings for screen readers; they keep the look of the button. */
+.fold-box h2 { display: flex; align-self: flex-start; margin: 0; font: inherit; letter-spacing: normal; text-transform: none; color: inherit; }
 .beat-rate { font: 600 14px var(--f-mono); font-variant-numeric: tabular-nums; }
 .mini-label { font-size: 12px; color: var(--muted); }
 
