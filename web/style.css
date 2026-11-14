@@ -151,6 +151,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .tuning-bar select { min-width: 0; flex: 1 1 auto; max-width: none; }
 }
 @media (max-width: 480px) { .brand-name { display: none; } }
+/* Too narrow for the mark beside the buttons: it goes before the tuning. */
+@media (max-width: 359px) {
+  .brand { order: 4; margin-right: 0; }
+  .tuning-bar { width: auto; flex: 1 1 0; min-width: 0; }
+  #btn-help { margin-left: auto; }
+}
 
 /* Controls */
 select, input[type="text"], input[type="number"], textarea {
