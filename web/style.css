@@ -309,6 +309,15 @@ select:disabled { opacity: 0.55; }
 /* Dial: canvas with scale, needle and strobe rings (drawDial), and the note
    hub on top. The hub's centre (54cqw) and size (30cqw) follow DIAL in draw.js. */
 .dial { position: relative; width: 100%; max-width: 560px; margin: 0 auto; aspect-ratio: 1 / 0.7; container-type: inline-size; }
+/* Not on phones: the dial also follows the window's height, so the keyboard
+   and its legend fit under it on a laptop. 520 px: the rest of the page down
+   to the legend, and a small margin. */
+@media (min-width: 621px) {
+  .dial {
+    max-width: min(560px, max(280px, (100vh - 520px) / 0.7));
+    max-width: min(560px, max(280px, (100svh - 520px) / 0.7));
+  }
+}
 .dial canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .hub {
   position: absolute;
