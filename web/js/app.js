@@ -7,7 +7,7 @@ import {
 } from './theory.js';
 import { Analyzer, rmsDb, median } from './dsp.js';
 import { listTunings, getTuning, saveTuning, deleteTuning, newTuning, normalize, duplicateTuning } from './store.js';
-import { num, short, fmtC, fmtHz, fmtB } from './format.js';
+import { num, short, fmtC, fmtHz, fmtB, parseNum } from './format.js';
 import { tr, trNodes, lang, locale, setLang, translateDom } from './i18n.js';
 import { Mic } from './mic.js';
 import { TonePlayer } from './tone.js';
@@ -189,6 +189,7 @@ function setSaveState(s) {
     return span;
   }));
   el.title = s === 'error' ? tr('save.errorTitle') : '';
+  $('btn-settings').dataset.save = s; // the mark on phones (style.css)
 }
 
 async function reloadAfterConflict(t) {
@@ -215,6 +216,16 @@ function renderTuningSelect() {
   const sel = $('tuning-select');
   sel.replaceChildren(...state.list.map((t) => option(t.id, t.name || tr('name.untitled'))));
   if (state.tuning) sel.value = state.tuning.id;
+}
+
+// On phones the piano is chosen at the top of the Piano tab: the top bar
+// keeps one row, so more of the tuning order fits on the first screen.
+const phoneTop = matchMedia('(max-width: 620px)');
+function placeTuningSelect() {
+  const label = $('tuning-label');
+  label.classList.toggle('sr-only', !phoneTop.matches);
+  const home = phoneTop.matches ? document.querySelector('#panel-piano .form') : document.querySelector('.tuning-bar');
+  home.prepend(label, $('tuning-select'));
 }
 
 async function openTuning(t) {
@@ -343,10 +354,17 @@ function renderSettingDescs() {
   for (const [id, k] of [['out-two', s.twoStringsTo], ['out-one', s.oneStringTo]]) $(id).textContent = k ? kName(k) : tr('piano.stringsNone');
 }
 
+// The field shows the reference with the language's decimal separator.
+function showRefField() {
+  const ref = Number(S().refA4);
+  $('set-ref').value = num(ref, 1);
+  $('set-ref').setAttribute('aria-valuenow', ref);
+}
+
 function renderRef() {
   const ref = Number(S().refA4);
-  if (document.activeElement !== $('set-ref')) $('set-ref').value = ref.toFixed(1);
-  $('btn-ref-chip').textContent = `A4 = ${fmtHz(ref, 1)}`;
+  if (document.activeElement !== $('set-ref')) showRefField();
+  $('ref-hz').textContent = fmtHz(ref, 1);
   const c = centsBetween(ref, 440);
   $('ref-cents').textContent = Math.abs(c) < 0.05 ? tr('ref.standard') : tr('ref.vs440', { c: fmtC(c) });
   for (const b of $('ref-presets').children) b.classList.toggle('on', Number(b.dataset.hz) === ref);
@@ -1304,8 +1322,8 @@ function renderOrderPanel() {
 }
 
 // "Show more" under a clamped explanation; not needed when it all fits or
-// the panel is beside the dial (style.css).
-const orderWide = matchMedia('(min-width: 960px)');
+// the panel is beside the dial in a high window (style.css).
+const orderWide = matchMedia('(min-width: 960px) and (min-height: 900px)');
 function fitOrderText() {
   const panel = $('order-panel');
   if (panel.hidden) return;
@@ -1816,7 +1834,20 @@ function bindEvents() {
   });
 
   // Reference
-  on('set-ref', 'change', (e) => setRef(parseFloat(e.target.value.replace(',', '.'))));
+  // Invalid input goes back to the current reference.
+  on('set-ref', 'change', (e) => {
+    setRef(parseNum(e.target.value));
+    showRefField();
+  });
+  // Arrow keys step 0.1 Hz, with Shift 1 Hz.
+  on('set-ref', 'keydown', (e) => {
+    const dir = { ArrowUp: 1, ArrowDown: -1 }[e.key];
+    if (!dir) return;
+    e.preventDefault();
+    const typed = parseNum(e.target.value);
+    setRef((Number.isFinite(typed) ? typed : Number(S().refA4)) + dir * (e.shiftKey ? 1 : 0.1));
+    showRefField();
+  });
   onAll('[data-ref]', (b) => setRef(Number(S().refA4) + Number(b.dataset.ref)));
   onAll('[data-hz]', (b) => setRef(Number(b.dataset.hz)));
   on('btn-fit-ref', 'click', fitRefToPiano);
@@ -2007,6 +2038,8 @@ function bindEvents() {
 async function boot() {
   try { state.micId = localStorage.getItem(LS.mic) || ''; } catch { /* optional */ }
   buildStaticUi();
+  placeTuningSelect();
+  phoneTop.addEventListener('change', placeTuningSelect);
   state.colors = readColors();
   try {
     await refreshList();

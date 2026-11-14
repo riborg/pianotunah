@@ -153,10 +153,12 @@ export function drawDial(canvas, { display, signal, bands, live, tol }, C, dt, p
     if (t === 0) tick(t, w * 0.045, C.ink, 2);
     else tick(t, w * 0.026, C.muted);
     if (Math.abs(t) === 1 && w <= 450) continue;
-    // ±50 is kept inside the canvas on a narrow phone and a small dial.
-    const [x, y] = at(ang(t), R + w * 0.065);
-    const half = ctx.measureText(signed(t)).width / 2;
-    ctx.fillText(signed(t), Math.max(half, Math.min(w - half, x)), y);
+    // ±50 is kept inside the canvas, and below its tick: beside it a small
+    // dial has no room.
+    let [x, y] = at(ang(t), R + w * 0.065);
+    const m = ctx.measureText(signed(t));
+    if (Math.abs(t) === 50) y = at(ang(t), R)[1] + Math.max(3, w * 0.01) + m.actualBoundingBoxAscent;
+    ctx.fillText(signed(t), Math.max(m.width / 2, Math.min(w - m.width / 2, x)), y);
   }
 
   // Needle, with a halo in the card color so it reads over the rings.
@@ -297,9 +299,10 @@ export function drawChart(canvas, { top, target, points, ticks, current, xs }, C
   const vals = [...target.slice(1, top + 1), ...points.map((p) => p.c)];
   const lo = Math.min(-10, ...vals);
   const hi = Math.max(10, ...vals);
-  // Coarser grid when the range is large or the chart is low.
+  // Coarser grid when the range is large or the chart is low. A row of 16 px
+  // still holds an 11 px label.
   const lines = (s) => Math.ceil(hi / s) - Math.floor(lo / s);
-  const step = [10, 20, 50, 100].find((s) => lines(s) <= (h - pad.t - pad.b) / 18) ?? 100;
+  const step = [10, 20, 50, 100].find((s) => lines(s) <= (h - pad.t - pad.b) / 16) ?? 100;
   const yMin = Math.floor(lo / step) * step;
   const yMax = Math.ceil(hi / step) * step;
   const xOf = xs ? (k) => pad.l + xs[k] * (w - pad.l - pad.r) : (k) => pad.l + ((k - 1) / (top - 1)) * (w - pad.l - pad.r);

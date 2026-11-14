@@ -23,7 +23,7 @@
     <span class="brand-name">Piano Tunah</span>
   </a>
   <div class="tuning-bar">
-    <label class="sr-only" for="tuning-select" data-i18n="top.tuning">Piano</label>
+    <label id="tuning-label" class="sr-only" for="tuning-select" data-i18n="top.tuning">Piano</label>
     <select id="tuning-select"></select>
     <span id="save-status" class="chip" data-state="idle">–</span>
   </div>
@@ -47,7 +47,7 @@
     <div class="tuner-head">
       <div class="head-left">
         <div class="ref-anchor">
-          <button id="btn-ref-chip" class="ref-chip" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="ref-pop" title="Change reference" data-i18n-title="tuner.refTitle"></button>
+          <button id="btn-ref-chip" class="ref-chip" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="ref-pop" title="Change reference" data-i18n-title="tuner.refTitle"><span class="ref-a4">A4 = </span><span id="ref-hz"></span></button>
           <div id="ref-pop" class="ref-pop" role="dialog" aria-labelledby="ref-h" tabindex="-1" hidden>
             <button id="ref-more" class="btn ghost wide" type="button" data-i18n="ref.more">More tuning settings</button>
           </div>
@@ -128,8 +128,6 @@
         </div>
         <div class="survey-bar" aria-hidden="true"><i id="order-bar"></i></div>
         <p class="survey-step" id="order-task" aria-live="polite"></p>
-        <p class="order-state" id="order-state" aria-live="polite"></p>
-        <div class="survey-checks" id="order-checks"></div>
         <div class="btn-row">
           <button id="order-back" class="btn primary" type="button" hidden></button>
           <button id="order-action" class="btn primary" type="button" hidden></button>
@@ -138,11 +136,13 @@
           <button id="order-next" class="btn ghost" type="button" data-i18n="order.next">Next</button>
           <button id="order-skip" class="btn ghost" type="button" data-i18n="order.nextStep">Next step</button>
         </div>
+        <p class="order-state" id="order-state" aria-live="polite"></p>
         <div id="order-confirm-pass" class="confirm" hidden>
           <span data-i18n="pass.confirm">Save the pass to the history and start over?</span>
           <button id="order-confirm-pass-yes" class="btn primary" type="button" data-i18n="pass.new">New pass</button>
           <button id="order-confirm-pass-no" class="btn ghost" type="button" data-i18n="cancel">Cancel</button>
         </div>
+        <div class="survey-checks" id="order-checks"></div>
         <p class="survey-intro" id="order-text"></p>
         <button id="order-more" class="fold" type="button" aria-controls="order-text" aria-expanded="false" hidden></button>
       </div>
@@ -153,7 +153,7 @@
       <div class="kb-frame">
         <div class="kb-marker" id="kb-marker"><span id="kb-marker-name">A4</span></div>
         <div class="chart-wrap mini" id="curve-row">
-          <canvas id="minichart" class="chart" height="96" role="img" aria-label="Target curve in cents per key" data-i18n-aria-label="curve.label"></canvas>
+          <canvas id="minichart" class="chart" data-fluid role="img" aria-label="Target curve in cents per key" data-i18n-aria-label="curve.label"></canvas>
           <div class="tooltip" id="minitip" hidden></div>
         </div>
         <div class="keyboard" id="keyboard"></div>
@@ -284,7 +284,7 @@
       <button class="btn icon sm" type="button" data-ref="-0.1"></button>
       <div class="ref-input">
         <label class="sr-only" for="set-ref" data-i18n="ref.input">Reference frequency in Hz</label>
-        <input id="set-ref" type="number" min="380" max="480" step="0.1" inputmode="decimal">
+        <input id="set-ref" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" role="spinbutton" aria-valuemin="380" aria-valuemax="480">
         <span>Hz</span>
       </div>
       <button class="btn icon sm" type="button" data-ref="0.1"></button>
