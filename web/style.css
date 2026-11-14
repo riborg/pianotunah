@@ -126,7 +126,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
   gap: 10px;
   padding-block: 12px;
   margin-inline: -16px;
-  padding-inline: 16px;
+  /* Full width, with the content over the 1100 px of .layout. */
+  padding-inline: max(16px, 16px + (100% - 1100px) / 2);
   background: var(--bg);
   border-bottom: 1px solid var(--line);
 }
