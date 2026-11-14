@@ -733,11 +733,12 @@ details > .form { margin-top: 10px; }
   .tuner-head { position: relative; }
   .ref-anchor { position: static; }
   .ref-pop { width: auto; right: 0; }
-  /* One row of controls that wraps where it must: two rows at 390 px. */
+  /* One row of controls that wraps where it must: two rows from 375 px,
+     also with the longer Swedish labels. */
   .tuner-head { gap: 8px 6px; }
   .head-left, .head-right { display: contents; }
-  .head-right .seg { padding-inline: 7px; }
-  .flows .btn { padding-inline: 8px; }
+  .head-right .seg { padding-inline: 5px; }
+  .flows .btn { padding-inline: 6px; }
   .menu { left: auto; right: 0; }
   .plan-modes { order: 1; width: 100%; }
   .seg { white-space: nowrap; }
