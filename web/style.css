@@ -709,6 +709,8 @@ details > .form { margin-top: 10px; }
   .tab { padding: 8px 5px; font-size: 14px; }
   /* Under the dial the head is narrow: progress beside the title, the step below. */
   .order-panel .survey-head select { order: 1; }
+  /* A long action such as "Done: new pass for the fine tuning" wraps instead of sticking out. */
+  .order-panel .btn-row .btn { white-space: normal; }
 }
 /* Reference and tone do not fit on one row: the reference shares its row
    with Auto/Lock instead, so the toolbar takes three rows, not four. */
