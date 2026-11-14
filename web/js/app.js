@@ -1311,8 +1311,8 @@ function renderOrderPanel() {
 }
 
 // "Show more" under a clamped explanation; not needed when it all fits or
-// the panel is beside the dial (style.css).
-const orderWide = matchMedia('(min-width: 960px)');
+// the panel is beside the dial in a high window (style.css).
+const orderWide = matchMedia('(min-width: 960px) and (min-height: 900px)');
 function fitOrderText() {
   const panel = $('order-panel');
   if (panel.hidden) return;

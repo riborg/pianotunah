@@ -471,13 +471,14 @@ select:disabled { opacity: 0.55; }
 .order-state:empty { display: none; }
 .chk.main { border-color: var(--accent); color: var(--ink); }
 /* Under the dial the explanation shows two lines until it is opened, so the
-   buttons stay close to the dial. Beside it there is room for all of it. */
+   buttons stay close to the dial. Beside it there is room for all of it in a
+   window 900 px high; in a lower one the panel would push the keys down. */
 .order-panel .fold { align-self: flex-start; font-size: 13px; }
 /* × stays top right when the head wraps. */
 .order-panel { position: relative; }
 .order-panel .survey-head { padding-right: 36px; }
 #order-close { position: absolute; top: 6px; right: 6px; }
-@media (max-width: 959px) {
+@media (max-width: 959px), (max-height: 899px) {
   .order-panel:not(.text-open) #order-text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
 }
 
