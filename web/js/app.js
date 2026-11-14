@@ -189,6 +189,7 @@ function setSaveState(s) {
     return span;
   }));
   el.title = s === 'error' ? tr('save.errorTitle') : '';
+  $('btn-settings').dataset.save = s; // the mark on phones (style.css)
 }
 
 async function reloadAfterConflict(t) {

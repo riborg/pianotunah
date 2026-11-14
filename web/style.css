@@ -155,6 +155,24 @@ button, input, select, textarea { font: inherit; color: inherit; }
    when starting, not between keys. */
 @media (max-width: 620px) {
   .top { position: static; padding-block: 8px; gap: 8px; }
+  /* No room for the save state's word beside the microphone: Settings gets a
+     dot while changed or saving and a red ! when saving fails; nothing when
+     saved. The chip is kept for screen readers. */
+  .tuning-bar { display: contents; }
+  #save-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #btn-settings { position: relative; }
+  #btn-settings:is([data-save="dirty"], [data-save="saving"])::after {
+    content: ""; position: absolute; top: -4px; right: -4px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--muted); box-shadow: 0 0 0 2px var(--bg);
+  }
+  #btn-settings[data-save="error"]::after {
+    content: "!"; content: "!" / "";
+    position: absolute; top: -7px; right: -7px;
+    min-width: 18px; height: 18px; border-radius: 99px;
+    font: 700 12px/18px var(--f-body); text-align: center;
+    background: var(--bad); color: #fff; box-shadow: 0 0 0 2px var(--bg);
+  }
 }
 @media (max-width: 480px) { .brand-name { display: none; } }
 /* Too narrow for the mark beside the buttons: it goes before the tuning. */
