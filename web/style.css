@@ -331,16 +331,23 @@ select:disabled { opacity: 0.55; }
 .dial { position: relative; width: 100%; max-width: 560px; margin: 0 auto; aspect-ratio: 1 / 0.7; container-type: inline-size; }
 /* Laptops: the dial, the curve and the keys follow the window's height, so
    the keyboard and its legend fit under the dial. The curve and the keys are
-   full size from 900 px and smallest at 650 px. 360 px: the rest of the page
-   down to the legend, and a small margin. */
+   full size from 900 px and smallest at 650 px. Under 700 px the spacing
+   above the keys tightens too, by up to 34 px at 600 px (--sq). 360 px: the
+   rest of the page down to the legend, and a small margin. */
 @media (min-width: 621px) and (min-height: 561px) {
   :root {
     --win-h: 100vh;
     --chart-h: clamp(56px, 56px + (var(--win-h) - 650px) * 0.16, 96px);
     --kb-h: clamp(40px, min(5vw, 40px + (var(--win-h) - 650px) * 0.096), 64px);
+    --sq: clamp(0px, 700px - var(--win-h), 100px);
   }
   @supports (height: 100svh) { :root { --win-h: 100svh; } }
-  .dial { max-width: min(560px, max(280px, (var(--win-h) - 360px - var(--chart-h) - var(--kb-h)) / 0.7)); }
+  .dial { max-width: min(560px, max(240px, (var(--win-h) - 360px + var(--sq) * 0.34 - var(--chart-h) - var(--kb-h)) / 0.7)); }
+  .top { padding-block: calc(12px - var(--sq) * 0.04); }
+  .layout { margin-top: calc(16px - var(--sq) * 0.08); }
+  .tuner.card { padding-top: calc(16px - var(--sq) * 0.06); }
+  .tuner { gap: calc(14px - var(--sq) * 0.04); }
+  .keys-block { gap: calc(10px - var(--sq) * 0.04); }
 }
 .dial canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .hub {
