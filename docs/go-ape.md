@@ -222,8 +222,8 @@ He publishes no time per tuning. "Efficient" rests on one pass and fewer mute mo
 
 Hardly anyone else has written about the method. The interview [POD] confirms the name, a talk at the 2015 PTG convention and two classes planned for 2024, but describes no steps. The discussion is on the Piano World forum, which blocks automated reading, so the points below come from search summaries, not from the threads themselves:
 
-- A 2013 thread says his method "doesn't place the 4:1 and 3:1 equally beating, but the difference is small". Another poster answers "Mark's method is your method", which questions how new it is ([thread](https://forums.pianoworld.com/ubbthreads.php/ubb/printthread/Board/3/main/140101/type/thread.html)).
-- In a 2016 thread he reportedly conceded that his tunings "don't progress very well at all when measured" ([thread](https://forum.pianoworld.com/ubbthreads.php/topics/2598445/Beat_Speed_Windows_Temperament.html)).
+- In a 2013 thread, according to the summary, one poster finds that the method does not make the double octave and the twelfth beat equally, though the difference is small, and another questions how new it is ([thread](https://forums.pianoworld.com/ubbthreads.php/ubb/printthread/Board/3/main/140101/type/thread.html)).
+- The summary of a 2016 thread suggests that his tunings measured less evenly than they sounded. We could not read the thread to see who said what ([thread](https://forum.pianoworld.com/ubbthreads.php/topics/2598445/Beat_Speed_Windows_Temperament.html)).
 - Summaries describe his octaves as a "compromise between 4:2 and 6:3". The 2015 article makes that true only for the medium class.
 
 Cerisano says himself that the stacked-thirds skeleton is not new [PTJ15]. What he claims as new is the bisection and the choice of sequence from the octave spread. His perception thresholds come from his own study of six people, and we found no one who has repeated it. No source compares his method with other published sequences.
@@ -239,7 +239,7 @@ This section is our analysis, made by running `web/js/theory.js` with the app's 
 1. **Windows and equalities.** The tuning order shows checks as single intervals with their beat rates. A.P.E. needs two or three intervals shown together, with the target placed between them or equal to them.
 2. **A second temperament sequence.** The current temperament step is F3–E4 by fourths and fifths. A.P.E. needs F3–F4 by thirds, three variants after D4, and tasks that go back to F3 and F4.
 3. **A blended octave.** The medium class wants a slightly wide 4:2 with a slightly narrow 6:3. The app has the octave types 2:1, 4:2, 6:3 and 8:4 only.
-4. **Stretch from pure wide intervals.** The app builds targets as a chain of octaves and moves the treble towards 2:1 above C6. With the normal stretch, twelfths are within about 1 cent of pure up to C7. Nineteenths are 1.1–1.4 cents narrow in C6–E6, and triple octaves 0.6–2 cents narrow in F6–B6. Near C8 they are 8–10 cents narrow. A.P.E. makes them pure, so its treble is wider than the app's. The app also lacks the minor sixth, eleventh, nineteenth and triple octave as check intervals.
+4. **Stretch from pure wide intervals.** The app builds targets as a chain of octaves and moves the treble towards 2:1 above C6. With the normal stretch, twelfths are within about 1 cent of pure up to C7. Nineteenths are 1.1–1.4 cents narrow in C6–E6, and triple octaves 0.7–2.2 cents narrow in F6–B6. Near C8 they are 7–10 cents narrow. A.P.E. makes them pure, so its treble is wider than the app's. The app also lacks the minor sixth, eleventh, nineteenth and triple octave as check intervals.
 
 **What conflicts with the app as it is:**
 
