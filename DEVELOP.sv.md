@@ -52,7 +52,7 @@ Att flytta en befintlig tagg startar releasen igen och skriver över `latest`. S
 
 Gränssnittets texter finns i `web/js/lang/en.js` och `sv.js`. Statisk markup använder `data-i18n`-attribut, och koden använder `tr('key', { param })`. En ny text läggs i båda filerna. Nycklar som saknas faller tillbaka på engelska.
 
-Dokumentationen finns på båda språken: `README.md` och `README.sv.md`, `DEVELOP.md` och `DEVELOP.sv.md`, `docs/tuning.md` och `docs/tuning.sv.md`. Ändrar du det ena dokumentet ändrar du det andra i samma commit.
+Dokumentationen finns på båda språken: varje `namn.md` i repots rot och i `docs/` har en svensk `namn.sv.md`, och de två länkar till varandra. Undantagen är `CONTEXT.md` och `docs/agents/`, som är skrivna för agenter. Ändrar du det ena dokumentet ändrar du det andra i samma commit.
 
 ## API
 
