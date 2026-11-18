@@ -1,6 +1,6 @@
 # Piano Tunah
 
-Piano Tunah is a piano tuner that runs in the browser. It listens through the computer's microphone, computes stretch from the strings' inharmonicity and keeps the measurements for each piano.
+Piano Tunah is a piano tuner that runs in the browser. It listens through the computer's microphone, computes stretch from the strings' inharmonicity and keeps the measurements for each piano. [Svenska](README.sv.md).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png">

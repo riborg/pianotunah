@@ -1,6 +1,6 @@
 # Development
 
-The host needs neither Node nor Go. Everything runs in containers.
+The host needs neither Node nor Go. Everything runs in containers. [Svenska](DEVELOP.sv.md).
 
 ## Tests
 
@@ -50,6 +50,8 @@ Moving an existing tag triggers the release again and overwrites `latest`. Disab
 ## Translations
 
 UI strings are in `web/js/lang/en.js` and `sv.js`. Static markup uses `data-i18n` attributes, and code uses `tr('key', { param })`. A new string goes in both files. Missing keys fall back to English.
+
+The documentation is in both languages: `README.md` and `README.sv.md`, `DEVELOP.md` and `DEVELOP.sv.md`, `docs/tuning.md` and `docs/tuning.sv.md`. A change to one document goes into the other in the same commit.
 
 ## API
 
