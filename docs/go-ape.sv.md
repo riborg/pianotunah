@@ -222,8 +222,8 @@ Han anger ingen tid per stämning. "Efficient" vilar på en enda omgång och fä
 
 Nästan ingen annan har skrivit om metoden. Intervjun [POD] bekräftar namnet, ett föredrag på PTG:s konvent 2015 och två planerade lektioner 2024, men beskriver inga steg. Diskussionen finns på forumet Piano World, som spärrar automatisk läsning. Punkterna nedan kommer därför från sökmotorernas sammanfattningar, inte från trådarna själva:
 
-- En tråd från 2013 säger att hans metod "doesn't place the 4:1 and 3:1 equally beating, but the difference is small". En annan skribent svarar "Mark's method is your method", vilket ifrågasätter hur ny den är ([tråd](https://forums.pianoworld.com/ubbthreads.php/ubb/printthread/Board/3/main/140101/type/thread.html)).
-- I en tråd från 2016 ska han ha medgett att hans stämningar "don't progress very well at all when measured" ([tråd](https://forum.pianoworld.com/ubbthreads.php/topics/2598445/Beat_Speed_Windows_Temperament.html)).
+- I en tråd från 2013 menar en skribent, enligt sammanfattningen, att metoden inte får dubbeloktaven och duodecimen att sväva lika, men att skillnaden är liten. En annan ifrågasätter hur ny metoden är ([tråd](https://forums.pianoworld.com/ubbthreads.php/ubb/printthread/Board/3/main/140101/type/thread.html)).
+- Sammanfattningen av en tråd från 2016 tyder på att hans stämningar var mindre jämna när de mättes än när de lyssnades på. Vi kunde inte läsa tråden och se vem som sa vad ([tråd](https://forum.pianoworld.com/ubbthreads.php/topics/2598445/Beat_Speed_Windows_Temperament.html)).
 - Sammanfattningarna beskriver hans oktaver som en kompromiss mellan 4:2 och 6:3. Enligt artikeln från 2015 stämmer det bara för mellanklassen.
 
 Cerisano skriver själv att skelettet av terser i följd inte är nytt [PTJ15]. Det han kallar nytt är halveringen av fönster och valet av ordning efter oktavspridningen. Hans gränser för vad örat hör kommer från hans egen studie med sex personer, och vi har inte hittat någon som har upprepat den. Ingen källa jämför hans metod med andra publicerade tempereringsordningar.
@@ -239,7 +239,7 @@ Avsnittet är vår analys, gjord genom att köra `web/js/theory.js` med appens m
 1. **Fönster och likheter.** Arbetsordningen visar kontrollerna som enskilda intervall med sina svävningar. A.P.E. behöver två eller tre intervall visade tillsammans, med målet mellan dem eller lika med dem.
 2. **En andra tempereringsordning.** Dagens tempereringssteg är F3–E4 med kvarter och kvinter. A.P.E. behöver F3–F4 med terser, tre varianter efter D4 och uppgifter som går tillbaka till F3 och F4.
 3. **En blandad oktav.** Mellanklassen vill ha en något vid 4:2 med en något trång 6:3. Appen har bara oktavtyperna 2:1, 4:2, 6:3 och 8:4.
-4. **Stretch från rena breda intervall.** Appen bygger målen som en kedja av oktaver och för diskanten mot 2:1 ovanför C6. Med normal stretch ligger duodecimorna inom ungefär 1 cent från rena upp till C7. 19:orna är 1,1–1,4 cent trånga i C6–E6 och trippeloktaverna 0,6–2 cent trånga i F6–B6. Nära C8 är de 8–10 cent trånga. A.P.E. gör dem rena, så dess diskant blir vidare än appens. Appen saknar också liten sext, undecima, 19:e och trippeloktav som kontrollintervall.
+4. **Stretch från rena breda intervall.** Appen bygger målen som en kedja av oktaver och för diskanten mot 2:1 ovanför C6. Med normal stretch ligger duodecimorna inom ungefär 1 cent från rena upp till C7. 19:orna är 1,1–1,4 cent trånga i C6–E6 och trippeloktaverna 0,7–2,2 cent trånga i F6–B6. Nära C8 är de 7–10 cent trånga. A.P.E. gör dem rena, så dess diskant blir vidare än appens. Appen saknar också liten sext, undecima, 19:e och trippeloktav som kontrollintervall.
 
 **Det som krockar med appen som den är:**
 

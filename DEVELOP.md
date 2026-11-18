@@ -51,7 +51,7 @@ Moving an existing tag triggers the release again and overwrites `latest`. Disab
 
 UI strings are in `web/js/lang/en.js` and `sv.js`. Static markup uses `data-i18n` attributes, and code uses `tr('key', { param })`. A new string goes in both files. Missing keys fall back to English.
 
-The documentation is in both languages: each `name.md` in the repo root and in `docs/` has a Swedish `name.sv.md`, and the two link to each other. The exceptions are `CONTEXT.md` and `docs/agents/`, which are written for agents. A change to one document goes into the other in the same commit.
+The documentation is in both languages: each `name.md` in the repo root and in `docs/` has a Swedish `name.sv.md`, and the two link to each other. The exceptions are `CLAUDE.md`, `CONTEXT.md` and `docs/agents/`, which are written for agents. A change to one document goes into the other in the same commit.
 
 ## API
 
