@@ -59,3 +59,28 @@ jobs:
           docker cp "$id:/pianotunah" ./pianotunah-bin
           docker rm "$id"
           "$(go env GOPATH)/bin/govulncheck" -mode=binary ./pianotunah-bin
+
+  # The Swift core (mac/) is tested against fixtures written from the web JS.
+  # They must be regenerated when the JS changes; see docs/macos-port.md.
+  fixtures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      - name: Swift fixtures match the JS
+        run: |
+          node test/fixtures.mjs
+          git diff --exit-code mac/Tests/PianoTunahCoreTests/Fixtures
+          test -z "$(git status --porcelain mac/Tests/PianoTunahCoreTests/Fixtures)"
+
+  swift:
+    runs-on: ubuntu-latest
+    container: swift:6.4
+    steps:
+      - uses: actions/checkout@v7
+      - name: Swift core tests
+        working-directory: mac
+        run: swift test
