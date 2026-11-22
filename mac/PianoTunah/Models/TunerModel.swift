@@ -228,6 +228,8 @@ final class TunerCore: @unchecked Sendable {
             flash = KeyFlash(key: k, serial: flashSerial)
             keysChanged = true
         case .key, .mode, .targets, .survey, .order, .measureB:
+            // Not .orderState: it judges a strike, and the order moves on
+            // (the outline) only by goOrder, which sends .order.
             keysChanged = true
         case .message(let m):
             messages.append(m)

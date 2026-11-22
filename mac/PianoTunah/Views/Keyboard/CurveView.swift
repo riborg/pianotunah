@@ -16,7 +16,8 @@ struct CurveView: View {
 
     @Environment(\.colorScheme) private var scheme
     @State private var hovered: Int?
-    @State private var tipSize = CGSize.zero
+    /// The tooltip's size, nil until it is first laid out.
+    @State private var tipSize: CGSize?
 
     var body: some View {
         let palette = Palette.of(scheme)
@@ -41,11 +42,13 @@ struct CurveView: View {
                     CurveTip(state: state, palette: palette)
                         .fixedSize()
                         .onGeometryChange(for: CGSize.self) { $0.size } action: { tipSize = $0 }
-                        // Within the curve, right of the key, above its target.
+                        // Within the curve, right of the key, above its target;
+                        // hidden until measured, or it would stick out a frame.
                         .offset(
-                            x: max(4, min(chart.x(k) + 12, size.width - tipSize.width - 4)),
-                            y: max(4, chart.y(state.targetCents) - tipSize.height - 10)
+                            x: max(4, min(chart.x(k) + 12, size.width - (tipSize?.width ?? 0) - 4)),
+                            y: max(4, chart.y(state.targetCents) - (tipSize?.height ?? 0) - 10)
                         )
+                        .opacity(tipSize == nil ? 0 : 1)
                         .allowsHitTesting(false)
                 }
             }
@@ -58,6 +61,11 @@ struct CurveView: View {
 /// The curve's scales for a size: the range covers the target and the
 /// points, at least ±10 cents, in steps of 10, 20, 50 or 100 cents so that a
 /// row is at least 16 points high.
+///
+/// The points stretch the range to ±`reach` cents at most, so that one wild
+/// reading does not flatten the curve; a point beyond the range is drawn at
+/// its edge as a triangle pointing out. The web's drawChart does not limit
+/// the range.
 private struct CurveGeometry {
     let keys: TunerKeys
     let layout: KeyboardLayout
@@ -68,6 +76,7 @@ private struct CurveGeometry {
 
     static let padTop = 8.0
     static let padBottom = 6.0
+    static let reach = 100.0
 
     init(keys: TunerKeys, size: CGSize) {
         self.keys = keys
@@ -76,9 +85,13 @@ private struct CurveGeometry {
         var lo = -10.0
         var hi = 10.0
         for s in keys.states {
-            for c in [s.targetCents, s.targetCents + s.now] where c.isFinite {
-                lo = min(lo, c)
-                hi = max(hi, c)
+            guard s.targetCents.isFinite else { continue }
+            lo = min(lo, s.targetCents)
+            hi = max(hi, s.targetCents)
+            let c = s.targetCents + s.now
+            if c.isFinite {
+                lo = min(lo, max(c, -Self.reach))
+                hi = max(hi, min(c, Self.reach))
             }
         }
         let room = (size.height - Self.padTop - Self.padBottom) / 16
@@ -131,11 +144,19 @@ private struct CurveGeometry {
         }
         context.stroke(target, with: .color(palette.accent.color), style: StrokeStyle(lineWidth: 2, lineJoin: .round))
 
-        // The measured keys.
+        // The measured keys; beyond the range at its edge, pointing out.
         for s in keys.states where s.now.isFinite {
-            let c = CGPoint(x: x(s.key), y: y(s.targetCents + s.now))
-            context.fill(Path(ellipseIn: CGRect(x: c.x - 5.5, y: c.y - 5.5, width: 11, height: 11)), with: .color(palette.surface.color))
-            context.fill(Path(ellipseIn: CGRect(x: c.x - 4, y: c.y - 4, width: 8, height: 8)), with: .color(palette.status(s.status).color))
+            let cents = s.targetCents + s.now
+            let c = CGPoint(x: x(s.key), y: y(min(max(cents, yMin), yMax)))
+            let color = palette.status(s.status).color
+            if cents > yMax || cents < yMin {
+                let out = Self.outside(c, up: cents > yMax)
+                context.stroke(out, with: .color(palette.surface.color), style: StrokeStyle(lineWidth: 3, lineJoin: .round))
+                context.fill(out, with: .color(color))
+            } else {
+                context.fill(Path(ellipseIn: CGRect(x: c.x - 5.5, y: c.y - 5.5, width: 11, height: 11)), with: .color(palette.surface.color))
+                context.fill(Path(ellipseIn: CGRect(x: c.x - 4, y: c.y - 4, width: 8, height: 8)), with: .color(color))
+            }
         }
 
         // The scale on top of the curve, with a halo so it stays readable
@@ -151,6 +172,18 @@ private struct CurveGeometry {
             }
             context.draw(ink, at: at, anchor: .leading)
         }
+    }
+
+    /// A point beyond the range: a triangle on the edge at `c`, pointing up
+    /// or down, out of the curve.
+    static func outside(_ c: CGPoint, up: Bool) -> Path {
+        let tip = up ? -5.0 : 5.0
+        var p = Path()
+        p.move(to: CGPoint(x: c.x, y: c.y + tip))
+        p.addLine(to: CGPoint(x: c.x - 5, y: c.y - tip))
+        p.addLine(to: CGPoint(x: c.x + 5, y: c.y - tip))
+        p.closeSubpath()
+        return p
     }
 
     /// A scale label: "0", "+20", "−20".

@@ -61,7 +61,7 @@ struct KeyboardBlock: View {
                 DisclosureGroup(isExpanded: $tableOpen) {
                     // Not built while closed.
                     if tableOpen {
-                        KeyTable(keys: keys, current: current) { tuner.selectKey($0) }
+                        KeyTable(keys: keys, current: current, select: { tuner.selectKey($0) }, step: { tuner.step($0) })
                             .padding(.top, 8)
                     }
                 } label: {
