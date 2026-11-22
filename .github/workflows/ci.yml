@@ -99,5 +99,5 @@ jobs:
         working-directory: mac
         run: |
           swift --version
-          uname -m
+          test "$(uname -m)" = arm64 # the fixtures must hold on Apple silicon
           swift test

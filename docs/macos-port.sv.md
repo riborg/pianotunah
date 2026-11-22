@@ -13,7 +13,7 @@ Appen skrivs i Swift 6 med SwiftUI, AVAudioEngine och Foundation, för macOS 26 
 - **Ljudet är Apples.** Mikrofonbehörighet, val av enhet, röstbehandling, viloläge och enhetsbyten går alla genom AVFoundation och Core Audio. Rusts `cpal` täcker mindre av detta, och Swift-limmet skulle behövas ändå.
 - **Rust lönar sig bara om en kärna ska tjäna både webben (som WASM) och Macen.** Ingen har bett om det, och webbversionen fungerar i JS. Om behovet uppstår är Swift-kärnan och dess fixturer (nedan) en exakt specifikation att porta från.
 
-Appen stöder en macOS-version och inga äldre, så den använder de nyaste API:erna i SwiftUI och Observation direkt, utan versionskontroller. Deployment target är macOS 26 tills vidare: GitHubs macOS-runners har Xcode 26.6 och ingen macOS 27-SDK än (november 2026), och varje steg av appen kompileras där. Den körs på macOS 27 som den är. När runnerna får Xcode 27 flyttas målet (`mac/project.yml`, `sparkle:minimumSystemVersion`) till 27 i en ändring. Swift 6-läge med strikt kontroll av samtidighet.
+Appen stöder en macOS-version och inga äldre, så den använder de nyaste API:erna i SwiftUI och Observation direkt, utan versionskontroller. Deployment target är macOS 26 tills vidare: GitHubs macOS-runners har Xcode 26.6 och ingen macOS 27-SDK än (november 2026), och varje steg av appen kompileras där. Den körs på macOS 27 som den är. När runnerna får Xcode 27 flyttas målet i `mac/project.yml` till 27 i en ändring; release-jobbet läser det därifrån till appcasten. Swift 6-läge med strikt kontroll av samtidighet.
 
 ## Struktur
 
@@ -175,7 +175,7 @@ Appen uppdaterar sig själv från GitHub Releases med [Sparkle](https://sparkle-
    4. skriver `appcast.xml` med en `<item>` för den här versionen:
       - `sparkle:version` = `CFBundleVersion`;
       - `sparkle:shortVersionString` = taggen utan `v`;
-      - `sparkle:minimumSystemVersion` = deployment target (26.0 tills vidare);
+      - `sparkle:minimumSystemVersion` = deployment target, läst från `mac/project.yml` så att den bara anges på ett ställe (26.0 tills vidare);
       - en `sparkle:releaseNotesLink` till GitHub-releasen;
       - en `<enclosure>` vars `url` är taggens egen fil, `releases/download/vX.Y.Z/PianoTunah.zip`, aldrig `latest`-adressen, med `sparkle:edSignature` och `length` från `sign_update`;
    5. sparar zip-filen och appcasten som artefakter i arbetsflödet.

@@ -13,7 +13,7 @@ The app is Swift 6 with SwiftUI, AVAudioEngine and Foundation, for macOS 26 for 
 - **Audio is Apple's.** Microphone permission, device choice, voice processing, sleep and device changes all go through AVFoundation and Core Audio. Rust's `cpal` covers less of this, and the Swift glue would still be needed.
 - **Rust would pay off only if one core served both the web (as WASM) and the Mac.** Nobody has asked for that, and the web version works in JS. If the need comes, the Swift core and its fixtures (below) are a precise specification to port from.
 
-The app supports one macOS version and no older ones, so it uses the newest SwiftUI and Observation APIs directly, with no availability checks. The deployment target is macOS 26 for now: GitHub's macOS runners have Xcode 26.6 and no macOS 27 SDK yet (November 2026), and every step of the app is compiled there. It runs on macOS 27 as it is. When the runners get Xcode 27, the target (`mac/project.yml`, `sparkle:minimumSystemVersion`) moves to 27 in one change. Swift 6 language mode with strict concurrency checking.
+The app supports one macOS version and no older ones, so it uses the newest SwiftUI and Observation APIs directly, with no availability checks. The deployment target is macOS 26 for now: GitHub's macOS runners have Xcode 26.6 and no macOS 27 SDK yet (November 2026), and every step of the app is compiled there. It runs on macOS 27 as it is. When the runners get Xcode 27, the target in `mac/project.yml` moves to 27 in one change; the release job reads it from there for the appcast. Swift 6 language mode with strict concurrency checking.
 
 ## Shape
 
@@ -175,7 +175,7 @@ The app updates itself from GitHub Releases with [Sparkle](https://sparkle-proje
    4. writes `appcast.xml` with one `<item>` for this version:
       - `sparkle:version` = `CFBundleVersion`;
       - `sparkle:shortVersionString` = the tag without `v`;
-      - `sparkle:minimumSystemVersion` = the deployment target (26.0 for now);
+      - `sparkle:minimumSystemVersion` = the deployment target, read from `mac/project.yml` so that it is set in one place (26.0 for now);
       - a `sparkle:releaseNotesLink` to the GitHub Release;
       - an `<enclosure>` whose `url` is the tag's own asset, `releases/download/vX.Y.Z/PianoTunah.zip`, never the `latest` URL, with `sparkle:edSignature` and `length` from `sign_update`;
    5. saves the zip and the appcast as workflow artifacts.
