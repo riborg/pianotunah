@@ -1253,6 +1253,35 @@ function rateText(b) {
   return tr('order.rate', { n: num(a, a < 10 ? 1 : 0), dir: tr(b > 0 ? 'order.wide' : 'order.narrow') });
 }
 
+const ivKeys = (r) => `${kName(r.lo)}–${kName(r.hi)}`;
+
+// How much faster b beats than a, in per cent; signed for the row, plain for the title.
+function rise(a, b, signed = true) {
+  const x = (Math.abs(b.beat) / Math.abs(a.beat) - 1) * 100;
+  return tr('order.pct', { n: (signed ? (x < 0 ? '−' : '+') : '') + num(x, 0) });
+}
+
+// A check row as text, and for a third or sixth with tuned neighbours its
+// window: slower < this < faster, with how much faster each step beats.
+function checkLabel(r) {
+  const text = `${ivKeys(r)} ${ivName(r)} ${rateText(r.beat)}`;
+  if (!r.below && !r.above) return { textContent: text };
+  const steps = [];
+  const title = [];
+  if (r.below) {
+    steps.push(rise(r.below, r));
+    title.push(tr('order.window.below', { iv: ivKeys(r), x: ivKeys(r.below), n: rise(r.below, r, false) }));
+  }
+  if (r.above) {
+    steps.push(rise(r, r.above));
+    title.push(tr('order.window.above', { iv: ivKeys(r), x: ivKeys(r.above), n: rise(r, r.above, false) }));
+  }
+  return {
+    textContent: `${r.below ? ivKeys(r.below) + ' < ' : ''}${text}${r.above ? ' < ' + ivKeys(r.above) : ''} (${steps.join(', ')})`,
+    title: title.join(' '),
+  };
+}
+
 function stepParams(id) {
   const r = {
     strip: order.STRIP, pull: [order.STRIP[1], order.STRIP[0]], temperament: [33, 44], upper: [45, order.STRIP[1] - 1],
@@ -1304,11 +1333,11 @@ function renderOrderPanel() {
   $('order-bar').style.width = `${order.progress(o, pos) * 100}%`;
   $('order-task').textContent = t ? taskText(t) : tr(`order.${step.id}.task`, stepParams(step.id));
 
-  const rows = t ? order.checkRows(state.T, t, top()) : [];
+  const rows = t ? order.checkRows(state.T, t, top(), order.tunedBefore(o, pos)) : [];
   $('order-checks').replaceChildren(
     ...rows.map((r, i) => Object.assign(document.createElement('span'), {
       className: 'chk' + (i === 0 && t.from ? ' main' : ''),
-      textContent: `${kName(r.lo)}–${kName(r.hi)} ${ivName(r)} ${rateText(r.beat)}`,
+      ...checkLabel(r),
     })),
   );
   $('order-checks').hidden = !rows.length;

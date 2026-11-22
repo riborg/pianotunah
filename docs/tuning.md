@@ -70,7 +70,7 @@ Tune eleven keys in fourths and fifths from A3, each from the key before it:
 | B3 | F♯3 | fourth up |
 | E4 | B3 | fourth up |
 
-Tune the fourths slightly wide and the fifths slightly narrow. Compare each new interval with the same kind of interval below it. The thirds should beat evenly faster the higher they lie, from F3–A3 to C4–E4. A third that breaks the series means a key is off. If you tune the fourths and fifths too pure, F3–A3 beats too fast.
+Tune the fourths slightly wide and the fifths slightly narrow. Compare each new interval with the same kind of interval below it. The thirds should beat evenly faster the higher they lie, from F3–A3 to C4–E4. A third that breaks the series means a key is off. For a third or sixth with the key you are tuning, the app shows the nearest tuned ones of the same size around it, such as F♯3–B♭3 < G3–B3 < A♭3–C4: G3–B3 should beat faster than F♯3–B♭3 and slower than A♭3–C4, by the percentages in parentheses. Hearing that an interval lies between two others is easier than counting its beats. The idea comes from Mark Cerisano's beat speed windows ([go-ape.md](go-ape.md)). If you tune the fourths and fifths too pure, F3–A3 beats too fast.
 
 ### 6. Octaves F4–A♭4
 

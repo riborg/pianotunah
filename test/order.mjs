@@ -157,12 +157,16 @@ check((await read()).key === 37, 'Back returns to A3');
 // The temperament, all eleven keys.
 r = await playUntilMoved(37);
 const seq = [];
+let b3 = [];
 while (r.moved && r.s.step === 4) {
   seq.push(r.s.key);
+  if (r.s.key === 39) b3 = r.s.checks;
   r = await playUntilMoved(r.s.key);
 }
 check(seq.join(',') === '42,35,40,33,38,43,36,41,34,39,44', `temperament order ${seq.join(',')}`);
 check(r.s.step === 5 && r.s.key === 45, `then the octaves above: ${r.s.task}`);
+// B3: G3–B3 is shown between the tuned thirds a semitone below and above.
+check(b3.some((c) => /^F♯3–B♭3 < G3–B3 major third \d\.\d\/s wide < A♭3–C4 \(\+\d+%, \+\d+%\)$/.test(c)), `B3 shows G3–B3 in its window: ${b3.join(' | ')}`);
 
 // The position is kept with the piano.
 await sleep(3000); // saving

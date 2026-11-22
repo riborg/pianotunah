@@ -106,6 +106,21 @@ export function prevPos(order, { step, i }) {
 
 export const taskAt = (order, { step, i }) => order[step].tasks[i] || null;
 
+// Tasks that set a key's pitch; the others tune its other strings to it.
+const PITCHED = new Set(['middle', 'one', 'pair']);
+
+// Keys whose pitch was set before pos. The pitch raise is loose and does not count.
+export function tunedBefore(order, { step, i }) {
+  const keys = new Set();
+  order.forEach((s, si) => {
+    if (s.loose || si > step) return;
+    s.tasks.forEach((t, ti) => {
+      if ((si < step || ti < i) && PITCHED.has(t.what)) keys.add(t.k);
+    });
+  });
+  return keys;
+}
+
 // Share of the order before pos, 0–1.
 export function progress(order, { step, i }) {
   const total = order.reduce((s, x) => s + count(x), 0);
@@ -128,10 +143,32 @@ export function confirmReading(c, attack, ok) {
   return ok && c.streak >= 1;
 }
 
+// Thirds and sixths beat fast enough for the ear to place one between two
+// neighbours a few per cent apart. Fourths and fifths beat too slowly.
+const WINDOWED = new Set([3, 4, 9]);
+
+// The nearest interval of the same size below and above row whose keys are
+// both tuned, for the window slower < row < faster.
+function neighbours(T, row, tuned, top) {
+  const find = (dir) => {
+    for (let lo = row.lo + dir; lo >= 1 && lo + row.semis <= top; lo += dir) {
+      const hi = lo + row.semis;
+      if (tuned.has(lo) && tuned.has(hi)) return { lo, hi, beat: intervalBeat(T, lo, hi, row.p) };
+    }
+    return undefined;
+  };
+  const below = find(-1);
+  const above = find(1);
+  return { ...(below && { below }), ...(above && { above }) };
+}
+
 // The checks of a task with their beat rates at the targets T: the interval
 // it is tuned by first, then the others, each once. Left out: keys off the
 // keyboard and coincident partials too low or too high to hear (40 Hz–5 kHz).
-export function checkRows(T, task, top) {
+// With tuned (the keys tuned before the task), a third or sixth with the
+// task's key also gets its window: the tuned neighbours below and above. A
+// check that is a neighbour in a window is then left out as a row.
+export function checkRows(T, task, top, tuned = null) {
   const list = [...(task.from ? [[Math.min(task.k, task.from), Math.max(task.k, task.from)]] : []), ...(task.checks || [])];
   const seen = new Set();
   const rows = [];
@@ -141,7 +178,13 @@ export function checkRows(T, task, top) {
     seen.add(id);
     const f = partialFreq(T.freq[lo], T.B[lo], p[0]);
     if (f < 40 || f > 5000) continue;
-    rows.push({ lo, hi, semis: hi - lo, p, beat: intervalBeat(T, lo, hi, p) });
+    const row = { lo, hi, semis: hi - lo, p, beat: intervalBeat(T, lo, hi, p) };
+    if (tuned && WINDOWED.has(row.semis) && (lo === task.k || hi === task.k)) {
+      Object.assign(row, neighbours(T, row, new Set([...tuned, task.k]), top));
+    }
+    rows.push(row);
   }
-  return rows;
+  // A check shown as a neighbour in a window needs no row of its own.
+  const shown = new Set(rows.flatMap((r) => [r.below, r.above]).filter(Boolean).map((n) => `${n.lo}-${n.hi}`));
+  return rows.filter((r, i) => (i === 0 && task.from) || !shown.has(`${r.lo}-${r.hi}`));
 }

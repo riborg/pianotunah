@@ -10,7 +10,7 @@ import { wavBlob } from '../web/js/mic.js';
 import { Saver } from '../web/js/saver.js';
 import { fmtC, parseNum } from '../web/js/format.js';
 import { newRun, nextPending, handled, wrongKey } from '../web/js/survey.js';
-import { buildOrder, nextPos, prevPos, clampPos, taskAt, progress, newConfirm, confirmReading, checkRows } from '../web/js/order.js';
+import { buildOrder, nextPos, prevPos, clampPos, taskAt, progress, newConfirm, confirmReading, checkRows, tunedBefore } from '../web/js/order.js';
 
 const SR = 48000;
 const N = 32768;
@@ -335,6 +335,39 @@ test('tuning order: checks carry the beat rate, inaudible partials left out', ()
   assert.ok(Math.abs(rows[0].beat + 0.59) < 0.01 && Math.abs(rows[1].beat - 6.93) < 0.01);
   const c8 = order.find((s) => s.id === 'treble').tasks.find((x) => x.k === 88);
   assert.ok(checkRows(t, c8, 88).every((r) => r.p[0] * t.freq[r.lo] <= 5000));
+});
+
+test('tuning order: a third or sixth with the key is shown between its tuned neighbours', () => {
+  const t = computeTargets({ ...DEFAULT_SETTINGS, stretch: 'none' });
+  t.B.fill(0);
+  const order = buildOrder({ top: 88 });
+  const step = order.findIndex((s) => s.id === 'temperament');
+  const at = (k) => ({ step, i: order[step].tasks.findIndex((x) => x.k === k) });
+  const rowsFor = (k) => checkRows(t, taskAt(order, at(k)), 88, tunedBefore(order, at(k)));
+  const name = (r) => (r ? `${r.lo}-${r.hi}` : null);
+
+  // Before B3 the keys tuned are A4, A3 and ten of the temperament; B3 is next.
+  assert.deepEqual([...tunedBefore(order, at(39))].sort((a, b) => a - b), [33, 34, 35, 36, 37, 38, 40, 41, 42, 43, 49]);
+  // B3: G3–B3 lies between F♯3–B♭3 and A♭3–C4, one semitone (5.95 %) each way.
+  const gb = rowsFor(39).find((r) => name(r) === '35-39');
+  assert.equal(name(gb.below), '34-38');
+  assert.equal(name(gb.above), '36-40');
+  assert.ok(Math.abs(gb.beat / gb.below.beat - 2 ** (1 / 12)) < 1e-3);
+  assert.ok(Math.abs(gb.above.beat / gb.beat - 2 ** (1 / 12)) < 1e-3);
+  // B♭3–D4 is the lower neighbour of B3–E♭4, so it has no row of its own.
+  assert.equal(name(rowsFor(39).find((r) => name(r) === '39-43').below), '38-42');
+  assert.ok(!rowsFor(39).some((r) => name(r) === '38-42'));
+  // A row without the key is not given neighbours, nor is a fourth or fifth.
+  assert.ok(rowsFor(39).filter((r) => r.lo !== 39 && r.hi !== 39).every((r) => !r.below && !r.above));
+  assert.ok(rowsFor(39).filter((r) => [5, 7].includes(r.semis)).every((r) => !r.below && !r.above));
+  // B♭3: the first third above F3–A3, so only a lower neighbour, five semitones down.
+  const bd = rowsFor(38).find((r) => name(r) === '38-42');
+  assert.equal(name(bd.below), '33-37');
+  assert.equal(bd.above, undefined);
+  // F3: F3–A3 is the only third tuned, so it has no neighbours.
+  assert.ok(rowsFor(33).every((r) => !r.below && !r.above));
+  // Without the tuned keys the rows are as before.
+  assert.ok(checkRows(t, taskAt(order, at(39)), 88).every((r) => !r.below && !r.above));
 });
 
 test('recording: mono 32-bit float WAV', async () => {
