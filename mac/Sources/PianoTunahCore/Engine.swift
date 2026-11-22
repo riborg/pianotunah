@@ -228,16 +228,25 @@ public final class Engine {
         return a <= jsMathMax(5, tolerance * 2) ? .warn : .bad
     }
 
+    /// The middle of the piano, C3–C6: its before values say where the
+    /// piano was.
+    public static let middle = 28...64
+
     /// Before values in the middle of the piano (C3–C6).
     public func midBefore() -> [Double] {
-        (28...64).map(beforeDev).filter(\.isFinite)
+        Self.middle.map(beforeDev).filter(\.isFinite)
     }
 
     /// Where the middle of the piano was before tuning: the median of
     /// ``midBefore()``, or NaN with fewer than three of them.
     public var midShift: Double {
-        let mid = midBefore()
-        return mid.count >= 3 ? median(mid) : .nan
+        Self.midShift(midBefore())
+    }
+
+    /// ``midShift`` from the finite before values of the middle, for an app
+    /// that has them without the engine.
+    public static func midShift(_ midBefore: [Double]) -> Double {
+        midBefore.count >= 3 ? median(midBefore) : .nan
     }
 
     /// The fundamental to play as a reference tone, including overpull.
@@ -264,10 +273,14 @@ public final class Engine {
     }
 
     public var refAdvice: RefAdvice {
-        let m = midShift
+        Self.refAdvice(midShift: midShift, refA4: settings.refA4)
+    }
+
+    /// ``refAdvice`` for a piano whose middle was `m` cents off (NaN when
+    /// unknown, see ``midShift(_:)``) at the reference `ref`.
+    public static func refAdvice(midShift m: Double, refA4 ref: Double) -> RefAdvice {
         if !m.isFinite { return .none }
         if abs(m) < 3 { return .near(m: m) }
-        let ref = settings.refA4
         let p = recommendedOverpull(m)
         var a = RefOffset(m: m, hz: ref * pow(2, m / 1200), p: p)
         if p != 0 {

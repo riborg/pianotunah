@@ -219,6 +219,18 @@ final class TunerCore: @unchecked Sendable {
         publish()
     }
 
+    /// A change of piano `id` from the app, run only while it is the open
+    /// one; the piano is then saved (the web's markDirty). Returns what the
+    /// command returned, nil if another piano is open.
+    func edit<T>(_ id: String, _ command: (Engine) -> T) -> T? {
+        guard let engine, engine.piano.id == id else { return nil }
+        let result = command(engine)
+        dirty = true
+        keysChanged = true
+        publish()
+        return result
+    }
+
     /// One analysis frame from the microphone.
     func frame(_ f: AnalysisFrame) {
         guard let engine else { return }
@@ -408,6 +420,15 @@ final class TunerModel {
                 return nil
             }
         }
+    }
+
+    /// Sends a change of piano `id` to its engine, as `open(_:)` asks (see
+    /// TunerModel+Settings.swift). `done` gets the command's result, nil if
+    /// the piano was no longer open, on the analysis queue.
+    func edit<T>(_ id: String, _ command: @escaping @Sendable (Engine) -> T,
+                 done: @escaping @Sendable (T?) -> Void = { _ in }) {
+        let core = core
+        queue.async { done(core.edit(id, command)) }
     }
 
     fileprivate func receive(_ update: TunerCore.Update) {

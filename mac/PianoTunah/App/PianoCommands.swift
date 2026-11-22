@@ -9,6 +9,13 @@ struct PianoCommands: Commands {
         CommandMenu("Piano") {
             Button("New Piano") { library.newPiano() }
                 .keyboardShortcut("n")
+            Button {
+                library.duplicateSelected()
+            } label: {
+                Text("Duplicate Piano", tableName: "Inspector")
+            }
+            .keyboardShortcut("d")
+            .disabled(library.selected == nil)
             Divider()
             Button("Import…") { library.isImporting = true }
                 .keyboardShortcut("o")

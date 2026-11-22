@@ -1,0 +1,1046 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ (copy)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (kopia)"
+          }
+        }
+      }
+    },
+    "%@ cents at A0" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ cent vid A0"
+          }
+        }
+      }
+    },
+    "%@ cents at C8" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ cent vid C8"
+          }
+        }
+      }
+    },
+    "%@ cents from 440 Hz" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ cent mot 440 Hz"
+          }
+        }
+      }
+    },
+    "%@: %@ keys, ref %@ Hz, before %@ cents → after %@ cents on average" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: %@ tangenter, ref %@ Hz, före %@ cent → efter %@ cent i snitt"
+          }
+        }
+      }
+    },
+    "85 (A0–A7, older piano)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "85 (A0–A7, äldre piano)"
+          }
+        }
+      }
+    },
+    "88 (A0–C8)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "88 (A0–C8)"
+          }
+        }
+      }
+    },
+    "Bass" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bas"
+          }
+        }
+      }
+    },
+    "Choose the octave type for bass, middle and treble yourself." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Välj oktavtyp för bas, mitt och diskant själv."
+          }
+        }
+      }
+    },
+    "Counted from A0 = 1; 0 = none. The tuning order uses it for which keys need a wedge and which have no unison to tune." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Räknat från A0 = 1; 0 = inga. Arbetsordningen använder det för vilka tangenter som behöver kil och vilka som saknar kor att renstämma."
+          }
+        }
+      }
+    },
+    "Custom" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Egen"
+          }
+        }
+      }
+    },
+    "C–G–D–A–E are narrowed by 1/4 syntonic comma (pure major third C–E), F♯–C♯ by a schisma." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "C–G–D–A–E minskas 1/4 syntoniskt komma (ren stor ters C–E), F♯–C♯ minskas ett schisma."
+          }
+        }
+      }
+    },
+    "Delete…" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Radera…"
+          }
+        }
+      }
+    },
+    "Double string unison (DSU)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dubbelsträngsunison (DSU)"
+          }
+        }
+      }
+    },
+    "Duplicate" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duplicera"
+          }
+        }
+      }
+    },
+    "Duplicate Piano" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duplicera piano"
+          }
+        }
+      }
+    },
+    "Equal temperament" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liksvävande"
+          }
+        }
+      }
+    },
+    "Every fifth is narrowed by the same amount (1/12 Pythagorean comma). Standard for modern pianos; all keys sound alike." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alla kvinter minskas lika mycket (1/12 pytagoreiskt komma). Standard för moderna pianon; alla tonarter låter lika."
+          }
+        }
+      }
+    },
+    "Exactly 1200 cents per octave. Sounds too narrow on a real piano; useful for comparison." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exakt 1200 cent per oktav. Låter för smalt på ett riktigt piano, användbart som jämförelse."
+          }
+        }
+      }
+    },
+    "Export…" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportera…"
+          }
+        }
+      }
+    },
+    "Extra bass" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extra bas"
+          }
+        }
+      }
+    },
+    "Extra treble" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extra diskant"
+          }
+        }
+      }
+    },
+    "Fixed average curve after Railsback’s measurements (≈ −25 cents at A0, +30 cents at C8). Does not use inharmonicity." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fast genomsnittskurva efter Railsbacks mätningar (≈ −25 cent på A0, +30 cent på C8). Använder inte inharmonicitet."
+          }
+        }
+      }
+    },
+    "For harpsichords, organs and early music. Modern pianos are tuned in equal temperament; with the others some keys sound out of tune." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "För cembalo, orgel och tidig musik. Moderna pianon stäms liksvävande; med de andra låter vissa tonarter ostämda."
+          }
+        }
+      }
+    },
+    "Four fifths (C–G, G–D, D–A, B–F♯) are narrowed by 1/4 PC, the rest are pure. Keys with few accidentals sound purer." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fyra kvinter (C–G, G–D, D–A, B–F♯) minskas 1/4 PC, resten rena. Tonarter med få förtecken låter renare."
+          }
+        }
+      }
+    },
+    "Grand piano" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flygel"
+          }
+        }
+      }
+    },
+    "Height" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Höjd"
+          }
+        }
+      }
+    },
+    "Historical temperaments" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historiska temperaturer"
+          }
+        }
+      }
+    },
+    "History" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historik"
+          }
+        }
+      }
+    },
+    "Import…" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importera…"
+          }
+        }
+      }
+    },
+    "Instrument" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instrument"
+          }
+        }
+      }
+    },
+    "Keys" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tangenter"
+          }
+        }
+      }
+    },
+    "Kirnberger III (1779)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kirnberger III (1779)"
+          }
+        }
+      }
+    },
+    "Length" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Längd"
+          }
+        }
+      }
+    },
+    "Light" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lätt"
+          }
+        }
+      }
+    },
+    "Like Vallotti but shifted one fifth: C–G–D–A–E–B–F♯ are narrowed by 1/6 PC." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Som Vallotti men förskjuten en kvint: C–G–D–A–E–B–F♯ minskas 1/6 PC."
+          }
+        }
+      }
+    },
+    "Make, model, room, humidity …" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Märke, modell, rum, fuktighet …"
+          }
+        }
+      }
+    },
+    "Measure from the floor to the top of the lid. Used as the initial guess for the strings’ inharmonicity until the piano is surveyed." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mät från golvet till lockets ovansida. Används som startgissning för strängarnas inharmonicitet tills pianot är kartlagt."
+          }
+        }
+      }
+    },
+    "Measure from the front edge of the keyboard to the tail. Used as the initial guess for the strings’ inharmonicity until the piano is surveyed." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mät från klaviaturens framkant till bakkanten. Används som startgissning för strängarnas inharmonicitet tills pianot är kartlagt."
+          }
+        }
+      }
+    },
+    "Measured" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uppmätta"
+          }
+        }
+      }
+    },
+    "Middle" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mitt"
+          }
+        }
+      }
+    },
+    "Milder meantone (Silbermann). The wolf fifth G♯–E♭ is smaller but still there." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mildare medelton (Silbermann). Vargkvinten G♯–E♭ är mindre men finns kvar."
+          }
+        }
+      }
+    },
+    "More stretch for large grands and concert use: 8:4 in the bass and extra height in the treble." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mer stretch för stora flyglar och konsertbruk: 8:4 i basen och extra höjd i diskanten."
+          }
+        }
+      }
+    },
+    "More than 25 cents flat on an old piano, 50 on a newer one: raise in two passes, a quick one with overpull and then a fine one. Old strings can break; raise gradually." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mer än 25 cent lågt på ett gammalt piano, 50 på ett nyare: dra upp i två omgångar, en snabb med överdrag och sedan en fin. Gamla strängar kan brista; dra upp gradvis."
+          }
+        }
+      }
+    },
+    "Name" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namn"
+          }
+        }
+      }
+    },
+    "New" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ny"
+          }
+        }
+      }
+    },
+    "New pass" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ny omgång"
+          }
+        }
+      }
+    },
+    "New pass started. Inharmonicity and settings are kept." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ny omgång påbörjad. Inharmonicitet och inställningar är kvar."
+          }
+        }
+      }
+    },
+    "None (theoretical equal temperament)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen (teoretisk liksvävande)"
+          }
+        }
+      }
+    },
+    "Normal" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        }
+      }
+    },
+    "Notes" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anteckningar"
+          }
+        }
+      }
+    },
+    "One string first" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En sträng först"
+          }
+        }
+      }
+    },
+    "One string up to key" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En sträng t.o.m. tangent"
+          }
+        }
+      }
+    },
+    "Overpull" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Överdrag"
+          }
+        }
+      }
+    },
+    "Pass" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omgång"
+          }
+        }
+      }
+    },
+    "Piano" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Piano"
+          }
+        }
+      }
+    },
+    "Piano Settings" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pianots inställningar"
+          }
+        }
+      }
+    },
+    "Play A4 (or survey a few keys in the middle) so the app can measure the piano’s pitch." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spela A4 (eller kartlägg några tangenter i mitten) så kan appen mäta pianots tonhöjd."
+          }
+        }
+      }
+    },
+    "Presets" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Förval"
+          }
+        }
+      }
+    },
+    "Pure 2:1 octaves in the treble and 4:2 in the bass. Good for small pianos and a soft sound." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rena 2:1-oktaver i diskanten och 4:2 i basen. Bra för små pianon och mjuk klang."
+          }
+        }
+      }
+    },
+    "Pure major thirds in the common keys. The wolf fifth G♯–E♭ makes remote keys unusable." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rena stora terser i de vanliga tonarterna. Vargkvint G♯–E♭ gör avlägsna tonarter oanvändbara."
+          }
+        }
+      }
+    },
+    "Quarter-comma meantone" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medeltonstemperatur 1/4 komma"
+          }
+        }
+      }
+    },
+    "Railsback curve" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Railsback-kurva"
+          }
+        }
+      }
+    },
+    "Reference A4" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Referens A4"
+          }
+        }
+      }
+    },
+    "Reference frequency in Hz" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Referensfrekvens i Hz"
+          }
+        }
+      }
+    },
+    "Reference set to %@ from the piano’s current pitch." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Referensen satt till %@ efter pianots nuvarande tonhöjd."
+          }
+        }
+      }
+    },
+    "Root" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grundton"
+          }
+        }
+      }
+    },
+    "Save the pass to the history and start over?" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spara omgången i historiken och börja om?"
+          }
+        }
+      }
+    },
+    "Saved pianos" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sparade pianon"
+          }
+        }
+      }
+    },
+    "Show or hide the piano’s settings (⌥⌘I)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visa eller dölj pianots inställningar (⌥⌘I)"
+          }
+        }
+      }
+    },
+    "Six fifths F–C–G–D–A–E–B are narrowed by 1/6 PC, the other six are pure. A mild well temperament." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sex kvinter F–C–G–D–A–E–B minskas 1/6 PC, övriga sex är rena. Mild välpasserad temperatur."
+          }
+        }
+      }
+    },
+    "Sixth-comma meantone" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medeltonstemperatur 1/6 komma"
+          }
+        }
+      }
+    },
+    "Small deviations are tuned directly without overpull." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Små avvikelser stäms direkt utan överdrag."
+          }
+        }
+      }
+    },
+    "Standard pitch" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standardstämton"
+          }
+        }
+      }
+    },
+    "Started" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Påbörjad"
+          }
+        }
+      }
+    },
+    "Stretch" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stretch"
+          }
+        }
+      }
+    },
+    "Survey or measure a few keys in the middle and the app can suggest a reference that suits the piano." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kartlägg eller mät några tangenter i mitten så kan appen föreslå en referens som passar pianot."
+          }
+        }
+      }
+    },
+    "Temperament" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperatur"
+          }
+        }
+      }
+    },
+    "The most common compromise: 4:2 in the middle and treble, 6:3 in the bass." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den vanligaste kompromissen: 4:2 i mitten och diskanten, 6:3 i basen."
+          }
+        }
+      }
+    },
+    "The piano was %@ cents from the target in the middle (≈ A4 = %@)." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pianot låg %@ cent från målet i mitten (≈ A4 = %@)."
+          }
+        }
+      }
+    },
+    "The piano was close to the target (%@ cents in the middle) when the pass started." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pianot låg nära målet (%@ cent i mitten) när omgången började."
+          }
+        }
+      }
+    },
+    "To reach the target: %@ overpull. A key that starts at %@ cents is tuned to %@ (A4 ≈ %@) and settles towards the target as the tension evens out. Check again with a new pass after 2–4 weeks. To avoid raising the pitch, use the piano’s current pitch instead." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "För att nå målet: %@ överdrag. En tangent som börjar på %@ cent stäms till %@ (A4 ≈ %@) och sjunker mot målet när spänningen jämnas ut. Kontrollera med en ny omgång efter 2–4 veckor. Vill du inte dra upp: använd pianots nuvarande tonhöjd."
+          }
+        }
+      }
+    },
+    "Tolerance" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tolerans"
+          }
+        }
+      }
+    },
+    "Treble" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diskant"
+          }
+        }
+      }
+    },
+    "Tune down to the target, or use the piano’s current pitch." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stäm ner till målet, eller använd pianots nuvarande tonhöjd."
+          }
+        }
+      }
+    },
+    "Tuning" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stämning"
+          }
+        }
+      }
+    },
+    "Two strings up to key" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Två strängar t.o.m. tangent"
+          }
+        }
+      }
+    },
+    "Unisons" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unisoner"
+          }
+        }
+      }
+    },
+    "Upright piano" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pianino (upprätt piano)"
+          }
+        }
+      }
+    },
+    "Use %@ overpull" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Använd %@ överdrag"
+          }
+        }
+      }
+    },
+    "Use the piano’s current pitch" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Använd pianots nuvarande tonhöjd"
+          }
+        }
+      }
+    },
+    "Vallotti (18th century)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vallotti (1700-tal)"
+          }
+        }
+      }
+    },
+    "Werckmeister III (1691)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werckmeister III (1691)"
+          }
+        }
+      }
+    },
+    "Wide (concert)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bred (konsert)"
+          }
+        }
+      }
+    },
+    "Within tolerance" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inom tolerans"
+          }
+        }
+      }
+    },
+    "Young II (1799)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Young II (1799)"
+          }
+        }
+      }
+    },
+    "baby grand" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "liten flygel"
+          }
+        }
+      }
+    },
+    "concert grand" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "konsertflygel"
+          }
+        }
+      }
+    },
+    "medium upright" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mellanstort piano"
+          }
+        }
+      }
+    },
+    "none" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "inga"
+          }
+        }
+      }
+    },
+    "parlour grand" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "salongsflygel"
+          }
+        }
+      }
+    },
+    "small upright" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "litet pianino"
+          }
+        }
+      }
+    },
+    "tall upright" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "högt piano"
+          }
+        }
+      }
+    },
+    "±%@ cents" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "±%@ cent"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

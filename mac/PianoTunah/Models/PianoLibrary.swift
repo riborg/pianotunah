@@ -24,6 +24,9 @@ final class PianoLibrary {
     private(set) var exportFile: JSONFile?
     private(set) var exportName = ""
     var pendingDeleteID: String?
+    /// The piano made last with New Piano: the window shows its settings,
+    /// so its key count and reference can be set right away.
+    private(set) var createdID: String?
 
     /// How long after a change the piano is saved.
     static let saveDelay: Duration = .seconds(2.5)
@@ -87,11 +90,27 @@ final class PianoLibrary {
     // MARK: - Changes
 
     func newPiano() {
-        add(Piano(name: String(localized: "New piano")))
+        let piano = Piano(name: String(localized: "New piano"))
+        add(piano)
+        createdID = piano.id
+    }
+
+    /// A copy of the open piano, with its measurements, opened in its place
+    /// (Piano.duplicate). The engine's latest changes are in the library
+    /// already: they come with every frame and command that makes them.
+    func duplicateSelected() {
+        guard let piano = selected else { return }
+        add(piano.duplicate(name: String(localized: "\(piano.name) (copy)", table: "Inspector")))
     }
 
     func rename(_ id: String, to name: String) {
         change(id) { $0.name = name }
+    }
+
+    /// The notes belong to the library, as the name does: the engine does
+    /// not hand them back.
+    func setNotes(_ id: String, _ notes: String) {
+        change(id) { $0.notes = notes }
     }
 
     /// Changes the piano and saves it a moment later.
