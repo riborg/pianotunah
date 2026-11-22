@@ -38,7 +38,7 @@ mac/
         └── Localizable.xcstrings English and Swedish
 ```
 
-The core package uses no Apple-only frameworks ([ADR 0003](adr/0003-mac-core-is-pure-swift.md)). It builds and tests on Linux in the `swift:6` container, so the same CI and the same agents that work here can run its tests. Only the app target needs Xcode. Foundation on Linux differs from Apple's in places, such as locale handling and number formatting, so the core's tests also run in Xcode on the Mac. The Format tests in particular must pass there.
+The core package uses no Apple-only frameworks ([ADR 0003](adr/0003-mac-core-is-pure-swift.md)). It builds and tests on Linux in the `swift:6.4` container, so the same CI and the same agents that work here can run its tests. Only the app target needs Xcode. Foundation on Linux differs from Apple's in places, such as locale handling and number formatting, so the core's tests also run in Xcode on the Mac. The Format tests in particular must pass there.
 
 ## Step 0: take the logic out of app.js (in JS, first)
 
@@ -197,7 +197,7 @@ Pre-release tags (`-rc.1`) build the Mac app too, so a pre-release can be tried 
 | Phase | Work | Parallel |
 |---|---|---|
 | 0 | engine.js out of app.js, unit tests, the end-to-end tests green | 1 agent; it touches all of app.js |
-| 1 | test/fixtures.mjs, the Swift package skeleton, the CI job in `swift:6` | 1 agent |
+| 1 | test/fixtures.mjs, the Swift package skeleton, the CI job in `swift:6.4` | 1 agent |
 | 2 | Theory, Survey, Order, Format, DSP, Engine, Piano in Swift | three waves of 3, 2 and 2 agents, one file each, against the fixtures |
 | 3 | Audio: input, tone, recording, devices | 1 agent; needs a Mac to run |
 | 4 | Views and models | 3 agents: dial and folds, keyboard and curve, panels and inspector |

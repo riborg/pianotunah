@@ -38,7 +38,7 @@ mac/
         └── Localizable.xcstrings engelska och svenska
 ```
 
-Kärnpaketet använder inga Apple-specifika ramverk ([ADR 0003](adr/0003-mac-core-is-pure-swift.sv.md)). Det byggs och testas på Linux i containern `swift:6`, så samma CI och samma agenter som arbetar här kan köra dess tester. Bara app-målet behöver Xcode. Foundation på Linux skiljer sig på sina ställen från Apples, till exempel i hantering av locale och formatering av tal, så kärnans tester körs också i Xcode på Macen. Särskilt Format-testerna måste gå igenom där.
+Kärnpaketet använder inga Apple-specifika ramverk ([ADR 0003](adr/0003-mac-core-is-pure-swift.sv.md)). Det byggs och testas på Linux i containern `swift:6.4`, så samma CI och samma agenter som arbetar här kan köra dess tester. Bara app-målet behöver Xcode. Foundation på Linux skiljer sig på sina ställen från Apples, till exempel i hantering av locale och formatering av tal, så kärnans tester körs också i Xcode på Macen. Särskilt Format-testerna måste gå igenom där.
 
 ## Steg 0: lyft ut logiken ur app.js (i JS, först)
 
@@ -197,7 +197,7 @@ Förhandstaggar (`-rc.1`) bygger också Mac-appen, så att en förhandsrelease k
 | Fas | Arbete | Parallellt |
 |---|---|---|
 | 0 | engine.js ur app.js, enhetstester, end-to-end-testerna gröna | 1 agent; den rör hela app.js |
-| 1 | test/fixtures.mjs, skelettet till Swift-paketet, CI-jobbet i `swift:6` | 1 agent |
+| 1 | test/fixtures.mjs, skelettet till Swift-paketet, CI-jobbet i `swift:6.4` | 1 agent |
 | 2 | Theory, Survey, Order, Format, DSP, Engine, Piano i Swift | tre vågor med 3, 2 och 2 agenter, en fil var, mot fixturerna |
 | 3 | Ljud: ingång, ton, inspelning, enheter | 1 agent; måste köras på en Mac |
 | 4 | Vyer och modeller | 3 agenter: ratt och utfällbara delar, klaviatur och kurva, paneler och inspektör |
