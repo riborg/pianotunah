@@ -348,10 +348,11 @@ private func withStore(_ body: (PianoStore, URL) throws -> Void) throws {
         #expect(try store.load(id: original).name == "Fixture piano A")
         #expect(try store.load(id: "copy").name == "The copy")
         #expect(try parse(Data(contentsOf: store.directory.appendingPathComponent("copy.json")))["id"] == "copy")
-        // Loaded and saved once more, unchanged: still its own piano.
-        try store.save(try store.load(id: "copy"))
+        // Loaded and saved once more, unchanged: the same piano, same file.
+        let before = try store.load(id: "copy")
+        try store.save(before)
+        #expect(try store.load(id: "copy") == before)
         #expect(try parse(Data(contentsOf: store.directory.appendingPathComponent("copy.json")))["id"] == "copy")
-        #expect(try store.load(id: "copy") == (try store.load(id: "copy")))
         #expect(try FileManager.default.contentsOfDirectory(atPath: store.directory.path).count == 2)
     }
 }
