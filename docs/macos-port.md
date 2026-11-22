@@ -167,10 +167,10 @@ The app updates itself from GitHub Releases with [Sparkle](https://sparkle-proje
 
 **The release job.** The release workflow runs on `v*` tags. Today one job builds the image and creates the GitHub Release. It changes like this:
 
-1. **`release`** (as today) publishes the image, but creates the GitHub Release as a **draft**, and only if the tag has no release yet (`gh release view` first), so a re-run of a failed workflow continues with the same draft. The image does not wait for the Mac. Uploads use `gh release upload --clobber`.
+1. **`release`** (as today) publishes the image, but creates the GitHub Release as a **draft**, and only if the tag has no release yet (`gh release view` first), so a re-run of a failed workflow continues with the same draft. Use `gh`, not the REST endpoint `releases/tags/{tag}`: that endpoint does not return drafts, while `gh release view` and `gh release upload` also look the tag up among drafts (through GraphQL, so they need `GH_TOKEN`, which the step that creates the release already sets). Only a *release not found* answer means the release is missing; any other error fails the job rather than creating a second draft. The image does not wait for the Mac. Uploads use `gh release upload --clobber`.
 2. **`mac`**, a new job on a macOS runner, runs next to it after `ci`, with `fetch-depth: 0`, since the version number counts commits:
    1. builds the app with `xcodebuild` in Release, version numbers from the tag;
-   2. signs it with the certificate from the secrets, imported into a temporary keychain. The certificate is self-signed and not trusted there, so `codesign` picks it by its SHA-1 hash, not by `security find-identity -v`. Sparkle's nested helpers (Autoupdate, Updater.app and the XPC services) are signed with the same identity, inside out, before the app itself;
+   2. signs it with the certificate from the secrets, imported into a temporary keychain. The certificate is self-signed and not trusted there, so `codesign` picks it by its SHA-1 hash. `security find-identity -p codesigning <keychain>` without `-v` lists it with the hash; `-v` hides untrusted identities. Sparkle's nested helpers (Autoupdate, Updater.app and the XPC services) are signed with the same identity, inside out, before the app itself;
    3. zips it with `ditto -c -k --keepParent` and signs the zip with Sparkle's `sign_update`;
    4. writes `appcast.xml` with one `<item>` for this version:
       - `sparkle:version` = `CFBundleVersion`;

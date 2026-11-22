@@ -167,10 +167,10 @@ Appen uppdaterar sig själv från GitHub Releases med [Sparkle](https://sparkle-
 
 **Release-jobbet.** Release-arbetsflödet körs på `v*`-taggar. I dag bygger ett jobb imagen och skapar GitHub-releasen. Det ändras så här:
 
-1. **`release`** (som i dag) publicerar imagen, men skapar GitHub-releasen som ett **utkast**, och bara om taggen inte har någon release än (`gh release view` först), så att en omkörning av ett fallerat arbetsflöde fortsätter med samma utkast. Imagen väntar inte på Macen. Uppladdningar görs med `gh release upload --clobber`.
+1. **`release`** (som i dag) publicerar imagen, men skapar GitHub-releasen som ett **utkast**, och bara om taggen inte har någon release än (`gh release view` först), så att en omkörning av ett fallerat arbetsflöde fortsätter med samma utkast. Använd `gh`, inte REST-anropet `releases/tags/{tag}`: det anropet returnerar inte utkast, medan `gh release view` och `gh release upload` även letar efter taggen bland utkast (via GraphQL, så de behöver `GH_TOKEN`, som steget som skapar releasen redan sätter). Bara svaret *release not found* betyder att releasen saknas; alla andra fel får jobbet att fallera i stället för att skapa ett andra utkast. Imagen väntar inte på Macen. Uppladdningar görs med `gh release upload --clobber`.
 2. **`mac`**, ett nytt jobb på en macOS-runner, körs bredvid efter `ci`, med `fetch-depth: 0` eftersom versionsnumret räknar commits:
    1. bygger appen med `xcodebuild` i Release, med versionsnummer från taggen;
-   2. signerar den med certifikatet från hemligheterna, importerat i en tillfällig nyckelring. Certifikatet är självsignerat och inte betrott där, så `codesign` väljer det med dess SHA-1-hash, inte via `security find-identity -v`. Sparkles inbäddade hjälpprogram (Autoupdate, Updater.app och XPC-tjänsterna) signeras med samma identitet, inifrån och ut, före själva appen;
+   2. signerar den med certifikatet från hemligheterna, importerat i en tillfällig nyckelring. Certifikatet är självsignerat och inte betrott där, så `codesign` väljer det med dess SHA-1-hash. `security find-identity -p codesigning <nyckelring>` utan `-v` visar det med hashen; `-v` döljer identiteter som inte är betrodda. Sparkles inbäddade hjälpprogram (Autoupdate, Updater.app och XPC-tjänsterna) signeras med samma identitet, inifrån och ut, före själva appen;
    3. zippar den med `ditto -c -k --keepParent` och signerar zip-filen med Sparkles `sign_update`;
    4. skriver `appcast.xml` med en `<item>` för den här versionen:
       - `sparkle:version` = `CFBundleVersion`;
