@@ -2,7 +2,7 @@
 
 En plan för en native Mac-version av Piano Tunah vid sidan av webbversionen. [English](macos-port.md).
 
-Status: beslutad, inte byggd än. Appen är för en Mac och körs från Xcode, utan synk. Se [Beslut](#beslut).
+Status: beslutad, byggs på grenen `macos-port`. Appen är för en Mac, installeras från GitHub Releases och uppdaterar sig själv, utan synk. Se [Beslut](#beslut).
 
 ## Språk: Swift, inte Rust
 
@@ -99,7 +99,7 @@ Sju filer i tre vågor, efter importerna i JS-koden. Inom en våg kan varje fil 
 - Använd hårdvarans samplingsfrekvens. Vid 96 kHz täcker de fasta fönstren halva tiden, och i Bluetooth-headset är bandbredden för låg. Sampla om till 48 kHz i de fallen, eller varna användaren.
 
 **Behörighet och inställningar**
-- Mikrofonbehörighet kräver `NSMicrophoneUsageDescription`, entitlementet `com.apple.security.device.audio-input` och `AVCaptureDevice.requestAccess`.
+- Mikrofonbehörighet kräver `NSMicrophoneUsageDescription` och `AVCaptureDevice.requestAccess`. Entitlementet `com.apple.security.device.audio-input` behövs bara med App Sandbox eller hardened runtime, och appen använder ingetdera (steg 6).
 - Utan behörighet levererar motorn tystnad, inte ett fel. Kontrollera `authorizationStatus` och länka till Systeminställningar › Integritet › Mikrofon.
 - Röstbehandling är avstängd från början och ska förbli det. Det ersätter webbversionens `echoCancellation: false`.
 
@@ -144,27 +144,53 @@ Uppskattning: kärnan 1 100–1 300 rader plus 600 rader tester, appen 4 000–5
 
 ## Steg 5: lagring
 
-Varje piano är en JSON-fil i appens mapp Application Support, i exakt webbens format, så att export och import fungerar åt båda hållen mellan versionerna ([ADR 0002](adr/0002-mac-app-stores-web-json-locally.sv.md)).
-
-Appen körs i sandlåda (steg 6), så mappen ligger i dess container: `~/Library/Containers/<bundle-id>/Data/Library/Application Support/`.
-- Bestäm bundle-id:t en gång och ändra det aldrig. Ett nytt id får en ny, tom container, och pianona blir kvar i den gamla.
-- Export är sättet att få ut ett piano ur appen. Time Machine säkerhetskopierar containern som vilken mapp som helst.
+Varje piano är en JSON-fil i `~/Library/Application Support/Piano Tunah/`, i exakt webbens format, så att export och import fungerar åt båda hållen mellan versionerna ([ADR 0002](adr/0002-mac-app-stores-web-json-locally.sv.md)). Appen körs inte i sandlåda (steg 6), så mappen ligger där sökvägen säger, och Time Machine säkerhetskopierar den.
 
 - Avkoda tillåtande: alla fält är valfria, standardvärden fylls i, och samma migrering som `normalize` och `migrateSettings` körs.
 - Behåll okända fält när filen skrivs, så att den kan gå fram och tillbaka.
 - `at` förblir ett antal millisekunder.
 - Spara automatiskt 2,5 s efter en ändring och när appen avslutas.
 
-Det finns ingen synk. Appen pratar inte med Go-servern och behöver inget nätverks-entitlement. Pianon flyttas mellan webben och Macen med export och import. Eftersom formatet och `rev` behålls går synk ändå att lägga till senare utan att ändra servern.
+Det finns ingen synk. Appen pratar inte med Go-servern; den enda nätverkstrafiken är uppdateringskontrollen i steg 6. Pianon flyttas mellan webben och Macen med export och import. Eftersom formatet och `rev` behålls går synk ändå att lägga till senare utan att ändra servern.
 
-## Steg 6: signering för en Mac
+## Steg 6: releaser och automatiska uppdateringar
 
-- Bygg och kör från Xcode, signerat med ditt Apple-ID:s personliga team (gratis) eller *Sign to Run Locally*. Inget Developer ID, ingen notarisering och ingen DMG.
-- Behåll App Sandbox påslagen, med två entitlements:
-  - `com.apple.security.device.audio-input` för mikrofonen;
-  - `com.apple.security.files.user-selected.read-write` för export, import och inspelningar.
-- Lägg `NSMicrophoneUsageDescription` i Info.plist. Utan den stoppas appen första gången den öppnar mikrofonen.
-- Om appen delas senare är signering med Developer ID, notarisering och en DMG som byggs i Actions nästa steg.
+Appen uppdaterar sig själv från GitHub Releases med [Sparkle](https://sparkle-project.org) 2 ([ADR 0004](adr/0004-mac-app-updates-itself-from-github.sv.md)).
+
+- **Flödet** är `https://github.com/riborg/pianotunah/releases/latest/download/appcast.xml`, en fil på den senaste releasen. GitHub hoppar över förhandsreleaser och utkast för `latest`, så en `v1.2.0-rc.1` når aldrig appen, samma regel som för imagens tagg `latest`.
+- **Kontroller:** Sparkle kontrollerar en gång om dagen och vid start, laddar ner en ny version i bakgrunden och installerar den när appen avslutas (`SUEnableAutomaticChecks`, `SUAutomaticallyUpdate`). *Sök efter uppdateringar…* i appmenyn kontrollerar direkt.
+- **Uppdateringens signatur:** varje release-zip signeras med en EdDSA-nyckel. Den publika nyckeln ligger i Info.plist (`SUPublicEDKey`), den privata är en hemlighet i Actions. Sparkle vägrar en uppdatering som inte stämmer.
+- **Kodsignering:** inget Apple Developer-konto, alltså inget Developer ID och ingen notarisering. CI signerar med ett självsignerat kodsigneringscertifikat, som skapas en gång och sparas som hemlighet i Actions. Samma certifikat i varje release håller appens identitet stabil, så att macOS behåller mikrofonbehörigheten mellan uppdateringar. Ad hoc-signering skulle ge varje bygge en ny identitet och fråga om mikrofonen igen efter varje uppdatering.
+- **Första installationen:** ladda ner zip-filen från releasen, flytta appen till Program och öppna den. macOS stoppar en app som inte är notariserad första gången; tillåt den en gång under Systeminställningar › Integritet och säkerhet › *Öppna ändå*. Uppdateringar installeras av Sparkle och ska inte fråga igen; kontrollera det vid den första riktiga uppdateringen.
+- **Ingen App Sandbox, ingen hardened runtime.** Sparkle i en app i sandlåda kräver extra installationstjänster och entitlements, vilket inte är värt det för en Mac. Hardened runtime behövs bara för notarisering. Lägg `NSMicrophoneUsageDescription` i Info.plist; utan den stoppas appen första gången den öppnar mikrofonen.
+- **Versionsnummer:** `CFBundleShortVersionString` är taggen utan `v` (1.2.0). `CFBundleVersion`, som Sparkle jämför, är antalet commits fram till taggen, så den växer alltid.
+
+**Release-jobbet.** Release-arbetsflödet körs på `v*`-taggar. I dag bygger ett jobb imagen och skapar GitHub-releasen. Det ändras så här:
+
+1. **`release`** (som i dag) publicerar imagen, men skapar GitHub-releasen som ett **utkast**, och bara om taggen inte har någon release än (`gh release view` först), så att en omkörning av ett fallerat arbetsflöde fortsätter med samma utkast. Imagen väntar inte på Macen. Uppladdningar görs med `gh release upload --clobber`.
+2. **`mac`**, ett nytt jobb på en macOS-runner, körs bredvid efter `ci`, med `fetch-depth: 0` eftersom versionsnumret räknar commits:
+   1. bygger appen med `xcodebuild` i Release, med versionsnummer från taggen;
+   2. signerar den med certifikatet från hemligheterna, importerat i en tillfällig nyckelring. Certifikatet är självsignerat och inte betrott där, så `codesign` väljer det med dess SHA-1-hash, inte via `security find-identity -v`. Sparkles inbäddade hjälpprogram (Autoupdate, Updater.app och XPC-tjänsterna) signeras med samma identitet, inifrån och ut, före själva appen;
+   3. zippar den med `ditto -c -k --keepParent` och signerar zip-filen med Sparkles `sign_update`;
+   4. skriver `appcast.xml` med en `<item>` för den här versionen:
+      - `sparkle:version` = `CFBundleVersion`;
+      - `sparkle:shortVersionString` = taggen utan `v`;
+      - `sparkle:minimumSystemVersion` = 27.0;
+      - en `sparkle:releaseNotesLink` till GitHub-releasen;
+      - en `<enclosure>` vars `url` är taggens egen fil, `releases/download/vX.Y.Z/PianoTunah.zip`, aldrig `latest`-adressen, med `sparkle:edSignature` och `length` från `sign_update`;
+   5. sparar zip-filen och appcasten som artefakter i arbetsflödet.
+3. **`publish`** behöver båda. Det laddar upp de två filerna till utkastet och publicerar det (`gh release edit --draft=false`, plus `--prerelease` för taggar med `-`).
+
+Om Mac-jobbet fallerar förblir releasen ett utkast och körningen blir röd. `releases/latest` pekar då kvar på den förra releasen, som har sin appcast, så installerade appar får ingen 404 utan stannar på den version de har. Imagen publiceras i vilket fall som helst. Rätta bygget, eller bygg på din Mac, ladda upp de två filerna till utkastet för hand och publicera det.
+
+Förhandstaggar (`-rc.1`) bygger också Mac-appen, så att en förhandsrelease kan provas genom att laddas ner. Dess appcast läses aldrig, eftersom `latest` hoppar över förhandsreleaser.
+
+**Runner.** Jobbet använder GitHubs nyaste macOS-image och väljer dess nyaste Xcode. Om den Xcode inte har macOS 27-SDK:n än fallerar jobbet och regeln ovan gäller. Händer det mer än en gång: registrera din Mac som self-hosted runner för det här jobbet.
+
+**Engångssteg på din Mac.**
+- Sparkles `generate_keys` skapar EdDSA-nyckelparet.
+- Skapa kodsigneringscertifikatet med `openssl`, giltigt i 10 år, och exportera det som .p12. Ett självsignerat certifikat från Nyckelhanteraren gäller ett år som standard. Ett nytt certifikat är en ny identitet, och macOS skulle fråga om mikrofonen igen. Sparkle kontrollerar själv uppdateringen med dess EdDSA-signatur, så ett nytt certifikat skulle inte stoppa uppdateringen; mikrofonbehörigheten är skälet att behålla det.
+- Hemligheter: `SPARKLE_ED_PRIVATE_KEY`, `MAC_SIGNING_P12` och `MAC_SIGNING_PASSWORD`.
 
 ## Ordning och agenter
 
@@ -176,13 +202,13 @@ Det finns ingen synk. Appen pratar inte med Go-servern och behöver inget nätve
 | 3 | Ljud: ingång, ton, inspelning, enheter | 1 agent; måste köras på en Mac |
 | 4 | Vyer och modeller | 3 agenter: ratt och utfällbara delar, klaviatur och kurva, paneler och inspektör |
 | 5 | Lagring, import/export, menyer, Inställningar, texter | 1–2 agenter |
-| 6 | Signering för lokal användning | du i Xcode, med ditt Apple-ID |
+| 6 | Release-jobb, Sparkle, appcast | 1 agent; du skapar nycklarna och certifikatet en gång |
 
 Fas 0–2 kan köras helt här på Linux. Från fas 3 byggs och provas appen i Xcode på din Mac. Kärnans tester körs fortfarande i CI.
 
 ## Beslut
 
-1. **Distribution:** bara för eget bruk, körs från Xcode.
+1. **Distribution:** för eget bruk, installeras från GitHub Releases. Appen bevakar GitHub och uppdaterar sig själv när en ny version släpps ([ADR 0004](adr/0004-mac-app-updates-itself-from-github.sv.md)).
 2. **Flera enheter:** behövs inte. Mac-appen används för sig, så det finns ingen synk ([ADR 0002](adr/0002-mac-app-stores-web-json-locally.sv.md)).
 3. **Gränssnittets språk:** följ macOS.
 4. **Lägsta version:** macOS 27, den aktuella.
