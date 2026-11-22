@@ -70,7 +70,7 @@ Stäm elva tangenter i kvarter och kvinter från A3, var och en mot tangenten f�
 | B3 | F♯3 | kvart upp |
 | E4 | B3 | kvart upp |
 
-Stäm kvarterna något vida och kvinterna något trånga. Jämför varje nytt intervall med samma slags intervall under. Terserna ska sväva jämnt snabbare ju högre de ligger, från F3–A3 till C4–E4. En ters som bryter serien betyder att en tangent ligger fel. Stämmer du kvarterna och kvinterna för rent svävar F3–A3 för snabbt.
+Stäm kvarterna något vida och kvinterna något trånga. Jämför varje nytt intervall med samma slags intervall under. Terserna ska sväva jämnt snabbare ju högre de ligger, från F3–A3 till C4–E4. En ters som bryter serien betyder att en tangent ligger fel. För en ters eller sext med tangenten du stämmer visar appen de närmaste stämda av samma storlek runt den, till exempel F♯3–B♭3 < G3–B3 < A♭3–C4: G3–B3 ska sväva snabbare än F♯3–B♭3 och långsammare än A♭3–C4, med procenten inom parentes. Att höra att ett intervall ligger mellan två andra är lättare än att räkna dess svävningar. Idén kommer från Mark Cerisanos svävningsfönster ([go-ape.sv.md](go-ape.sv.md)). Stämmer du kvarterna och kvinterna för rent svävar F3–A3 för snabbt.
 
 ### 6. Oktaver F4–A♭4
 

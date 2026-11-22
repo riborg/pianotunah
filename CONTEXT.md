@@ -109,3 +109,7 @@ A per-piano choice under Unisons [Unisoner], instead of One string first [En str
 
 **Check** [kontroll]:
 An interval you play by ear to confirm a tuned key. The app shows it with the beat rate the targets give.
+
+**Window** [fönster]:
+A check that is a third or sixth with the key being tuned, shown between the nearest tuned intervals of the same size below and above it: slower < this < faster, with how much faster each step beats. From Mark Cerisano's beat speed windows.
+_Avoid_: range, bracket
