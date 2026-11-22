@@ -346,6 +346,26 @@ export function rmsDb(buf, len = 2048) {
   return 10 * Math.log10(s / len + 1e-20);
 }
 
+// Whether the latest STEADY_N readings (cents) hold still: the middle ones,
+// without the TRIM lowest and highest, lie within SPREAD cents, and the first
+// and last four (medians) are within DRIFT, so a string still gliding after
+// the pin moved does not count. On a real piano single readings swing 1–4
+// cents with the strings' own beats and the slow wave after the attack. Five
+// readings in a row within 0.8 cents were then met on only 4 of 19 notes of
+// F4 and A4, and at the wave's top or bottom; this test is met on 18 of them,
+// about 1 s after the attack, and on every note in the bass and treble
+// recordings.
+export const STEADY_N = 9;
+const TRIM = 2;
+const SPREAD = 2;
+const DRIFT = 1.5;
+export function steady(cs) {
+  if (cs.length < STEADY_N) return false;
+  const w = cs.slice(-STEADY_N);
+  const mid = [...w].sort((a, b) => a - b).slice(TRIM, STEADY_N - TRIM);
+  return mid[mid.length - 1] - mid[0] < SPREAD && Math.abs(median(w.slice(0, 4)) - median(w.slice(-4))) < DRIFT;
+}
+
 export function median(a) {
   if (!a.length) return NaN;
   const s = [...a].sort((x, y) => x - y);

@@ -5,7 +5,7 @@ import {
   KEY_COUNT, A4, TEMPERAMENTS, PIANO_KINDS, STRETCH_PRESETS, OCTAVE_TYPES, sizeClass,
   computeTargets, bOutliers, recommendedOverpull, defaultPartial, partialFreq, centsBetween, noteName, pcName, pitchClass, isBlack,
 } from './theory.js';
-import { Analyzer, rmsDb, median } from './dsp.js';
+import { Analyzer, rmsDb, median, steady, STEADY_N } from './dsp.js';
 import { listTunings, getTuning, saveTuning, deleteTuning, newTuning, normalize, duplicateTuning } from './store.js';
 import { num, short, fmtC, fmtHz, fmtB, parseNum } from './format.js';
 import { tr, trNodes, lang, locale, setLang, translateDom } from './i18n.js';
@@ -826,7 +826,8 @@ function analyseFrame() {
   const attack = lvl - Math.min(...state.levels) > 12;
   if (attack && !state.inAttack) state.attacks++; // once per attack, though it shows for a few frames
   state.inAttack = attack;
-  if (attack) Object.assign(state, { unison: [], unisonSkip: 0 }); // a new attack
+  // A new attack: the previous note's tail is not part of this one's reading.
+  if (attack) Object.assign(state, { readings: [], unison: [], unisonSkip: 0 });
   // Noise floor: follows quickly down, slowly up, and hardly at all while a
   // note is heard, so a long decay is not mistaken for noise.
   const up = state.signal ? 0.02 : 0.15;
@@ -900,11 +901,11 @@ function measureCurrent(A) {
   state.refTainted = ref;
   state.readings.push({ c: raw, hz: m.freq });
   if (!ref) trackBeating(k, raw, m.prom);
-  if (state.readings.length > 7) state.readings.shift();
+  if (state.readings.length > STEADY_N) state.readings.shift();
   const last = state.readings.slice(-5);
   const cs = last.map((r) => r.c);
   const sure = !auto || state.autoFrames >= 3;
-  state.stable = !ref && sure && last.length >= 4 && Math.max(...cs) - Math.min(...cs) < (k > 70 ? 1.5 : 0.8);
+  state.stable = !ref && sure && steady(state.readings.map((r) => r.c));
   state.signal = true;
   state.diag.readings++;
 

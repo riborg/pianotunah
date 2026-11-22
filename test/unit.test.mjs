@@ -5,7 +5,7 @@ import {
   computeTargets, temperamentOffsets, partialFreq, centsBetween, noteName,
   migrateSettings, recommendedOverpull, octaveStretch, bOutliers, intervalBeat, DEFAULT_SETTINGS,
 } from '../web/js/theory.js';
-import { Analyzer } from '../web/js/dsp.js';
+import { Analyzer, steady } from '../web/js/dsp.js';
 import { wavBlob } from '../web/js/mic.js';
 import { Saver } from '../web/js/saver.js';
 import { fmtC, parseNum } from '../web/js/format.js';
@@ -445,4 +445,18 @@ test('format: the sign of a cent value follows what is shown', () => {
 test('format: a typed number takes comma or point', () => {
   assert.deepEqual(['441,5', '441.5', ' 440 ', '440,', ',5'].map(parseNum), [441.5, 441.5, 440, 440, 0.5]);
   assert.ok(['', 'abc', '441,5,1', '4e2', '441 Hz', '1.2.3'].every((s) => Number.isNaN(parseNum(s))));
+});
+
+test('steady: a reading that swings a few cents counts, a glide or a short run does not', () => {
+  // F4 on a real piano, single readings 90 ms apart: never five in a row within 0.8 cents.
+  const f4 = [2.9, 3.5, 2.7, 1.3, 4.1, 3.5, 0.6, 2.2, 2.6];
+  assert.equal(steady(f4), true);
+  // Two stray readings (the attack, a neighbour) do not stop it.
+  assert.equal(steady([2.6, 34.7, 2.5, 4.1, 2.9, 3, 0.2, 2.4, 2.1]), true);
+  // A string still moving: 0.4 cents per reading, though the middle five lie within 2 cents.
+  assert.equal(steady([0, 0.4, 0.8, 1.2, 1.6, 2, 2.4, 2.8, 3.2]), false);
+  // Too few readings yet.
+  assert.equal(steady([3, 3, 3, 3, 3, 3, 3, 3]), false);
+  // The window is the latest nine.
+  assert.equal(steady([40, -30, ...f4]), true);
 });
