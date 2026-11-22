@@ -253,7 +253,14 @@ extension Piano {
     /// `migrateSettings` and over the defaults. Where JS would keep a value
     /// of the wrong type as it is, the typed field takes its default (or, for
     /// numbers, JS `Number(x)`); the value itself is still written back as
-    /// long as the field is not changed.
+    /// long as the field is not changed. Two exceptions:
+    /// - an id or a timestamp (createdAt, updatedAt, passStartedAt) that is
+    ///   not a string counts as missing, so a new one is made and written;
+    /// - in `keys`, `inharmonicity` and `partials`, an entry that cannot be
+    ///   read (a key that is not a whole number, an entry of the wrong kind)
+    ///   is written back only while that whole field is unchanged, and keys
+    ///   such as "05" and "5" are the same key, the last one read winning.
+    ///   The web keeps such entries; neither the web nor the app writes them.
     public init(object: [String: JSONValue], now: Date = Date(), makeID: () -> String = Piano.newID) {
         var made: Set<String> = []
         func text(_ key: String) -> String? { object[key]?.string }

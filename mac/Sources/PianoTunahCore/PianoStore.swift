@@ -62,12 +62,17 @@ public struct PianoStore: Sendable {
         return out.sorted { ($0.updatedAt, $1.id) > ($1.updatedAt, $0.id) }
     }
 
-    /// The piano saved as `id`, decoded leniently. A file without an id of
-    /// its own gets the file's.
+    /// The piano saved as `id`, decoded leniently. Its id is always the
+    /// file's name, as in `list()` and on the server (main.go refuses a
+    /// document whose id is not its URL's): a file copied to a new name
+    /// without its id edited is that new piano, and saving it updates that
+    /// file instead of making another one.
     public func load(id: String) throws -> Piano {
         guard Self.isValidID(id) else { throw StoreError.invalidID(id) }
         guard FileManager.default.fileExists(atPath: url(id).path) else { throw StoreError.notFound(id) }
-        return try Piano.decode(Data(contentsOf: url(id)), makeID: { id })
+        var piano = try Piano.decode(Data(contentsOf: url(id)), makeID: { id })
+        piano.id = id
+        return piano
     }
 
     /// Saves the piano as `<id>.json`, replacing the file in one step. The
@@ -79,6 +84,13 @@ public struct PianoStore: Sendable {
         let tmp = directory.appendingPathComponent(".tmp-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: tmp) }
         try data.write(to: tmp)
+        // Flushed (fsync) before the rename, so a crash or power cut is far
+        // less likely to leave the piano's file empty. fsync does not empty
+        // the drive's own cache (that needs F_FULLFSYNC) and the folder is
+        // not synced, which is enough for one small file per piano.
+        let handle = try FileHandle(forUpdating: tmp)
+        try handle.synchronize()
+        try handle.close()
         guard rename(tmp.path, url(piano.id).path) == 0 else {
             throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
         }

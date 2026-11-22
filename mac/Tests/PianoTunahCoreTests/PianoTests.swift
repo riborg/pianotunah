@@ -274,6 +274,9 @@ func decodingAndEncodingGivesTheInputBack(_ which: String) throws {
 
     #expect(throws: PianoImportError.noSettings) { try Piano.importing(Data(#"{"name":"x"}"#.utf8)) }
     #expect(throws: PianoImportError.noSettings) { try Piano.importing(Data("[1, 2]".utf8)) }
+    // Truthy as in JS: empty settings are settings, 0 is not.
+    #expect(try Piano.importing(Data(#"{"settings":{}}"#.utf8), makeID: { "e" }).settings == .defaults)
+    #expect(throws: PianoImportError.noSettings) { try Piano.importing(Data(#"{"settings":0}"#.utf8)) }
     #expect(throws: PianoImportError.notJSON) { try Piano.importing(Data("not json".utf8)) }
 }
 
@@ -325,6 +328,31 @@ private func withStore(_ body: (PianoStore, URL) throws -> Void) throws {
         try store.delete(id: ids[1])
         #expect(try store.list().map(\.id) == [ids[0], ids[2]])
         #expect(throws: PianoStore.StoreError.notFound(ids[1])) { try store.load(id: ids[1]) }
+    }
+}
+
+@Test func aCopiedFileIsThePianoOfItsName() throws {
+    try withStore { store, _ in
+        try store.save(try decoded("a"))
+        let original = "00000000-0000-4000-8000-00000000000a"
+        // Copied by hand to a new name, its id left as it was.
+        try FileManager.default.copyItem(
+            at: store.directory.appendingPathComponent(original + ".json"),
+            to: store.directory.appendingPathComponent("copy.json"))
+        var copy = try store.load(id: "copy")
+        #expect(copy.id == "copy")
+        copy.name = "The copy"
+        try store.save(copy)
+        let files = try FileManager.default.contentsOfDirectory(atPath: store.directory.path).sorted()
+        #expect(files == ["\(original).json", "copy.json"].sorted())
+        #expect(try store.load(id: original).name == "Fixture piano A")
+        #expect(try store.load(id: "copy").name == "The copy")
+        #expect(try parse(Data(contentsOf: store.directory.appendingPathComponent("copy.json")))["id"] == "copy")
+        // Loaded and saved once more, unchanged: still its own piano.
+        try store.save(try store.load(id: "copy"))
+        #expect(try parse(Data(contentsOf: store.directory.appendingPathComponent("copy.json")))["id"] == "copy")
+        #expect(try store.load(id: "copy") == (try store.load(id: "copy")))
+        #expect(try FileManager.default.contentsOfDirectory(atPath: store.directory.path).count == 2)
     }
 }
 
