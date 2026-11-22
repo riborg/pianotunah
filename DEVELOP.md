@@ -34,7 +34,24 @@ docker run --rm --network container:pianotunah -v "$PWD":/home/pptruser/pt ghcr.
 
 The end-to-end tests share the app container's network, so they work with any reverse proxy. They create and delete their own tuning.
 
-CI in `.github/workflows/ci.yml` runs the unit tests, `go vet`, a test build for amd64 and arm64, and govulncheck on the binary in the image. `vuln.yml` scans the published `latest` image every Monday. A red run means it is time for a release built with the latest Go patch.
+CI in `.github/workflows/ci.yml` runs the unit tests, `go vet`, a test build for amd64 and arm64, govulncheck on the binary in the image, and the macOS app's checks below. `vuln.yml` scans the published `latest` image every Monday. A red run means it is time for a release built with the latest Go patch.
+
+## macOS app
+
+The native Mac version is being built in `mac/`, following [docs/macos-port.md](docs/macos-port.md). Its core, the Swift package `PianoTunahCore`, is tested against fixtures written from the web JS, so the two versions compute the same things.
+
+```sh
+# Regenerate the fixtures in mac/Tests/PianoTunahCoreTests/Fixtures/ after a
+# change to web/js/. Commit them with the change.
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD":/app -w /app node:26-alpine node test/fixtures.mjs
+
+# Swift tests of the core
+docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD/mac":/pkg -w /pkg swift:6.4 swift test
+```
+
+CI regenerates the fixtures and fails if they differ from the committed ones. If it fails with no change to the JS, a new Node minor version has moved a `Math.*` result: regenerate, check that only the last digits moved, and commit.
+
+The piano documents `a` and `b` in the fixtures' `piano/` folder are copies of two real pianos with the id, name and notes replaced. `node test/fixtures.mjs --pianos data` takes new copies of the first two in `data/`.
 
 ## Release
 
@@ -75,4 +92,6 @@ The server answers `GET /api/tunings`, `GET|PUT|DELETE /api/tunings/{id}`, `GET 
 | `web/fonts/` | ♭ ♮ ♯ from Bravura Text, built by `tools/accidentals.py` |
 | `web/favicon.svg`, `web/icons/` | logo and app icons, built by `tools/icons.py` |
 | `test/` | unit and end-to-end tests |
+| `test/fixtures.mjs` | fixtures for the Swift tests, written from the web JS |
+| `mac/` | the macOS app: Swift package `PianoTunahCore` and its tests |
 | `.github/workflows/` | CI, release, weekly vulnerability scan |

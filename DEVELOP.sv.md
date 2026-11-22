@@ -35,7 +35,24 @@ docker run --rm --network container:pianotunah -v "$PWD":/home/pptruser/pt ghcr.
 
 End-to-end-testerna delar nätverk med appens container, så de fungerar med vilken omvänd proxy som helst. De skapar och tar bort sin egen stämning.
 
-CI i `.github/workflows/ci.yml` kör enhetstesterna, `go vet`, ett testbygge för amd64 och arm64 och govulncheck på binären i avbilden. `vuln.yml` skannar den publicerade `latest`-avbilden varje måndag. En röd körning betyder att det är dags för en release byggd med den senaste Go-patchen.
+CI i `.github/workflows/ci.yml` kör enhetstesterna, `go vet`, ett testbygge för amd64 och arm64, govulncheck på binären i avbilden och macOS-appens kontroller nedan. `vuln.yml` skannar den publicerade `latest`-avbilden varje måndag. En röd körning betyder att det är dags för en release byggd med den senaste Go-patchen.
+
+## macOS-appen
+
+Den inbyggda Mac-versionen byggs i `mac/` enligt [docs/macos-port.sv.md](docs/macos-port.sv.md). Dess kärna, Swift-paketet `PianoTunahCore`, testas mot fixturer som skrivs från webbens JS, så att de två versionerna räknar likadant.
+
+```sh
+# Skapa om fixturerna i mac/Tests/PianoTunahCoreTests/Fixtures/ efter en
+# ändring i web/js/. Committa dem med ändringen.
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD":/app -w /app node:26-alpine node test/fixtures.mjs
+
+# Swift-tester av kärnan
+docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD/mac":/pkg -w /pkg swift:6.4 swift test
+```
+
+CI skapar om fixturerna och misslyckas om de skiljer sig från de committade. Misslyckas den utan att JS:en har ändrats har en ny mindre version av Node flyttat ett `Math.*`-resultat: skapa om dem, kontrollera att bara de sista siffrorna har flyttat sig och committa.
+
+Pianodokumenten `a` och `b` i fixturernas mapp `piano/` är kopior av två riktiga pianon med id, namn och anteckningar utbytta. `node test/fixtures.mjs --pianos data` tar nya kopior av de två första i `data/`.
 
 ## Release
 
@@ -76,4 +93,6 @@ Servern svarar på `GET /api/tunings`, `GET|PUT|DELETE /api/tunings/{id}`, `GET 
 | `web/fonts/` | ♭ ♮ ♯ från Bravura Text, byggda av `tools/accidentals.py` |
 | `web/favicon.svg`, `web/icons/` | logotyp och appikoner, byggda av `tools/icons.py` |
 | `test/` | enhets- och end-to-end-tester |
+| `test/fixtures.mjs` | fixturer för Swift-testerna, skrivna från webbens JS |
+| `mac/` | macOS-appen: Swift-paketet `PianoTunahCore` och dess tester |
 | `.github/workflows/` | CI, release, veckovis sårbarhetsskanning |
