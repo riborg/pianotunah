@@ -2,6 +2,11 @@
 // PianoTunahCore: the app's logic in pure Swift (standard library and
 // Foundation only), so it builds and tests on Linux too. See
 // docs/macos-port.md and docs/adr/0003-mac-core-is-pure-swift.md.
+//
+// PianoTunahAudio: the microphone, the reference tone and the recording.
+// Its logic (ring buffer, frame clock, tone synthesis, WAV) is pure Swift and
+// tested on Linux too; the AVFoundation and Core Audio glue is compiled only
+// where AVFoundation exists (step 3 of docs/macos-port.md).
 import PackageDescription
 
 let package = Package(
@@ -12,6 +17,7 @@ let package = Package(
     platforms: [.macOS(.v15)],
     products: [
         .library(name: "PianoTunahCore", targets: ["PianoTunahCore"]),
+        .library(name: "PianoTunahAudio", targets: ["PianoTunahAudio"]),
     ],
     targets: [
         .target(name: "PianoTunahCore"),
@@ -21,6 +27,8 @@ let package = Package(
             // Written by test/fixtures.mjs from the web JS; not edited by hand.
             resources: [.copy("Fixtures")]
         ),
+        .target(name: "PianoTunahAudio", dependencies: ["PianoTunahCore"]),
+        .testTarget(name: "PianoTunahAudioTests", dependencies: ["PianoTunahAudio"]),
     ],
     swiftLanguageModes: [.v6]
 )
