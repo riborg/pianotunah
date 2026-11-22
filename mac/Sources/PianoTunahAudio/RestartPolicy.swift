@@ -47,6 +47,10 @@ public struct RestartPolicy: Sendable, Equatable {
     public private(set) var isExhausted = false
     /// The automatic restarts within the last ``window``, oldest first.
     private var restarts: [Double] = []
+    /// A change of inputs is among the triggers of the pending restart. If
+    /// the budget refuses it, it waits for room instead of being dropped: a
+    /// microphone plugged in just after a headset gave up still starts.
+    private var inputsPending = false
 
     public init(debounce: Double = 0.5, maxRestarts: Int = 3, window: Double = 10) {
         precondition(debounce >= 0 && maxRestarts > 0 && window > 0)
@@ -65,10 +69,16 @@ public struct RestartPolicy: Sendable, Equatable {
         case .wake:
             restarts.removeAll()
             isExhausted = false
+            // A restart waiting for room in the budget can go sooner now.
+            if let p = pending, p > now + debounce {
+                pending = now + debounce
+                return .at(now + debounce)
+            }
         case .inputsChanged:
             // Tries again, but within the same budget: a headset switching
             // profiles may change the inputs too, and must not loop.
             isExhausted = false
+            inputsPending = true
         case .configurationChange:
             if isExhausted { return nil }
         }
@@ -79,17 +89,24 @@ public struct RestartPolicy: Sendable, Equatable {
     }
 
     /// The pending restart's time has come, at `now`. True: restart now.
-    /// False: there were too many and the policy gives up
-    /// (``isExhausted``), or none was pending.
+    /// False: none was pending, or there were too many. Then, if a change of
+    /// inputs is waiting, ``pending`` is the time the oldest restart leaves
+    /// the window, to call this again; otherwise the policy gives up
+    /// (``isExhausted``).
     public mutating func due(at now: Double) -> Bool {
         guard pending != nil else { return false }
         pending = nil
         restarts.removeAll { now - $0 >= window }
         guard restarts.count < maxRestarts else {
-            isExhausted = true
+            if inputsPending, let oldest = restarts.first {
+                pending = oldest + window
+            } else {
+                isExhausted = true
+            }
             return false
         }
         restarts.append(now)
+        inputsPending = false
         return true
     }
 
@@ -97,6 +114,7 @@ public struct RestartPolicy: Sendable, Equatable {
     /// or a fresh start.
     public mutating func reset() {
         pending = nil
+        inputsPending = false
         isExhausted = false
         restarts.removeAll()
     }

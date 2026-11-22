@@ -67,15 +67,36 @@ import Testing
 }
 
 /// A change of inputs retries after giving up, within the same budget: it
-/// may come from the same headset.
+/// may come from the same headset. Refused, it waits until there is room
+/// rather than being dropped (a microphone plugged in 3 s after a headset
+/// gave up still starts).
 @Test func inputsChangedRetriesWithinTheBudget() {
     let p = exhausted()
     #expect(p.request(.inputsChanged, at: 3) == .at(3.5))
     #expect(!p.isExhausted)
-    #expect(!p.due(at: 3.5)) // still three in the last 10 s
-    #expect(p.isExhausted)
-    #expect(p.request(.inputsChanged, at: 12) == .at(12.5))
-    #expect(p.due(at: 12.5)) // the first ones have left the window
+    #expect(!p.due(at: 3.5)) // still three in the last 10 s ...
+    #expect(!p.isExhausted)
+    #expect(p.pending == 10.5) // ... until the one at 0.5 s leaves
+    #expect(p.request(.configurationChange, at: 5) == nil) // joins it
+    #expect(p.due(at: 10.5))
+    #expect(p.pending == nil && !p.isExhausted)
+}
+
+/// A wake while a change of inputs waits for room brings it forward.
+@Test func aWakeBringsAWaitingRestartForward() {
+    let p = exhausted()
+    _ = p.request(.inputsChanged, at: 3)
+    _ = p.due(at: 3.5)
+    #expect(p.pending == 10.5)
+    #expect(p.request(.wake, at: 4) == .at(4.5))
+    #expect(p.due(at: 4.5))
+}
+
+/// Without a change of inputs waiting, a refused restart gives up.
+@Test func aRefusedConfigurationChangeGivesUp() {
+    let p = exhausted()
+    #expect(p.isExhausted && p.pending == nil)
+    #expect(p.request(.configurationChange, at: 20) == nil)
 }
 
 @Test func resetForgetsEverything() {

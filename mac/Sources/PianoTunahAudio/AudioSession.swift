@@ -151,6 +151,10 @@ public final class AudioSession {
         default: false
         }
         guard applies, case let .at(due)? = policy.request(trigger, at: Self.now()) else { return }
+        scheduleRestart(at: due)
+    }
+
+    private func scheduleRestart(at due: Double) {
         restartTask?.cancel()
         restartTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(max(0, due - Self.now())))
@@ -164,6 +168,9 @@ public final class AudioSession {
         guard isRestartable else { return policy.reset() }
         if policy.due(at: Self.now()) {
             reopen()
+        } else if let later = policy.pending {
+            // A change of inputs waits for room in the budget.
+            scheduleRestart(at: later)
         } else if policy.isExhausted, state == .running {
             // The engine keeps changing its own configuration: leave it off.
             close()
@@ -197,6 +204,7 @@ public final class AudioSession {
     private func open() {
         // Before the new engine starts: its tap writes to the recorder from
         // its first buffer, and only a closed recorder ignores that.
+        let cutHere = recorder.isRecording && !recorder.isFull
         cutRecording(.inputRestarted)
         let ring = RingBuffer()
         do {
@@ -211,6 +219,8 @@ public final class AudioSession {
             }
         } catch {
             mic.stop()
+            // Cut here and the input did not start: it failed.
+            if cutHere { recordingCut = .inputFailed }
             input = nil
             state = .failed(String(describing: error))
             endActivity()
