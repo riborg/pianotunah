@@ -143,6 +143,21 @@ export function confirmReading(c, attack, ok) {
   return ok && c.streak >= 1;
 }
 
+// Tasks with more than one string sounding, judged clean as well as on pitch.
+export const UNISON_TASKS = new Set(['unison', 'pull', 'pair', 'third']);
+
+// What to say when a unison task's strings are clean together but off target:
+// adding strings can move a unison's pitch by a cent or two either way, and
+// retuning one string makes it beat. 'shift2': move one string, then make
+// the pair clean with the other. 'shift3': mute one string, move the pair
+// that way, then bring the third to them. null when there is nothing to say.
+// status is statusClass of the reading; strings(k) the strings of key k.
+export function unisonAdvice(task, strings, { clean, status }) {
+  if (!task || !UNISON_TASKS.has(task.what) || !clean || status === 'good' || status === 'none') return null;
+  const sounding = task.what === 'pair' ? 2 : strings(task.k);
+  return sounding >= 3 ? 'shift3' : sounding === 2 ? 'shift2' : null;
+}
+
 // Thirds and sixths beat fast enough for the ear to place one between two
 // neighbours a few per cent apart. Fourths and fifths beat too slowly.
 const WINDOWED = new Set([3, 4, 9]);

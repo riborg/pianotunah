@@ -87,6 +87,7 @@ const read = () =>
       task: $('order-task').textContent,
       progress: $('order-progress').textContent,
       checks: [...$('order-checks').children].map((c) => c.textContent),
+      state: $('order-state').textContent,
       back: $('order-back').hidden ? '' : $('order-back').textContent,
     };
   });
@@ -183,7 +184,11 @@ s = await read();
 check(s.key === 50 && /^Wedge B♭4/.test(s.task), `treble starts with one string: ${s.task}`);
 r = await playUntilMoved(50);
 check(r.moved && r.s.key === 50 && /strings 1 and 2/.test(r.s.task), `then the unison on B♭4: ${r.s.task}`);
+// A clean unison 3 cents sharp does not move on and says how to move it whole.
+r = await playUntilMoved(50, 3, 6000);
+check(!r.moved && /^Clean, but 3\.\d cents sharp\. .*mute an outer string/.test(r.s.state), `a clean unison off target gets the hint: ${r.s.state}`);
 r = await playUntilMoved(50);
+check(!r.s.state.startsWith('Clean, but'), `the hint goes once it is on target: ${r.s.state}`);
 check(r.moved && r.s.key === 51, `clean unison moves on: ${r.s.task}`);
 
 await press('#order-close');
