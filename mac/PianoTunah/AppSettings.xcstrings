@@ -1,0 +1,432 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ Hz" : {
+      "comment" : "Microphone: a sample rate in hertz.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Hz"
+          }
+        }
+      }
+    },
+    "About" : {
+      "comment" : "Settings tab: version, links, licences.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Om"
+          }
+        }
+      }
+    },
+    "Chosen microphone (not connected)" : {
+      "comment" : "Microphone picker: the stored input is not plugged in.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vald mikrofon (inte ansluten)"
+          }
+        }
+      }
+    },
+    "Could not save the recording: %@" : {
+      "comment" : "Recording: writing the WAV file failed; the argument is the system's reason.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunde inte spara inspelningen: %@"
+          }
+        }
+      }
+    },
+    "General" : {
+      "comment" : "Settings tab.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allmänt"
+          }
+        }
+      }
+    },
+    "In use" : {
+      "comment" : "Microphone: the input listened to now.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Används"
+          }
+        }
+      }
+    },
+    "Input" : {
+      "comment" : "Microphone picker label.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingång"
+          }
+        }
+      }
+    },
+    "License" : {
+      "comment" : "About: section heading.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licens"
+          }
+        }
+      }
+    },
+    "Microphone" : {
+      "comment" : "Settings tab: the audio input.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofon"
+          }
+        }
+      }
+    },
+    "Microphone access is off. Allow Piano Tunah in System Settings › Privacy & Security › Microphone." : {
+      "comment" : "Microphone: the permission was denied.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofonen är inte tillåten. Tillåt Piano Tunah i Systeminställningar › Integritet och säkerhet › Mikrofon."
+          }
+        }
+      }
+    },
+    "Nothing was recorded." : {
+      "comment" : "Recording: the recorder had no recording to save.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inget spelades in."
+          }
+        }
+      }
+    },
+    "Open Privacy Settings" : {
+      "comment" : "Microphone: button to the microphone pane of System Settings.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öppna integritetsinställningarna"
+          }
+        }
+      }
+    },
+    "Piano Tunah Help" : {
+      "comment" : "Help menu item; also the help window's title.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hjälp för Piano Tunah"
+          }
+        }
+      }
+    },
+    "Piano Tunah is in the public domain under CC0 1.0. It was written with Claude as co-programmer. You can use it for anything without attribution." : {
+      "comment" : "About: the licence (README, License).",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Piano Tunah är allmän egendom enligt CC0 1.0. Den skrevs med Claude som medprogrammerare. Du får använda den till vad som helst utan att ange källa."
+          }
+        }
+      }
+    },
+    "Piano tuner for the Mac. Listens through the microphone, computes stretch from the strings' inharmonicity and keeps the measurements for each piano." : {
+      "comment" : "About: what the app does (web app.desc).",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stämapparat för piano på Mac. Lyssnar med mikrofonen, räknar fram stretch ur strängarnas inharmonicitet och sparar mätningarna för varje piano."
+          }
+        }
+      }
+    },
+    "Record" : {
+      "comment" : "Recording: start recording.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spela in"
+          }
+        }
+      }
+    },
+    "Recording" : {
+      "comment" : "Settings tab: record the input to a WAV file.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspelning"
+          }
+        }
+      }
+    },
+    "Recording saved: %@" : {
+      "comment" : "Recording: saved under this file name (web rec.saved).",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspelningen sparad: %@"
+          }
+        }
+      }
+    },
+    "Sample rate" : {
+      "comment" : "Microphone: the input's sample rate.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Samplingsfrekvens"
+          }
+        }
+      }
+    },
+    "Saves what the microphone hears, unprocessed, as a WAV file: about 11 MB per minute at 48 kHz, at most %lld minutes." : {
+      "comment" : "Recording: what it does; the argument is the limit in minutes.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Saves what the microphone hears, unprocessed, as a WAV file: about 11 MB per minute at 48 kHz, at most %lld minute."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Saves what the microphone hears, unprocessed, as a WAV file: about 11 MB per minute at 48 kHz, at most %lld minutes."
+                }
+              }
+            }
+          }
+        },
+        "sv" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Sparar det mikrofonen hör, obearbetat, som WAV-fil: cirka 11 MB per minut vid 48 kHz, högst %lld minut."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Sparar det mikrofonen hör, obearbetat, som WAV-fil: cirka 11 MB per minut vid 48 kHz, högst %lld minuter."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Start Microphone" : {
+      "comment" : "Button: start listening.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starta mikrofon"
+          }
+        }
+      }
+    },
+    "Start the microphone to record." : {
+      "comment" : "Recording: shown while not listening.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starta mikrofonen för att spela in."
+          }
+        }
+      }
+    },
+    "Start the microphone to see the input in use and its sample rate." : {
+      "comment" : "Microphone: shown while not listening.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starta mikrofonen för att se vilken ingång som används och dess samplingsfrekvens."
+          }
+        }
+      }
+    },
+    "Starting the microphone…" : {
+      "comment" : "Microphone: waiting for the permission or the input.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startar mikrofonen…"
+          }
+        }
+      }
+    },
+    "Stop and Save" : {
+      "comment" : "Recording: end the recording and open the save panel.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stoppa och spara"
+          }
+        }
+      }
+    },
+    "System default" : {
+      "comment" : "Microphone picker: the system's default input.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Systemets standard"
+          }
+        }
+      }
+    },
+    "System default (%@)" : {
+      "comment" : "Microphone picker: the system's default input, with its name.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Systemets standard (%@)"
+          }
+        }
+      }
+    },
+    "The chosen microphone is not connected; using the system default." : {
+      "comment" : "Microphone: fallback note (web mic.missing).",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den valda mikrofonen är inte ansluten; använder systemets standard."
+          }
+        }
+      }
+    },
+    "The exception is the font with ♭ ♮ ♯, adapted from Bravura Text by Steinberg. Its licence is the SIL Open Font License 1.1." : {
+      "comment" : "About: the font's licence (README, License).",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Undantaget är typsnittet med ♭ ♮ ♯, bearbetat från Bravura Text av Steinberg. Dess licens är SIL Open Font License 1.1."
+          }
+        }
+      }
+    },
+    "The microphone did not start. It is tried again when an input is connected or the Mac wakes." : {
+      "comment" : "Microphone: the input failed.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofonen startade inte. Den provas igen när en ingång ansluts eller datorn vaknar."
+          }
+        }
+      }
+    },
+    "The recording did not start. Try again once the microphone is running." : {
+      "comment" : "Recording: the audio session refused to start a recording.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspelningen startade inte. Försök igen när mikrofonen är igång."
+          }
+        }
+      }
+    },
+    "The recording stopped early: the microphone started again, after a change of input or sleep. A recording never spans two starts." : {
+      "comment" : "Recording: cut short by a restart of the input.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspelningen slutade i förtid: mikrofonen startade om, efter byte av ingång eller viloläge. En inspelning sträcker sig aldrig över två starter."
+          }
+        }
+      }
+    },
+    "The recording stopped early: the microphone stopped." : {
+      "comment" : "Recording: cut short because the input failed.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspelningen slutade i förtid: mikrofonen stannade."
+          }
+        }
+      }
+    },
+    "The recording was not saved." : {
+      "comment" : "Recording: the save panel was cancelled.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspelningen sparades inte."
+          }
+        }
+      }
+    },
+    "Try Again" : {
+      "comment" : "Microphone: restart a failed input.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Försök igen"
+          }
+        }
+      }
+    },
+    "Version %@ (%@)" : {
+      "comment" : "About: the version and build number, linking to the releases.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@ (%@)"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
