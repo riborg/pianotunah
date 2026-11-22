@@ -1,11 +1,11 @@
-// Piano Tunah: state, DOM and events. Calculations live in theory.js and
-// dsp.js, drawing in draw.js, audio in mic.js/tone.js, saving in saver.js.
+// Piano Tunah: DOM and events. What the sound means for the piano lives in
+// engine.js, the sums in theory.js and dsp.js, drawing in draw.js, audio in
+// mic.js/tone.js, saving in saver.js.
 
 import {
-  KEY_COUNT, A4, TEMPERAMENTS, PIANO_KINDS, STRETCH_PRESETS, OCTAVE_TYPES, sizeClass,
-  computeTargets, bOutliers, recommendedOverpull, defaultPartial, partialFreq, centsBetween, noteName, pcName, pitchClass, isBlack,
+  KEY_COUNT, TEMPERAMENTS, PIANO_KINDS, STRETCH_PRESETS, OCTAVE_TYPES, sizeClass,
+  partialFreq, centsBetween, noteName, pcName, pitchClass, isBlack,
 } from './theory.js';
-import { Analyzer, rmsDb, median, steady, STEADY_N, BeatMeter } from './dsp.js';
 import { listTunings, getTuning, saveTuning, deleteTuning, newTuning, normalize, duplicateTuning } from './store.js';
 import { num, short, fmtC, fmtHz, fmtB, parseNum } from './format.js';
 import { tr, trNodes, lang, locale, setLang, translateDom } from './i18n.js';
@@ -16,74 +16,29 @@ import { enableDiag, diagOn, diag } from './diag.js';
 import { readColors, drawDial, drawSpectro, drawBeat, drawChart } from './draw.js';
 import * as survey from './survey.js';
 import * as order from './order.js';
+import { Engine, FRAME_MS, SPEC_COLS, SPEC_BINS, SPEC_CENTS, clampRef, clampSize, stepRange } from './engine.js';
 
 const $ = (id) => document.getElementById(id);
 
-const FRAME_MS = 90; // analysis interval
-const SPEC_COLS = 100; // spectrogram history, ≈ 9 s
-const SPEC_BINS = 48;
-const SPEC_CENTS = 30;
 const REC_MAX_S = 120;
 const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', toneOnKey: 'pianotunah.toneOnKey', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab', curve: 'pianotunah.curve', partials: 'pianotunah.partials', beats: 'pianotunah.beats', mic: 'pianotunah.mic', order: 'pianotunah.order' };
 
 const mic = new Mic();
-const beatMeter = new BeatMeter(); // the beat check of the current note, see trackBeating
 const tones = new TonePlayer();
+// The piano, the key, the readings, the survey and the order. What it does
+// is drawn by onEngine.
+const engine = new Engine({ emit: (type, e) => onEngine(type, e) });
 
+// The page's own state; the rest is in engine.
 const state = {
-  tuning: null,
-  T: null, // targets from computeTargets
   list: [],
-  key: A4,
-  mode: 'auto', // auto | lock | survey
-  analyzer: null,
   timer: 0,
-  level: -100,
-  prevLevel: -100,
-  levels: [], // levels of the latest frames, for attack detection
-  noise: -70,
-  signal: false,
-  readings: [], // latest readings for the current key: { c, hz }
-  display: NaN, // deviation from the (possibly overpulled) target
-  measHz: NaN, // measured frequency of the partial, the same readings as display
-  stable: false,
-  spec: [], // spectrogram columns, see drawSpectro
-  frameCol: null,
-  beatHz: NaN,
   beatPhase: 0,
-  partialDevs: [],
-  strobe: [], // [{ p, c }] per strobe band: partial and deviation from its goal
-  strobeReadings: [[], []], // recent readings of the two upper bands
   micId: '', // chosen input, '' = system default
-  cand: 0, // candidate key in auto mode and frames in a row
-  candCount: 0,
-  autoFrames: 0, // frames in a row the current key has been a clear winner
-  shift: 0, // auto mode: cents from the target where the current key was heard
-  unisonSkip: 0,
-  beating: false,
-  beatKnown: false, // the beat check has decided for the current note
-  beatFedAt: 0, // audio clock when the beat check last heard the note
-  frameTime: 0, // audio clock at the end of the latest frame
-  bReadings: [],
-  bBad: new Set(), // keys whose measured B is left out, see bOutliers
   version: '', // the server's version when the page loaded, see checkVersion
-  attacks: 0, // attacks heard, see jumpConfirmed
-  inAttack: false,
-  jump: null, // { k, hz, attack } a reading far from the last one, waiting for a new attack
-  diag: { frames: 0, readings: 0, idle: {}, savedKey: 0, savedAt: 0 }, // counts for the debug log, see diagStatus
-  measureB: null, // { k, until } during manual B measurement
-  survey: null, // the current key in a survey, see survey.newKeyState
-  run: null, // the survey as a whole, see survey.newRun
-  surveyPlan: 'quick',
-  orderOn: false, // the tuning order is shown and followed
-  order: null, // steps from order.buildOrder
-  orderPos: { step: 0, i: 0 },
-  orderConfirm: null, // strikes towards the current task, see order.confirmReading
-  orderRecheck: null, // keys outside tolerance when the last step began
   toneMode: 'piano', // piano | sine
   toneOnKey: false, // clicking a key also plays the tone
   refUntil: 0, // reference tone audible in the microphone until this time
-  refTainted: false,
   wakeLock: null,
   recTimer: 0,
   ringPhase: [0, 0, 0],
@@ -95,45 +50,50 @@ const state = {
 // ---------------------------------------------------------------------------
 // Derived values
 
-const S = () => state.tuning.settings;
+const S = () => engine.settings;
 const kName = (k) => noteName(k);
-const tolerance = () => Number(S().tolerance) || 1;
-const top = () => (Number(S().keyCount) === 85 ? 85 : KEY_COUNT); // A7 on older pianos, otherwise C8
-const partialOf = (k) => state.tuning.partials[k] || defaultPartial(k);
-const bSource = (k) => tr(!state.tuning.inharmonicity[k] ? 'b.model' : state.bBad.has(k) ? 'b.outlier' : 'b.measured');
+const top = () => engine.top();
+const partialOf = (k) => engine.partialOf(k);
+const curDev = (k) => engine.curDev(k);
+const statusDev = (k) => engine.statusDev(k);
+const statusClass = (d) => engine.statusClass(d);
+const bSource = (k) => tr(!engine.tuning.inharmonicity[k] ? 'b.model' : engine.bBad.has(k) ? 'b.outlier' : 'b.measured');
 const fmtDate = (d) => d.toLocaleDateString(locale(), { dateStyle: 'medium' });
-
-// Measurements are stored as the frequency of the measured partial, so they
-// stay valid when reference, temperament, stretch or B change.
-const keyRec = (k) => state.tuning.keys[k];
-const devOf = (k, hz, n) => (hz && n ? centsBetween(hz, partialFreq(state.T.freq[k], state.T.B[k], n)) : NaN);
-const curDev = (k) => devOf(k, keyRec(k)?.hz, keyRec(k)?.n);
-const beforeDev = (k) => devOf(k, keyRec(k)?.bhz, keyRec(k)?.bn);
-const heardDevs = () => Float64Array.from({ length: KEY_COUNT + 1 }, (_, k) => curDev(k));
-
-// Overpull: tune past the target by a share of how far off the key started.
-function goal(k) {
-  const b = beforeDev(k);
-  const p = Number(S().overpull) || 0;
-  return Number.isFinite(b) && p ? (-p / 100) * b : 0;
-}
-const statusDev = (k) => curDev(k) - goal(k);
-
-function statusClass(d) {
-  if (!Number.isFinite(d)) return 'none';
-  const a = Math.abs(d);
-  if (a <= tolerance()) return 'good';
-  return a <= Math.max(5, tolerance() * 2) ? 'warn' : 'bad';
-}
 
 // The microphone hears the speaker (no echo cancellation). Nothing is saved
 // while a reference tone sounds.
 const refPlaying = () => tones.sineOn || performance.now() < state.refUntil;
 
-function midBefore() {
-  const d = [];
-  for (let k = 28; k <= 64; k++) if (Number.isFinite(beforeDev(k))) d.push(beforeDev(k));
-  return d;
+// What the engine did, shown on the page.
+function onEngine(type, e) {
+  switch (type) {
+    case 'key': return renderKeyChange();
+    case 'mode': return renderMode();
+    case 'targets': return renderTargets();
+    case 'dirty': return markDirty();
+    case 'saved':
+      markDirty();
+      return renderKeyStatus();
+    case 'flash': return flashKey(e.k);
+    case 'survey': return renderSurveyPanel();
+    case 'order':
+      renderOrderPanel();
+      return renderKeyboard();
+    case 'orderState': return renderOrderState();
+    case 'measureB': return void ($('btn-measure-b').disabled = e.on);
+    case 'message': return engineMessage(e);
+    case 'log': return diag(e.line);
+  }
+}
+
+function engineMessage(e) {
+  const name = e.k ? kName(e.k) : '';
+  if (e.id === 'jump') message(tr('msg.jump', { name, c: fmtC(e.c, 0) }), 'warn', 5000);
+  else if (e.id === 'bOutlier') message(tr('msg.bOutlier', { name, b: fmtB(e.B) }), 'warn', 0);
+  else if (e.id === 'bMeasured') message(tr('msg.bMeasured', { name, b: fmtB(e.B) }), 'ok');
+  else if (e.id === 'bFailed') message(tr('msg.bFailed'), 'warn');
+  else if (e.id === 'surveyDone') message(surveyDoneText(e), 'ok', 0);
+  else if (e.id === 'orderDone') message(tr('order.done'), 'ok');
 }
 
 // ---------------------------------------------------------------------------
@@ -166,7 +126,7 @@ new ResizeObserver(() => document.documentElement.style.setProperty('--msg-h', `
 // Saving
 
 const saver = new Saver({
-  current: () => state.tuning,
+  current: () => engine.tuning,
   onState: setSaveState,
   onSaved(t) {
     clearMessage('server');
@@ -214,12 +174,12 @@ async function reloadAfterConflict(t) {
 // ends in reloadAfterConflict instead, which says the changes were not saved.
 let syncing = null;
 function syncTuning() {
-  if (!state.tuning || syncing) return syncing;
+  if (!engine.tuning || syncing) return syncing;
   syncing = (async () => {
     try {
-      const t = state.tuning;
+      const t = engine.tuning;
       await saver.flush();
-      const skip = () => state.tuning !== t || saver.dirty || saver.conflicted(t);
+      const skip = () => engine.tuning !== t || saver.dirty || saver.conflicted(t);
       if (skip()) return;
       const latest = await getTuning(t.id);
       if (skip() || !(latest.rev > t.rev)) return;
@@ -242,7 +202,7 @@ async function refreshList() {
 function renderTuningSelect() {
   const sel = $('tuning-select');
   sel.replaceChildren(...state.list.map((t) => option(t.id, t.name || tr('name.untitled'))));
-  if (state.tuning) sel.value = state.tuning.id;
+  if (engine.tuning) sel.value = engine.tuning.id;
 }
 
 // On phones the piano is chosen at the top of the Piano tab: the top bar
@@ -257,17 +217,14 @@ function placeTuningSelect() {
 
 async function openTuning(t) {
   await saver.flush();
-  const other = state.tuning?.id !== t.id;
-  state.tuning = normalize(t);
-  state.orderRecheck = null;
+  const other = engine.tuning?.id !== t.id;
   try { localStorage.setItem(LS.tuning, t.id); } catch { /* optional */ }
-  resetReadings();
-  recompute();
+  engine.open(normalize(t));
   renderSettings();
   renderTuningSelect();
   setSaveState('idle');
-  if (other && state.mode === 'survey') setMode('survey'); // the run belongs to the piano it started on
-  followOrder();
+  if (other && engine.mode === 'survey') engine.setMode('survey'); // the run belongs to the piano it started on
+  engine.followOrder();
 }
 
 async function createAndOpen(t) {
@@ -281,9 +238,8 @@ async function createAndOpen(t) {
 
 const option = (value, text) => Object.assign(document.createElement('option'), { value, textContent: text });
 
-function recompute() {
-  state.T = computeTargets(S(), state.tuning.inharmonicity);
-  state.bBad = bOutliers(state.tuning.inharmonicity);
+// The targets changed (engine.recompute).
+function renderTargets() {
   renderKeyInfo();
   renderKeyboard();
   renderRef();
@@ -333,8 +289,8 @@ function buildKeyboard(n) {
 
 function applyKeyCount() {
   buildKeyboard(top());
-  rebuildOrder();
-  if (state.key > top()) selectKey(top(), false);
+  engine.rebuildOrder();
+  if (engine.key > top()) engine.selectKey(top(), false);
   renderKeyboard();
   renderChart();
 }
@@ -342,7 +298,7 @@ function applyKeyCount() {
 function renderSettings() {
   const s = S();
   applyKeyCount();
-  $('set-name').value = state.tuning.name;
+  $('set-name').value = engine.tuning.name;
   $('set-kind').value = s.pianoKind;
   $('set-size').value = s.sizeCm;
   $('set-keys').value = String(top());
@@ -360,7 +316,7 @@ function renderSettings() {
   $('set-extra-bass').value = s.extraBass;
   $('set-overpull').value = s.overpull;
   $('set-tolerance').value = String(s.tolerance);
-  $('set-notes').value = state.tuning.notes || '';
+  $('set-notes').value = engine.tuning.notes || '';
   renderSettingDescs();
 }
 
@@ -397,23 +353,21 @@ function renderRef() {
   $('ref-cents').textContent = Math.abs(c) < 0.05 ? tr('ref.standard') : tr('ref.vs440', { c: fmtC(c) });
   for (const b of $('ref-presets').children) b.classList.toggle('on', Number(b.dataset.hz) === ref);
 
-  const mid = midBefore();
+  const a = engine.refAdvice();
   $('btn-overpull').hidden = true;
-  if (mid.length < 3) {
+  if (a.kind === 'none') {
     $('ref-advice').textContent = tr('ref.adviceNone');
     return;
   }
-  const m = median(mid);
-  if (Math.abs(m) < 3) {
+  const { m, p } = a;
+  if (a.kind === 'near') {
     $('ref-advice').textContent = tr('ref.adviceNear', { c: fmtC(m) });
     return;
   }
-  const p = recommendedOverpull(m);
-  let text = tr('ref.adviceOff', { c: fmtC(m), hz: fmtHz(ref * 2 ** (m / 1200), 1) });
+  let text = tr('ref.adviceOff', { c: fmtC(m), hz: fmtHz(a.hz, 1) });
   if (p) {
-    const o = (-p / 100) * m;
-    text += tr('ref.overpull', { p, c: fmtC(m, 0), o: fmtC(o, 0), hz: fmtHz(ref * 2 ** (o / 1200), 1) });
-    if (m < -25) text += ' ' + tr('ref.overpullBig');
+    text += tr('ref.overpull', { p, c: fmtC(m, 0), o: fmtC(a.o, 0), hz: fmtHz(a.ohz, 1) });
+    if (a.big) text += ' ' + tr('ref.overpullBig');
     $('btn-overpull').textContent = tr('ref.useOverpull', { p });
     $('btn-overpull').dataset.p = p;
     $('btn-overpull').hidden = Number(S().overpull) === p;
@@ -432,10 +386,10 @@ function renderNoteName(k) {
 }
 
 function renderKeyInfo() {
-  const k = state.key;
-  const T = state.T;
+  const k = engine.key;
+  const T = engine.T;
   const n = partialOf(k);
-  const g = goal(k);
+  const g = engine.goal(k);
   renderNoteName(k);
   $('note-sub').replaceChildren(...trNodes('key.sub', { k, c: fmtC(T.cents[k]) }));
   $('targetline').replaceChildren(
@@ -446,22 +400,22 @@ function renderKeyInfo() {
   $('partial-val').textContent = n;
   $('bval').textContent = tr('measure.bval', { b: fmtB(T.B[k]), src: bSource(k) });
   if (tones.sineOn) {
-    diag(`sine ${kName(k)} partial ${n}, ${fmtHz(sineFreq())}`);
-    tones.setSine(sineFreq());
+    diag(`sine ${kName(k)} partial ${n}, ${fmtHz(engine.sineFreq())}`);
+    tones.setSine(engine.sineFreq());
   }
   renderToneButton();
 }
 
 function renderKeyboard() {
   buildKeyboard(top());
-  const cur = Math.min(state.key, top());
-  const quickPlan = state.survey && state.surveyPlan === 'quick';
-  const orderKey = orderOn() ? orderTask()?.k : 0;
+  const cur = Math.min(engine.key, top());
+  const quickPlan = engine.survey && engine.surveyPlan === 'quick';
+  const orderKey = engine.orderActive() ? engine.orderTask()?.k : 0;
   for (const el of $('keyboard').children) {
     const k = Number(el.dataset.k);
     const label = tr('key.label', { name: kName(k), dev: Number.isFinite(curDev(k)) ? fmtC(statusDev(k)) + ' ' + tr('unit.cents') : tr('key.unmeasured') });
     el.classList.toggle('current', k === cur);
-    el.classList.toggle('has-b', !!state.tuning.inharmonicity[k]);
+    el.classList.toggle('has-b', !!engine.tuning.inharmonicity[k]);
     el.classList.toggle('plan', (!!quickPlan && survey.QUICK_KEYS.includes(k)) || k === orderKey);
     if (el.firstChild) el.firstChild.textContent = pitchClass(k) === 0 || k === 1 ? kName(k) : '';
     el.setAttribute('aria-label', label);
@@ -476,22 +430,15 @@ function renderKeyboard() {
 }
 
 function renderPass() {
-  let measured = 0;
-  let ok = 0;
-  for (let k = 1; k <= top(); k++) {
-    const d = statusDev(k);
-    if (!Number.isFinite(d)) continue;
-    measured++;
-    if (statusClass(d) === 'good') ok++;
-  }
-  const since = new Date(state.tuning.passStartedAt || state.tuning.createdAt);
+  const { measured, ok } = engine.passStats();
+  const since = new Date(engine.tuning.passStartedAt || engine.tuning.createdAt);
   $('pass-stats').replaceChildren(
     stat(`${ok}/${top()}`, tr('pass.inTol')),
     stat(`${measured}`, tr('pass.measured')),
     stat(fmtDate(since), tr('pass.started')),
   );
   $('history').replaceChildren(
-    ...[...state.tuning.history].reverse().map((p) =>
+    ...[...engine.tuning.history].reverse().map((p) =>
       Object.assign(document.createElement('li'), {
         textContent: tr('pass.entry', {
           date: fmtDate(new Date(p.startedAt)), n: p.measured, ref: num(p.refA4, 1), before: num(p.meanAbsBefore), after: num(p.meanAbsAfter),
@@ -508,7 +455,7 @@ function stat(value, label) {
 }
 
 function renderTable() {
-  const T = state.T;
+  const T = engine.T;
   const head = document.createElement('thead');
   const hrow = document.createElement('tr');
   for (const h of ['table.key', 'table.note', 'table.targetC', 'table.targetHz', 'B', 'table.partial', 'table.before', 'table.now']) {
@@ -520,19 +467,19 @@ function renderTable() {
     const row = document.createElement('tr');
     const cells = [
       k, kName(k), fmtC(T.cents[k]), num(T.freq[k], 2),
-      fmtB(T.B[k]) + (state.bBad.has(k) ? ' ?' : state.tuning.inharmonicity[k] ? ' *' : ''), partialOf(k), fmtC(beforeDev(k)), fmtC(statusDev(k)),
+      fmtB(T.B[k]) + (engine.bBad.has(k) ? ' ?' : engine.tuning.inharmonicity[k] ? ' *' : ''), partialOf(k), fmtC(engine.beforeDev(k)), fmtC(statusDev(k)),
     ];
     for (const c of cells) row.append(Object.assign(document.createElement('td'), { textContent: c }));
     row.lastChild.dataset.s = statusClass(statusDev(k));
-    if (k === state.key) row.className = 'current';
+    if (k === engine.key) row.className = 'current';
     body.append(row);
   }
   $('ktable').replaceChildren(head, body);
 }
 
 function renderChart() {
-  if (!state.T) return;
-  const T = state.T;
+  if (!engine.T) return;
+  const T = engine.T;
   const points = [];
   const ticks = [];
   for (let k = 1; k <= top(); k++) {
@@ -543,13 +490,13 @@ function renderChart() {
   // The keyboard's key positions are the x axis.
   const xs = [0, ...[...$('keyboard').children].map((el) => el.dataset.cx / 100)];
   const c = $('minichart');
-  state.chartGeo = c.clientWidth ? drawChart(c, { top: top(), target: T.cents, points, ticks, current: state.key, xs }, state.colors) : null;
+  state.chartGeo = c.clientWidth ? drawChart(c, { top: top(), target: T.cents, points, ticks, current: engine.key, xs }, state.colors) : null;
   renderCurveHint();
 }
 
 // Until some inharmonicity is measured, the curve comes from the model.
 function renderCurveHint() {
-  $('curve-hint').hidden = $('curve-row').hidden || state.mode === 'survey' || Object.keys(state.tuning.inharmonicity).length > 0;
+  $('curve-hint').hidden = $('curve-row').hidden || engine.mode === 'survey' || Object.keys(engine.tuning.inharmonicity).length > 0;
 }
 
 function setCurveOpen(open) {
@@ -590,7 +537,7 @@ function chartHover(e) {
   const tip = $('minitip');
   tip.hidden = !k;
   if (!k) return;
-  const T = state.T;
+  const T = engine.T;
   const rows = [
     [kName(k), tr('tip.key', { k })],
     [tr('tip.target'), `${fmtC(T.cents[k])} ${tr('unit.cents')} · ${fmtHz(T.freq[k])}`],
@@ -612,19 +559,12 @@ function chartHover(e) {
 // ---------------------------------------------------------------------------
 // Key and mode
 
-function resetReadings() {
-  Object.assign(state, { readings: [], spec: [], beatHz: NaN, display: NaN, measHz: NaN, stable: false, partialDevs: [], strobe: [], strobeReadings: [[], []], bReadings: [], autoFrames: 0 });
-  resetBeating();
-}
+// A key chosen on the page; it leaves auto mode.
+const selectKey = (k) => engine.selectKey(k);
+const setMode = (m) => engine.setMode(m);
 
-function selectKey(k, manual = true) {
-  k = Math.max(1, Math.min(top(), k));
-  if (manual && state.mode === 'auto') setMode('lock');
-  if (k === state.key) return;
-  diag(`key ${kName(k)} (${manual ? 'chosen' : state.mode})`);
-  state.key = k;
-  resetReadings();
-  if (state.survey) state.survey = survey.newKeyState();
+// Another key is selected (engine.selectKey).
+function renderKeyChange() {
   renderSurveyPanel();
   renderOrderPanel();
   renderKeyInfo();
@@ -633,16 +573,12 @@ function selectKey(k, manual = true) {
   if ($('table-details').open) renderTable();
 }
 
-function setMode(m) {
-  if (m !== state.mode) diag(`mode ${m}`);
-  state.mode = m;
+// The mode changed (engine.setMode).
+function renderMode() {
+  const m = engine.mode;
   for (const id of ['auto', 'lock']) $('mode-' + id).setAttribute('aria-pressed', m === id);
   $('btn-survey').setAttribute('aria-pressed', m === 'survey');
-  state.survey = m === 'survey' ? survey.newKeyState() : null;
-  state.run = m === 'survey' ? newRun() : null;
-  state.bReadings = [];
   $('survey-panel').hidden = m !== 'survey';
-  if (m === 'survey') selectKey(nextPending(0), false);
   renderKeyboard();
   renderSurveyPanel();
   renderOrderPanel();
@@ -689,8 +625,7 @@ async function openMic() {
     message(key ? tr(key) : tr('mic.failed', { err: e.message }), 'error', 0);
     return;
   }
-  state.analyzer = new Analyzer(mic.sampleRate);
-  state.noise = -70;
+  engine.startAudio(mic.sampleRate);
   watchMic();
   state.timer = setInterval(processFrame, FRAME_MS);
   renderMicButton();
@@ -716,14 +651,14 @@ function watchMic() {
 // Every 5 s while the microphone runs: frames analysed, readings, and why the
 // other frames gave none.
 function diagStatus() {
-  const d = state.diag;
+  const d = engine.stats;
   if (mic.running && diagOn()) {
     const track = mic.stream?.getAudioTracks()[0];
     const idle = Object.entries(d.idle).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(', ') || '–';
-    const gate = Math.max(state.noise + (state.signal ? 5 : 10), -72);
+    const gate = engine.gate();
     diag(
-      `status: ${d.frames} frames, ${d.readings} readings; idle: ${idle}; level ${state.level.toFixed(0)} dB, noise ${state.noise.toFixed(0)}, gate ${gate.toFixed(0)}; ` +
-        `${state.mode} ${kName(state.key)}; audio ${mic.ctx.state}, track ${track?.readyState}${track?.muted ? ' muted' : ''}, page ${document.visibilityState}` +
+      `status: ${d.frames} frames, ${d.readings} readings; idle: ${idle}; level ${engine.level.toFixed(0)} dB, noise ${engine.noise.toFixed(0)}, gate ${gate.toFixed(0)}; ` +
+        `${engine.mode} ${kName(engine.key)}; audio ${mic.ctx.state}, track ${track?.readyState}${track?.muted ? ' muted' : ''}, page ${document.visibilityState}` +
         (refPlaying() ? ', reference tone' : ''),
     );
   }
@@ -749,7 +684,7 @@ function stopMic() {
   if (mic.recording) finishRecording();
   clearInterval(state.timer);
   mic.stop();
-  state.signal = false;
+  engine.stopAudio();
   state.wakeLock?.release?.().catch(() => {});
   state.wakeLock = null;
   renderMicButton();
@@ -811,237 +746,11 @@ async function requestWakeLock() {
   try { state.wakeLock = await navigator.wakeLock?.request('screen'); } catch { /* optional */ }
 }
 
+// Every FRAME_MS: the latest samples to the engine, then the readout.
 function processFrame() {
-  state.diag.frames++;
-  state.frameCol = null;
-  analyseFrame();
-  state.spec.push(state.frameCol);
-  if (state.spec.length > SPEC_COLS) state.spec.shift();
-}
-
-function analyseFrame() {
-  const buf = mic.read();
-  state.frameTime = mic.time; // when buf ends, for the beat check
-  const lvl = rmsDb(buf);
-  state.prevLevel = state.level;
-  state.level = lvl;
-  state.levels.push(lvl);
-  if (state.levels.length > 4) state.levels.shift();
-  const attack = lvl - Math.min(...state.levels) > 12;
-  if (attack && !state.inAttack) state.attacks++; // once per attack, though it shows for a few frames
-  state.inAttack = attack;
-  // A new attack: the previous note's tail is not part of this one's reading.
-  if (attack) {
-    Object.assign(state, { readings: [], unisonSkip: 0, beatKnown: false, beatFedAt: state.frameTime });
-    beatMeter.reset();
-  }
-  // Noise floor: follows quickly down, slowly up, and hardly at all while a
-  // note is heard, so a long decay is not mistaken for noise.
-  const up = state.signal ? 0.02 : 0.15;
-  state.noise = lvl < state.noise ? lvl : state.noise + Math.min(up, (lvl - state.noise) * 0.01);
-  // The survey waits for an attack so the previous key's decay is not measured.
-  if (state.survey?.waitAttack) {
-    if (lvl - state.prevLevel <= 6) return idle('waiting for attack');
-    state.survey.waitAttack = false;
-  }
-  // A note starts 10 dB above the noise and is followed down to 5 dB.
-  if (lvl < Math.max(state.noise + (state.signal ? 5 : 10), -72)) return idle('quiet');
-
-  const A = state.analyzer;
-  A.load(buf);
-  if (state.mode === 'auto') {
-    // Keys measured in this pass are also looked for where they were heard,
-    // so a key far from its target is not taken for its neighbour.
-    const d = A.detectKey(state.T, state.key, top(), heardDevs());
-    // The microphone hears the reference tone too; following it would move
-    // the key, and the sine with it, to whatever the speaker plays.
-    if (!refPlaying()) followDetectedKey(d);
-    // Only the current key's own sound gives a reading, not noise between
-    // notes or a note halfway between two keys.
-    if (d.key !== state.key || d.margin < 2) return idle(d.key !== state.key ? `hears ${kName(d.key)}` : 'unsure');
-    state.shift = d.shift;
-  } else if (state.survey) state.survey.heard = A.detectKey(state.T, state.key, top());
-  measureCurrent(A);
-}
-
-// Switch key when the same candidate wins two frames in a row by at least 3 dB
-// over its neighbours; as a note dies out, noise peaks win by less. Right
-// after an attack (6 dB up within four frames), one frame with a 10 dB lead
-// is enough. Count how long the current key has been a clear winner; only
-// then does auto mode save.
-function followDetectedKey(d) {
-  state.autoFrames = d.score > 8 && d.margin >= 6 && d.key === state.key ? state.autoFrames + 1 : 0;
-  if (d.score <= 8) return;
-  state.candCount = d.key === state.cand ? state.candCount + 1 : 1;
-  state.cand = d.key;
-  const attack = state.level - Math.min(...state.levels) > 6;
-  const frames = attack && d.margin >= 10 ? 1 : 2;
-  if (state.candCount >= frames && d.margin >= 3 && d.key !== state.key) selectKey(d.key, false);
-}
-
-function idle(why) {
-  state.diag.idle[why] = (state.diag.idle[why] || 0) + 1;
-  state.signal = false;
-  if (state.survey && !state.survey.waitAttack && state.survey.pitch.length) state.survey.lost = true;
+  engine.frame(mic.read(), { time: mic.time, now: performance.now(), wall: Date.now(), ref: refPlaying() });
   renderSurveyPanel();
   updateReadout();
-}
-
-function measureCurrent(A) {
-  const k = state.key;
-  const T = state.T;
-  const n = partialOf(k);
-  const target = partialFreq(T.freq[k], T.B[k], n);
-  // Auto: around where detection heard the key. Locked key: wide window so
-  // that even a badly flat piano is found.
-  const auto = state.mode === 'auto';
-  const m = A.measure(target * 2 ** ((auto ? state.shift : 0) / 1200), auto ? 50 : 150, 8);
-  if (!m) {
-    // A key far away has no partial near the target, but detection still hears it.
-    if (state.survey && !refPlaying()) trackWrongKey(survey.wrongKey(state.survey.heard, k, NaN, NaN, state.run.done));
-    return idle('no partial');
-  }
-
-  const raw = centsBetween(m.freq, target);
-  const ref = refPlaying();
-  if (!ref && state.refTainted) state.readings = []; // drop readings of the reference tone
-  state.refTainted = ref;
-  state.readings.push({ c: raw, hz: m.freq });
-  if (!ref) trackBeating(A, m.freq, m.prom);
-  if (state.readings.length > STEADY_N) state.readings.shift();
-  const last = state.readings.slice(-5);
-  const cs = last.map((r) => r.c);
-  const sure = !auto || state.autoFrames >= 3;
-  state.stable = !ref && sure && steady(state.readings.map((r) => r.c));
-  state.signal = true;
-  state.diag.readings++;
-
-  const g = goal(k);
-  state.display = median(cs) - g;
-  state.measHz = median(last.map((r) => r.hz));
-  const center = target * 2 ** (g / 1200); // the beat view is centred on the target including overpull
-  state.beatHz = center * (2 ** (state.display / 1200) - 1);
-  state.frameCol = { col: A.zoom(center, SPEC_CENTS, SPEC_BINS), c: state.display };
-  state.partialDevs = Array.from({ length: 8 }, (_, i) => {
-    const fi = partialFreq(T.freq[k], T.B[k], i + 1);
-    if (fi > A.sr * 0.45 || fi < 40) return null;
-    const mi = i + 1 === n ? m : A.measure(fi, 50, 8);
-    return mi ? centsBetween(mi.freq, fi) : null;
-  });
-
-  // Strobe: the measured partial and the two octaves above it, each against
-  // its own target. The upper ones are searched where the measured partial
-  // says they should be and smoothed like the main reading.
-  state.strobe = [{ p: n, c: state.display }];
-  [2 * n, 4 * n].forEach((p, i) => {
-    const fp = partialFreq(T.freq[k], T.B[k], p);
-    const sk = fp < A.sr * 0.45 ? A.measure(fp * 2 ** (raw / 1200), 30, 8) : null;
-    const rs = state.strobeReadings[i];
-    rs.push(sk ? centsBetween(sk.freq, fp) - g : NaN);
-    if (rs.length > 5) rs.shift();
-    const ok = rs.filter(Number.isFinite);
-    state.strobe.push({ p, c: ok.length >= 3 ? median(ok) : NaN });
-  });
-
-  if (state.stable && orderOn()) trackOrder(k);
-
-  // Save the value that is shown. During a survey, collectSurvey saves instead.
-  if (state.stable && !state.survey) {
-    const hz = median(last.map((r) => r.hz));
-    if (jumpConfirmed(k, n, hz)) recordKey(k, n, hz);
-  }
-
-  const f1 = T.freq[k] * 2 ** (raw / 1200);
-  if (!ref && state.measureB?.k === k) {
-    const r = A.inharmonicity(f1, T.B[k]);
-    if (r) state.bReadings.push(r.B);
-  }
-  if (state.survey && !ref) collectSurvey(A, k, m.freq, f1, raw);
-  if (state.measureB && performance.now() > state.measureB.until) finishMeasureB();
-  updateReadout();
-}
-
-// A unison out of tune beats: the measured partial pulses (BeatMeter). Its
-// level is followed from 0.5 s after the attack, while the note is clearly
-// heard and not being damped. The hint stays until a later note on the key
-// is clean. A note that fades before the check has 1.5 s of it (short
-// strikes high up) cannot be judged; beatUnheard tells the order so, if the
-// check heard at least 0.5 s of it and found no beat starting.
-function trackBeating(A, f, prom) {
-  if (prom < 25 || state.level < Math.max(...state.levels) - 12) return;
-  state.beatFedAt = state.frameTime;
-  if (state.unisonSkip < 6) return void state.unisonSkip++;
-  beatMeter.add(A.buf, A.sr, f, state.frameTime);
-  const b = beatMeter.beats();
-  if (b !== null) Object.assign(state, { beating: b, beatKnown: true });
-}
-
-const beatUnheard = () => !state.beatKnown && beatMeter.quiet && state.frameTime - state.beatFedAt > 0.3;
-
-function resetBeating() {
-  beatMeter.reset();
-  Object.assign(state, { unisonSkip: 0, beating: false, beatKnown: false, beatFedAt: state.frameTime });
-}
-
-// A reading more than 50 cents from the key's last one is saved only when a
-// new attack gives it again (within 10 cents). Another note still ringing or
-// a neighbour struck by mistake was saved as A4 at −94 cents. Tuning moves
-// the reading in smaller steps between strikes, so it is not held up.
-const JUMP = 50;
-function jumpConfirmed(k, n, hz) {
-  const rec = state.tuning.keys[k];
-  if (!rec?.hz || rec.n !== n || Math.abs(centsBetween(hz, rec.hz)) <= JUMP) {
-    state.jump = null;
-    return true;
-  }
-  const j = state.jump;
-  const same = j && j.k === k && Math.abs(centsBetween(hz, j.hz)) < 10;
-  if (same && state.attacks > j.attack) {
-    state.jump = null;
-    return true;
-  }
-  if (!same) {
-    state.jump = { k, hz, attack: state.attacks };
-    const c = fmtC(centsBetween(hz, rec.hz), 0);
-    diag(`not saved: ${kName(k)} ${c} cents from its last reading, waiting for a new attack`);
-    message(tr('msg.jump', { name: kName(k), c }), 'warn', 5000);
-  }
-  return false;
-}
-
-function recordKey(k, n, hz) {
-  const rec = state.tuning.keys[k] || {};
-  if (!rec.bhz) Object.assign(rec, { bhz: hz, bn: n }); // first measurement in the pass
-  Object.assign(rec, { hz, n, at: Date.now() });
-  state.tuning.keys[k] = rec;
-  if (k !== state.diag.savedKey || Date.now() - state.diag.savedAt > 2000) {
-    diag(`saved ${kName(k)} ${fmtC(centsBetween(hz, partialFreq(state.T.freq[k], state.T.B[k], n)))} cents`);
-    Object.assign(state.diag, { savedKey: k, savedAt: Date.now() });
-  }
-  markDirty();
-  renderKeyStatus();
-}
-
-function storeB(k, B) {
-  diag(`B ${kName(k)} = ${fmtB(B)}`);
-  state.tuning.inharmonicity[k] = Number(B.toPrecision(4));
-  markDirty();
-  recompute();
-}
-
-function finishMeasureB() {
-  const k = state.measureB.k;
-  state.measureB = null;
-  $('btn-measure-b').disabled = false;
-  if (state.bReadings.length >= 3) {
-    const B = median(state.bReadings);
-    storeB(k, B);
-    if (state.bBad.has(k)) message(tr('msg.bOutlier', { name: kName(k), b: fmtB(B) }), 'warn', 0);
-    else message(tr('msg.bMeasured', { name: kName(k), b: fmtB(B) }), 'ok');
-  } else {
-    message(tr('msg.bFailed'), 'warn');
-  }
-  state.bReadings = [];
 }
 
 function flashKey(k) {
@@ -1054,94 +763,30 @@ function flashKey(k) {
 // ---------------------------------------------------------------------------
 // Survey
 
-const isSurveyed = (k) => !!keyRec(k)?.mapped;
-const isQuick = () => state.surveyPlan === 'quick';
-const needsB = (k) => isQuick() || !state.tuning.inharmonicity[k]; // the quick survey always remeasures B
-const planKeys = () => survey.planKeys(state.surveyPlan, top());
-const newRun = () => survey.newRun(state.surveyPlan, top(), isSurveyed);
-const nextPending = (k) => survey.nextPending(state.run, state.surveyPlan, top(), k);
-
 function setSurveyPlan(p) {
-  state.surveyPlan = p;
   try { localStorage.setItem(LS.plan, p); } catch { /* optional */ }
   document.querySelectorAll('[data-plan]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.plan === p));
-  if (!state.survey) return;
-  state.survey = survey.newKeyState();
-  state.run = newRun();
-  selectKey(nextPending(0), false);
+  engine.setSurveyPlan(p);
+  if (!engine.survey) return;
   renderKeyboard();
   renderSurveyPanel();
 }
 
-// Nothing from another key is kept; the hint shows after a few frames in a row.
-function trackWrongKey(other) {
-  const sk = state.survey;
-  sk.wrongFrames = other ? sk.wrongFrames + 1 : 0;
-  sk.wrong = sk.wrongFrames >= 3 ? other : 0;
-  // Drop what was collected: the start of a wrong note can look right.
-  if (other) Object.assign(sk, { pitch: [], bs: [], ms: 0 });
-  return other;
-}
-
-function collectSurvey(A, k, partialHz, f1, raw) {
-  const sk = state.survey;
-  if (trackWrongKey(survey.wrongKey(sk.heard, k, raw, median(state.run.offsets), state.run.done))) return renderSurveyPanel();
-  sk.pitch.push(partialHz);
-  sk.ms += FRAME_MS;
-  sk.lost = false;
-  if (needsB(k) && sk.bs.length < survey.B_READINGS) {
-    const r = A.inharmonicity(f1, state.T.B[k]);
-    if (r) sk.bs.push(r.B);
-  }
-  if (!survey.keyDone(sk, needsB(k), state.surveyPlan)) return renderSurveyPanel();
-
-  const hz = median(sk.pitch);
-  const n = partialOf(k);
-  state.run.offsets.push(centsBetween(hz, partialFreq(state.T.freq[k], state.T.B[k], n)));
-  // Before stays the first measurement in the pass, as in recordKey.
-  state.tuning.keys[k] = { bhz: hz, bn: n, ...keyRec(k), hz, n, at: Date.now(), mapped: true };
-  if (sk.bs.length >= 3) storeB(k, median(sk.bs));
-  else {
-    markDirty();
-    recompute();
-  }
-  flashKey(k);
-  state.run.done.add(k);
-  advanceSurvey(k);
-}
-
-function skipSurveyKey() {
-  state.run.skipped.add(state.key);
-  advanceSurvey(state.key);
-}
-
-function advanceSurvey(k) {
-  const next = nextPending(k);
-  if (next) selectKey(next, false);
-  else finishSurvey();
-}
-
-function finishSurvey() {
-  const withB = (ks) => ks.filter((k) => state.tuning.inharmonicity[k]).length;
-  const all = Array.from({ length: top() }, (_, i) => i + 1);
-  const skipped = [...state.run.skipped].sort((a, b) => a - b);
-  const text =
-    (isQuick()
-      ? tr('survey.doneQuick', { b: withB(planKeys()), n: planKeys().length })
-      : tr('survey.doneFull', { n: all.filter(isSurveyed).length, b: withB(all) })) +
+// What a finished survey measured (engine.finishSurvey).
+function surveyDoneText({ quick, b, n, skipped, outliers }) {
+  return (
+    (quick ? tr('survey.doneQuick', { b, n }) : tr('survey.doneFull', { n, b })) +
     (!skipped.length ? '' : skipped.length <= 8 ? tr('survey.skipped', { keys: skipped.map(kName).join(', ') }) : tr('survey.skippedMany', { n: skipped.length })) +
-    (state.bBad.size ? tr('survey.bOutliers', { keys: [...state.bBad].sort((a, b) => a - b).map(kName).join(', ') }) : '');
-  setMode('lock');
-  selectKey(A4, false); // tuning starts in the temperament octave
-  message(text, 'ok', 0);
+    (outliers.length ? tr('survey.bOutliers', { keys: outliers.map(kName).join(', ') }) : '')
+  );
 }
 
 function renderSurveyPanel() {
-  if (!state.survey) return;
-  const sk = state.survey;
-  const name = kName(state.key);
-  const ks = planKeys();
-  const done = ks.filter((k) => survey.handled(state.run, k)).length;
+  if (!engine.survey) return;
+  const sk = engine.survey;
+  const name = kName(engine.key);
+  const ks = engine.planKeys();
+  const done = ks.filter((k) => survey.handled(engine.run, k)).length;
   $('survey-progress').textContent = tr('survey.progress', { done, total: ks.length });
   $('survey-bar').style.width = `${(done / ks.length) * 100}%`;
   $('survey-step').textContent = sk.wrong
@@ -1149,8 +794,8 @@ function renderSurveyPanel() {
     : tr(sk.waitAttack ? 'survey.strike' : sk.lost ? 'survey.lost' : 'survey.listening', { name });
   const p = Math.min(sk.pitch.length, survey.PITCH_READINGS);
   setCheck('survey-chk-pitch', tr('survey.pitch', { p, n: survey.PITCH_READINGS }), p >= survey.PITCH_READINGS);
-  if (!needsB(state.key)) setCheck('survey-chk-b', tr('survey.bKnown'), true);
-  else if (survey.bGivenUp(sk, state.surveyPlan)) setCheck('survey-chk-b', tr('survey.bSkipped'), true);
+  if (!engine.needsB(engine.key)) setCheck('survey-chk-b', tr('survey.bKnown'), true);
+  else if (survey.bGivenUp(sk, engine.surveyPlan)) setCheck('survey-chk-b', tr('survey.bSkipped'), true);
   else setCheck('survey-chk-b', tr('survey.b', { p: Math.min(sk.bs.length, survey.B_READINGS), n: survey.B_READINGS }), sk.bs.length >= survey.B_READINGS);
 }
 
@@ -1163,93 +808,23 @@ function setCheck(id, text, done) {
 // Tuning order: optional. The panel shows the step and the key it is on; any
 // other key or mode can be used meanwhile, and the order waits for its key.
 
-const orderOn = () => state.orderOn && state.mode !== 'survey' && !!state.order;
-const orderTask = () => (state.order ? order.taskAt(state.order, state.orderPos) : null);
-const orderStepIndex = (id) => state.order.findIndex((s) => s.id === id);
-const strings = (k) => (k <= Number(S().oneStringTo) ? 1 : k <= Number(S().twoStringsTo) ? 2 : 3);
-
-const recheckKeys = () => Array.from({ length: top() }, (_, i) => i + 1).filter((k) => Number.isFinite(curDev(k)) && statusClass(statusDev(k)) !== 'good');
-
-function rebuildOrder() {
-  if (!state.tuning) return;
-  const s = S();
-  const build = () => {
-    state.order = order.buildOrder({ top: top(), twoStringsTo: Number(s.twoStringsTo) || 0, oneStringTo: Number(s.oneStringTo) || 0, dsu: s.unisons === 'dsu' }, state.orderRecheck || []);
-    state.orderPos = order.clampPos(state.order, state.tuning.order);
-  };
-  build();
-  if (state.order[state.orderPos.step].id === 'finish' && !state.orderRecheck) {
-    state.orderRecheck = recheckKeys(); // opened on the last step
-    build();
-  }
-  state.orderConfirm = order.newConfirm(state.attacks);
-  state.orderAdvice = null;
-}
-
-// Select the key the order is on.
-function followOrder() {
-  const t = orderTask();
-  if (t && orderOn()) selectKey(t.k, false);
-  renderOrderPanel();
-  renderKeyboard();
-}
+const orderTask = () => engine.orderTask();
+const strings = (k) => engine.strings(k);
+const goOrder = (pos) => engine.goOrder(pos);
 
 function setOrderOn(on) {
-  state.orderOn = on;
   try { localStorage.setItem(LS.order, on ? 'on' : 'off'); } catch { /* optional */ }
   $('btn-order').setAttribute('aria-pressed', on);
-  diag(`tuning order ${on ? 'on' : 'off'}`);
-  if (on && state.mode === 'auto') setMode('lock');
-  followOrder();
+  engine.setOrderOn(on);
   if (on) syncTuning();
 }
 
-// Move to a position and select its key. The last step lists the keys
-// outside tolerance as it begins.
-function goOrder(pos) {
-  const finish = orderStepIndex('finish');
-  if (pos.step === finish && state.orderPos.step !== finish) state.orderRecheck = recheckKeys();
-  else if (pos.step !== finish) state.orderRecheck = null;
-  state.tuning.order = { step: pos.step, i: pos.i };
-  rebuildOrder();
-  markDirty();
-  followOrder();
-}
-
-function orderDone() {
-  diag('tuning order done');
-  message(tr('order.done'), 'ok');
-}
-
-// A steady reading on the order's key: in tune counts, and two strikes in a
-// row move on. Unisons also need the beat check to have seen the note clean.
-function trackOrder(k) {
-  const t = orderTask();
-  if (!t || t.k !== k || refPlaying()) return;
-  const s = statusClass(state.display);
-  // Tasks with more than one string sounding must also be clean, not only on pitch.
-  const unison = order.UNISON_TASKS.has(t.what);
-  // A note too short for the beat check counts on pitch alone.
-  const clean = !state.beating && (state.beatKnown || beatUnheard());
-  const ok = state.order[state.orderPos.step].loose ? s !== 'bad' : s === 'good' && !(unison && !clean);
-  // A clean unison off target gets a hint on moving it as a whole.
-  state.orderAdvice = state.order[state.orderPos.step].loose ? null : order.unisonAdvice(t, strings, { clean, status: s });
-  const done = order.confirmReading(state.orderConfirm, state.attacks, ok);
-  renderOrderState();
-  if (!done) return;
-  diag(`order: ${t.what} ${kName(k)} done`);
-  flashKey(k);
-  const next = order.nextPos(state.order, state.orderPos);
-  if (next) goOrder(next);
-  else orderDone();
-}
-
 function renderOrderState() {
-  const c = state.orderConfirm;
+  const c = engine.orderConfirm;
   const el = $('order-state');
-  const advice = orderTask() && state.orderAdvice;
+  const advice = orderTask() && engine.orderAdvice;
   el.textContent = advice
-    ? tr('order.' + advice, { c: num(state.display), dir: tr(state.display > 0 ? 'order.sharp' : 'order.flat') })
+    ? tr('order.' + advice, { c: num(engine.display), dir: tr(engine.display > 0 ? 'order.sharp' : 'order.flat') })
     : orderTask() && c && c.cur > c.since && c.ok ? tr('order.confirm') : '';
   el.classList.toggle('warn', !!advice);
 }
@@ -1292,10 +867,7 @@ function checkLabel(r) {
 }
 
 function stepParams(id) {
-  const r = {
-    strip: order.STRIP, pull: [order.STRIP[1], order.STRIP[0]], temperament: [33, 44], upper: [45, order.STRIP[1] - 1],
-    treble: [order.STRIP[1] + 1, top()], bass: [order.STRIP[0] - 1, 1],
-  }[id];
+  const r = stepRange(id, top());
   return r ? { lo: kName(r[0]), hi: kName(r[1]) } : {};
 }
 
@@ -1312,10 +884,9 @@ function taskText(t) {
 
 // Where the piano is, for the first two steps.
 function pitchAdvice() {
-  const mid = midBefore();
-  if (mid.length < 3) return tr('order.pitch.unknown');
-  const m = median(mid);
-  return tr(Math.abs(m) >= 10 ? 'order.pitch.off' : 'order.pitch.near', { c: fmtC(m, 0) });
+  const a = engine.pitchAdvice();
+  if (!a) return tr('order.pitch.unknown');
+  return tr(a.off ? 'order.pitch.off' : 'order.pitch.near', { c: fmtC(a.m, 0) });
 }
 
 function orderButton(id, label, run) {
@@ -1325,11 +896,11 @@ function orderButton(id, label, run) {
 }
 
 function renderOrderPanel() {
-  const on = orderOn();
+  const on = engine.orderActive();
   $('order-panel').hidden = !on;
   if (!on) return;
-  const o = state.order;
-  const pos = state.orderPos;
+  const o = engine.order;
+  const pos = engine.orderPos;
   const step = o[pos.step];
   const t = orderTask();
   const sel = $('order-step');
@@ -1342,7 +913,7 @@ function renderOrderPanel() {
   $('order-bar').style.width = `${order.progress(o, pos) * 100}%`;
   $('order-task').textContent = t ? taskText(t) : tr(`order.${step.id}.task`, stepParams(step.id));
 
-  const rows = t ? order.checkRows(state.T, t, top(), order.tunedBefore(o, pos)) : [];
+  const rows = t ? order.checkRows(engine.T, t, top(), order.tunedBefore(o, pos)) : [];
   $('order-checks').replaceChildren(
     ...rows.map((r, i) => Object.assign(document.createElement('span'), {
       className: 'chk' + (i === 0 && t.from ? ' main' : ''),
@@ -1357,7 +928,7 @@ function renderOrderPanel() {
   if (t && t.what !== 'raise') text += ' ' + tr('order.how');
   $('order-text').textContent = text;
 
-  orderButton('order-back', t && state.key !== t.k ? tr('order.back', { name: kName(t.k) }) : '');
+  orderButton('order-back', t && engine.key !== t.k ? tr('order.back', { name: kName(t.k) }) : '');
   orderButton('order-action', '');
   orderButton('order-action2', '');
   if (step.id === 'pitch') {
@@ -1366,15 +937,14 @@ function renderOrderPanel() {
       setMode('survey');
       if (!mic.running) startMic();
     });
-    if (midBefore().length >= 3) orderButton('order-action2', tr('ref.fit'), fitRefToPiano);
+    if (Number.isFinite(engine.midShift())) orderButton('order-action2', tr('ref.fit'), fitRefToPiano);
   } else if (step.id === 'raise') {
-    const mid = midBefore();
-    const p = mid.length >= 3 ? recommendedOverpull(median(mid)) : 0;
+    const p = engine.suggestedOverpull();
     if (p && Number(S().overpull) !== p) orderButton('order-action', tr('ref.useOverpull', { p }), () => setSetting('overpull', p));
     orderButton('order-action2', tr('order.finePass'), () => {
       newPass();
       setSetting('overpull', 0);
-      goOrder({ step: orderStepIndex('strip'), i: 0 });
+      goOrder({ step: engine.orderStepIndex('strip'), i: 0 });
     });
   } else if (step.id === 'finish') {
     // The main action once no key is left to go over.
@@ -1405,18 +975,17 @@ function fitOrderText() {
 // ---------------------------------------------------------------------------
 // Reference tones
 
-const goalF1 = (k) => state.T.freq[k] * 2 ** (goal(k) / 1200);
-const sineFreq = () => partialFreq(goalF1(state.key), state.T.B[state.key], partialOf(state.key));
+const sineFreq = () => engine.sineFreq();
 
 function playPiano() {
-  diag(`piano tone ${kName(state.key)}`);
-  const ms = tones.pluck(goalF1(state.key), state.T.B[state.key]);
+  diag(`piano tone ${kName(engine.key)}`);
+  const ms = tones.pluck(engine.goalF1(engine.key), engine.T.B[engine.key]);
   state.refUntil = Math.max(state.refUntil, performance.now() + ms + 800); // + the analysis buffer
 }
 
 function startSine() {
   if (!tones.sineOn && mic.running) message(tr('msg.sineNoSave'), 'info', 4000);
-  diag(`sine ${kName(state.key)} partial ${partialOf(state.key)}, ${fmtHz(sineFreq())}`);
+  diag(`sine ${kName(engine.key)} partial ${partialOf(engine.key)}, ${fmtHz(sineFreq())}`);
   tones.startSine(sineFreq());
   renderToneButton();
 }
@@ -1465,8 +1034,8 @@ function setToneMenuOpen(open) {
 // more above the key, so the button names the note it plays.
 function renderToneButton() {
   const b = $('btn-tone');
-  const n = state.toneMode === 'sine' ? partialOf(state.key) : 1;
-  const note = kName(Math.min(KEY_COUNT, state.key + Math.round(12 * Math.log2(n))));
+  const n = state.toneMode === 'sine' ? partialOf(engine.key) : 1;
+  const note = kName(Math.min(KEY_COUNT, engine.key + Math.round(12 * Math.log2(n))));
   const what = n > 1 ? tr('tone.partialNote', { note, n }) : note;
   b.textContent = `${tones.sineOn ? '■' : '▶'} ${note}`;
   b.title = tr(tones.sineOn ? 'tone.stopSine' : state.toneMode === 'sine' ? 'tone.playSine' : 'tone.playTitle', { what });
@@ -1481,23 +1050,23 @@ function updateReadout() {
   let text;
   let s = 'idle';
   if (!mic.running) text = tr('status.start');
-  else if (!state.signal) text = state.survey?.waitAttack ? tr('status.strike', { name: kName(state.key) }) : tr('status.listening');
+  else if (!engine.signal) text = engine.survey?.waitAttack ? tr('status.strike', { name: kName(engine.key) }) : tr('status.listening');
   else {
-    s = statusClass(state.display);
-    text = tr(refPlaying() ? 'status.ref' : s === 'good' ? 'status.good' : state.display > 0 ? 'status.high' : 'status.low');
+    s = statusClass(engine.display);
+    text = tr(refPlaying() ? 'status.ref' : s === 'good' ? 'status.good' : engine.display > 0 ? 'status.high' : 'status.low');
   }
   $('status').dataset.s = $('hub').dataset.s = s;
   $('status').textContent = text;
-  $('cents-num').textContent = mic.running ? fmtC(state.display) : '–';
-  $('cents').dataset.live = state.signal ? '1' : '0';
-  const n = partialOf(state.key);
-  const hz = mic.running && Number.isFinite(state.measHz) ? fmtHz(state.measHz) : '–';
+  $('cents-num').textContent = mic.running ? fmtC(engine.display) : '–';
+  $('cents').dataset.live = engine.signal ? '1' : '0';
+  const n = partialOf(engine.key);
+  const hz = mic.running && Number.isFinite(engine.measHz) ? fmtHz(engine.measHz) : '–';
   $('measured').replaceChildren(...trNodes(n > 1 ? 'measured.partial' : 'measured', { n, hz }));
-  $('measured').dataset.live = state.signal ? '1' : '0';
+  $('measured').dataset.live = engine.signal ? '1' : '0';
   const hint = $('unison-hint');
-  hint.hidden = !(mic.running && state.beating);
+  hint.hidden = !(mic.running && engine.beating);
   if (!hint.hidden) hint.textContent = tr('unison.hint');
-  $('level-bar').style.width = mic.running ? `${Math.max(0, Math.min(100, (state.level + 80) * 1.4))}%` : '0';
+  $('level-bar').style.width = mic.running ? `${Math.max(0, Math.min(100, (engine.level + 80) * 1.4))}%` : '0';
   renderPartials();
 }
 
@@ -1513,9 +1082,9 @@ function renderPartials() {
       }),
     );
   }
-  const n = partialOf(state.key);
+  const n = partialOf(engine.key);
   [...box.children].forEach((cell, i) => {
-    const d = state.signal ? state.partialDevs[i] : null;
+    const d = engine.signal ? engine.partialDevs[i] : null;
     cell.classList.toggle('sel', i + 1 === n);
     cell.lastChild.textContent = d == null ? '–' : fmtC(d);
     cell.dataset.s = d == null ? 'none' : statusClass(d);
@@ -1525,17 +1094,17 @@ function renderPartials() {
 function animate(t) {
   const dt = state.lastAnim ? Math.min(0.1, (t - state.lastAnim) / 1000) : 0;
   state.lastAnim = t;
-  if (state.tuning) {
+  if (engine.tuning) {
     const C = state.colors;
-    const tol = tolerance();
-    const live = state.signal && Number.isFinite(state.display);
-    drawDial($('dial'), { display: state.display, signal: state.signal, bands: state.strobe, live, tol }, C, dt, state.ringPhase);
-    const beatLive = live && Number.isFinite(state.beatHz);
+    const tol = engine.tolerance();
+    const live = engine.signal && Number.isFinite(engine.display);
+    drawDial($('dial'), { display: engine.display, signal: engine.signal, bands: engine.strobe, live, tol }, C, dt, state.ringPhase);
+    const beatLive = live && Number.isFinite(engine.beatHz);
     if (!$('beats-row').hidden) {
-      drawSpectro($('spectro'), state.spec, { capacity: SPEC_COLS, bins: SPEC_BINS, cents: SPEC_CENTS, tol }, C);
-      state.beatPhase = drawBeat($('beat'), { beatHz: state.beatHz, display: state.display, live: beatLive, tol }, C, dt, state.beatPhase);
+      drawSpectro($('spectro'), engine.spec, { capacity: SPEC_COLS, bins: SPEC_BINS, cents: SPEC_CENTS, tol }, C);
+      state.beatPhase = drawBeat($('beat'), { beatHz: engine.beatHz, display: engine.display, live: beatLive, tol }, C, dt, state.beatPhase);
     }
-    const df = Math.abs(state.beatHz);
+    const df = Math.abs(engine.beatHz);
     const rate = !beatLive ? '–' : df < 0.1 ? tr('beat.none') : tr('beat.rate', { n: num(df, df < 10 ? 1 : 0) });
     if ($('beat-rate').textContent !== rate) $('beat-rate').textContent = rate;
   }
@@ -1547,56 +1116,34 @@ function animate(t) {
 
 function setSetting(key, value) {
   S()[key] = value;
-  recompute();
+  engine.recompute();
   renderSettingDescs();
   markDirty();
 }
 
 function setRef(hz) {
   if (!Number.isFinite(hz)) return;
-  setSetting('refA4', Math.round(Math.max(380, Math.min(480, hz)) * 10) / 10);
+  setSetting('refA4', clampRef(hz));
 }
 
-// Set the reference so the middle of the piano is on target: median of the
-// before values in the middle, otherwise the key sounding now.
+// Set the reference so the middle of the piano is on target (engine.fitRefHz).
 function fitRefToPiano() {
-  const mid = midBefore();
-  let shift;
-  if (mid.length >= 3) shift = median(mid);
-  else if (state.signal && Number.isFinite(state.display)) shift = state.display + goal(state.key);
-  else return message(tr('msg.fitNeedsInput'), 'warn');
-  setRef(Number(S().refA4) * 2 ** (shift / 1200));
+  const hz = engine.fitRefHz();
+  if (!Number.isFinite(hz)) return message(tr('msg.fitNeedsInput'), 'warn');
+  setRef(hz);
   message(tr('msg.fitDone', { hz: fmtHz(Number(S().refA4), 1) }), 'ok');
 }
 
-// End the pass: save a summary to the history and clear the measurements.
-// Inharmonicity and settings are kept.
+// End the pass (engine.newPass).
 function newPass() {
-  const t = state.tuning;
-  const ks = Array.from({ length: top() }, (_, i) => i + 1);
-  const after = ks.map(statusDev).filter(Number.isFinite);
-  const before = ks.map(beforeDev).filter(Number.isFinite);
-  const meanAbs = (a) => (a.length ? a.reduce((s, x) => s + Math.abs(x), 0) / a.length : 0);
-  if (after.length) {
-    t.history = [
-      ...t.history,
-      { startedAt: t.passStartedAt, endedAt: new Date().toISOString(), refA4: Number(S().refA4), measured: after.length, meanAbsBefore: meanAbs(before), meanAbsAfter: meanAbs(after) },
-    ].slice(-30);
-  }
-  t.keys = {};
-  t.passStartedAt = new Date().toISOString();
-  t.order = { step: 0, i: 0 };
-  state.orderRecheck = null;
-  rebuildOrder();
-  resetReadings();
-  recompute();
+  engine.newPass(Date.now());
   markDirty();
   message(tr('msg.newPass'), 'ok');
 }
 
 function exportTuning() {
-  const blob = new Blob([JSON.stringify(state.tuning, null, 2)], { type: 'application/json' });
-  download(blob, (state.tuning.name || tr('name.file')).replace(/[^\p{L}\p{N}_-]+/gu, '_') + '.json');
+  const blob = new Blob([JSON.stringify(engine.tuning, null, 2)], { type: 'application/json' });
+  download(blob, (engine.tuning.name || tr('name.file')).replace(/[^\p{L}\p{N}_-]+/gu, '_') + '.json');
 }
 
 function download(blob, name) {
@@ -1626,7 +1173,7 @@ async function importTuning(file) {
 async function deleteCurrent() {
   try {
     await saver.discard(); // a save in progress must not recreate the file
-    await deleteTuning(state.tuning.id);
+    await deleteTuning(engine.tuning.id);
     await refreshList();
     if (state.list[0]) await openTuning(await getTuning(state.list[0].id));
     else await createAndOpen(newTuning(tr('name.default')));
@@ -1665,7 +1212,7 @@ function changeLanguage(l) {
   $('message').hidden = true;
   setSaveState($('save-status').dataset.state);
   renderSettings();
-  recompute();
+  engine.recompute();
   renderSurveyPanel();
   renderOrderPanel();
   renderToneButton();
@@ -1795,54 +1342,43 @@ function bindEvents() {
   on('btn-rec-stop', 'click', finishRecording);
 
   // Tuner
-  on('btn-prev', 'click', () => selectKey(state.key - 1));
-  on('btn-next', 'click', () => selectKey(state.key + 1));
+  on('btn-prev', 'click', () => selectKey(engine.key - 1));
+  on('btn-next', 'click', () => selectKey(engine.key + 1));
   on('mode-auto', 'click', () => setMode('auto'));
   on('mode-lock', 'click', () => setMode('lock'));
   const startSurvey = () => {
-    if (state.mode === 'survey') return;
+    if (engine.mode === 'survey') return;
     setMode('survey');
     if (!mic.running) startMic();
   };
-  on('btn-survey', 'click', () => (state.mode === 'survey' ? setMode('lock') : startSurvey()));
+  on('btn-survey', 'click', () => (engine.mode === 'survey' ? setMode('lock') : startSurvey()));
   on('btn-curve-survey', 'click', () => {
     setSurveyPlan('quick');
     startSurvey();
   });
-  on('survey-skip', 'click', skipSurveyKey);
+  on('survey-skip', 'click', () => engine.skipSurveyKey());
   on('survey-redo', 'click', () => {
-    state.survey = survey.newKeyState();
+    engine.redoSurveyKey();
     renderSurveyPanel();
   });
   on('survey-stop', 'click', () => setMode('lock'));
   onAll('[data-plan]', (b) => setSurveyPlan(b.dataset.plan));
-  on('btn-order', 'click', () => setOrderOn(!state.orderOn));
+  on('btn-order', 'click', () => setOrderOn(!engine.orderOn));
   on('order-close', 'click', () => setOrderOn(false));
   on('order-more', 'click', () => {
     $('order-panel').classList.toggle('text-open');
     fitOrderText();
   });
   on('order-step', 'change', (e) => goOrder({ step: Number(e.target.value), i: 0 }));
-  on('order-prev', 'click', () => goOrder(order.prevPos(state.order, state.orderPos) || state.orderPos));
-  on('order-next', 'click', () => {
-    const next = order.nextPos(state.order, state.orderPos);
-    if (next) goOrder(next);
-    else orderDone();
-  });
-  on('order-skip', 'click', () => {
-    const step = state.orderPos.step + 1;
-    if (step < state.order.length) goOrder({ step, i: 0 });
-    else orderDone();
-  });
-  on('order-back', 'click', () => {
-    if (state.mode === 'auto') setMode('lock');
-    selectKey(orderTask().k, false);
-  });
+  on('order-prev', 'click', () => engine.orderPrev());
+  on('order-next', 'click', () => engine.orderNext());
+  on('order-skip', 'click', () => engine.orderSkip());
+  on('order-back', 'click', () => engine.orderBack());
 
   on('keyboard', 'click', (e) => {
     const k = Number(e.target.closest('.key')?.dataset.k);
     if (!k) return;
-    const prev = state.key;
+    const prev = engine.key;
     selectKey(k);
     if (!state.toneOnKey) return;
     if (state.toneMode === 'piano') playPiano();
@@ -1881,11 +1417,7 @@ function bindEvents() {
   });
 
   const setPartial = (d) => {
-    const k = state.key;
-    const n = Math.max(1, Math.min(8, partialOf(k) + d));
-    if (n === defaultPartial(k)) delete state.tuning.partials[k];
-    else state.tuning.partials[k] = n;
-    resetReadings();
+    engine.setPartial(d);
     renderKeyInfo();
     markDirty();
   };
@@ -1893,11 +1425,9 @@ function bindEvents() {
   on('partial-inc', 'click', () => setPartial(1));
   on('btn-measure-b', 'click', () => {
     if (!mic.running) return message(tr('msg.micFirst'), 'warn');
-    state.bReadings = [];
-    const run = (state.measureB = { k: state.key, until: performance.now() + 4000 });
-    $('btn-measure-b').disabled = true;
-    message(tr('msg.strikeB', { name: kName(state.key) }), 'info', 4000);
-    setTimeout(() => state.measureB === run && finishMeasureB(), 6000); // in case the note dies away first
+    const run = engine.startMeasureB(performance.now());
+    message(tr('msg.strikeB', { name: kName(engine.key) }), 'info', 4000);
+    setTimeout(() => engine.measureB === run && engine.finishMeasureB(), 6000); // in case the note dies away first
   });
 
   // Reference
@@ -1928,8 +1458,7 @@ function bindEvents() {
     setSetting('pianoKind', e.target.value);
   });
   on('set-size', 'change', (e) => {
-    const k = PIANO_KINDS[S().pianoKind];
-    const cm = Math.round(Math.max(k.min, Math.min(k.max, Number(e.target.value) || k.def)));
+    const cm = clampSize(S().pianoKind, e.target.value);
     e.target.value = cm;
     setSetting('sizeCm', cm);
   });
@@ -1939,27 +1468,16 @@ function bindEvents() {
   });
   // Strings per key: within the keyboard, one string never above two.
   const setStrings = () => {
-    const clamp = (id) => Math.max(0, Math.min(top(), Math.round(Number($(id).value) || 0)));
-    const two = clamp('set-two');
-    const one = Math.min(clamp('set-one'), two);
-    $('set-two').value = S().twoStringsTo = two;
-    $('set-one').value = S().oneStringTo = one;
+    const { two, one } = engine.setStrings($('set-two').value, $('set-one').value);
+    $('set-two').value = two;
+    $('set-one').value = one;
     renderSettingDescs();
-    rebuildOrder();
     renderOrderPanel();
     markDirty();
   };
   on('set-two', 'change', setStrings);
   on('set-one', 'change', setStrings);
-  // The treble and the bass get other tasks: the order stays on the key it was on.
-  on('set-unisons', 'change', (e) => {
-    const k = orderTask()?.k;
-    const { step } = state.orderPos;
-    S().unisons = e.target.value;
-    rebuildOrder();
-    const i = state.order[step].tasks.findIndex((t) => t.k === k);
-    goOrder({ step, i: Math.max(0, i) });
-  });
+  on('set-unisons', 'change', (e) => engine.setUnisons(e.target.value));
   bindSetting('set-temperament', 'temperament');
   bindSetting('set-root', 'root', Number);
   bindSetting('set-stretch', 'stretch');
@@ -1971,14 +1489,14 @@ function bindEvents() {
   bindSetting('set-overpull', 'overpull', Number);
   bindSetting('set-tolerance', 'tolerance', Number);
   on('set-name', 'input', (e) => {
-    state.tuning.name = e.target.value.trim() || tr('name.untitled');
-    const item = state.list.find((t) => t.id === state.tuning.id);
-    if (item) item.name = state.tuning.name;
+    engine.tuning.name = e.target.value.trim() || tr('name.untitled');
+    const item = state.list.find((t) => t.id === engine.tuning.id);
+    if (item) item.name = engine.tuning.name;
     renderTuningSelect();
     markDirty();
   });
   on('set-notes', 'input', (e) => {
-    state.tuning.notes = e.target.value;
+    engine.tuning.notes = e.target.value;
     markDirty();
   });
 
@@ -1994,10 +1512,10 @@ function bindEvents() {
   on('btn-new', 'click', () => createAndOpen(newTuning(tr('name.new', { n: state.list.length + 1 }))).catch(() => message(tr('msg.createFailed'), 'error')));
   on('btn-dup', 'click', async () => {
     await saver.flush();
-    createAndOpen(duplicateTuning(state.tuning, tr('name.copy', { name: state.tuning.name }))).catch(() => message(tr('msg.dupFailed'), 'error'));
+    createAndOpen(duplicateTuning(engine.tuning, tr('name.copy', { name: engine.tuning.name }))).catch(() => message(tr('msg.dupFailed'), 'error'));
   });
   on('btn-del', 'click', () => {
-    $('confirm-del-text').textContent = tr('piano.confirmDel', { name: state.tuning.name });
+    $('confirm-del-text').textContent = tr('piano.confirmDel', { name: engine.tuning.name });
     $('confirm-del').hidden = false;
   });
   on('confirm-del-no', 'click', show('confirm-del', false));
@@ -2067,11 +1585,11 @@ function bindEvents() {
     if (e.key === 'Escape' && !$('drawer').hidden) return closeDrawer();
     if (e.target.closest('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
     const action = {
-      ArrowLeft: () => selectKey(state.key - 1),
-      ArrowRight: () => selectKey(state.key + 1),
+      ArrowLeft: () => selectKey(engine.key - 1),
+      ArrowRight: () => selectKey(engine.key + 1),
       l: () => setMode('lock'),
       a: () => setMode('auto'),
-      o: () => setOrderOn(!state.orderOn),
+      o: () => setOrderOn(!engine.orderOn),
       t: playCurrent,
       s: () => ($('drawer').hidden ? openDrawer() : closeDrawer()),
       h: toggleHelp,
@@ -2105,10 +1623,10 @@ function bindEvents() {
   window.addEventListener('focus', () => syncTuning());
   // Last chance to save when the tab closes.
   window.addEventListener('pagehide', () => {
-    if (!saver.dirty || !state.tuning) return;
+    if (!saver.dirty || !engine.tuning) return;
     navigator.sendBeacon?.(
-      'api/tunings/' + encodeURIComponent(state.tuning.id),
-      new Blob([JSON.stringify(state.tuning)], { type: 'application/json' }),
+      'api/tunings/' + encodeURIComponent(engine.tuning.id),
+      new Blob([JSON.stringify(engine.tuning)], { type: 'application/json' }),
     );
   });
 }
@@ -2131,8 +1649,8 @@ async function boot() {
     else await createAndOpen(newTuning(tr('name.default')));
   } catch {
     // Server unreachable: run anyway, without saving.
-    state.tuning = newTuning(tr('name.default'));
-    recompute();
+    engine.tuning = newTuning(tr('name.default'));
+    engine.recompute();
     renderSettings();
     setSaveState('error');
     message(tr('msg.noServer'), 'warn', 0, 'server');

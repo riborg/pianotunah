@@ -5,7 +5,7 @@ The host needs neither Node nor Go. Everything runs in containers. [Svenska](DEV
 ## Tests
 
 ```sh
-# Unit tests (theory and signal processing)
+# Unit tests (theory, signal processing and the engine)
 docker run --rm -v "$PWD":/app -w /app node:26-alpine npm test
 
 # End-to-end: headless Chrome with a synthetic piano tone as the microphone,
@@ -84,10 +84,11 @@ The server answers `GET /api/tunings`, `GET|PUT|DELETE /api/tunings/{id}`, `GET 
 | `web/js/draw.js` | canvas drawing |
 | `web/js/survey.js` | survey plans and completion criteria |
 | `web/js/order.js` | tuning order: steps, tasks, checks and when a task is done |
+| `web/js/engine.js` | the tuner without the DOM: each frame of sound to readings, saved measurements, beats, survey and order progress |
 | `web/js/saver.js` | save queue with revision check |
 | `web/js/mic.js`, `recorder.js`, `tone.js` | microphone, recording (AudioWorklet) and reference tones |
 | `web/js/i18n.js`, `lang/` | UI strings |
-| `web/js/app.js` | state, DOM and events |
+| `web/js/app.js` | DOM and events; draws what the engine does |
 | `web/js/diag.js` | debug log to the server (`DEBUG=1`) |
 | `web/fonts/` | ♭ ♮ ♯ from Bravura Text, built by `tools/accidentals.py` |
 | `web/favicon.svg`, `web/icons/` | logo and app icons, built by `tools/icons.py` |

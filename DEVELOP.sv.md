@@ -5,7 +5,7 @@ Värden behöver varken Node eller Go. Allt körs i containrar. [English](DEVELO
 ## Tester
 
 ```sh
-# Enhetstester (teori och signalbehandling)
+# Enhetstester (teori, signalbehandling och motorn)
 docker run --rm -v "$PWD":/app -w /app node:26-alpine npm test
 
 # End-to-end: Chrome utan fönster med en syntetisk pianoton som mikrofon,
@@ -85,10 +85,11 @@ Servern svarar på `GET /api/tunings`, `GET|PUT|DELETE /api/tunings/{id}`, `GET 
 | `web/js/draw.js` | ritning på canvas |
 | `web/js/survey.js` | kartläggningsplaner och när en kartläggning är klar |
 | `web/js/order.js` | arbetsordning: steg, uppgifter, kontroller och när en uppgift är klar |
+| `web/js/engine.js` | stämapparaten utan DOM: varje ljudram till avläsningar, sparade mätningar, svävningar, kartläggningens och arbetsordningens framsteg |
 | `web/js/saver.js` | sparkö med revisionskontroll |
 | `web/js/mic.js`, `recorder.js`, `tone.js` | mikrofon, inspelning (AudioWorklet) och referenstoner |
 | `web/js/i18n.js`, `lang/` | gränssnittets texter |
-| `web/js/app.js` | tillstånd, DOM och händelser |
+| `web/js/app.js` | DOM och händelser; visar vad motorn gör |
 | `web/js/diag.js` | felsökningslogg till servern (`DEBUG=1`) |
 | `web/fonts/` | ♭ ♮ ♯ från Bravura Text, byggda av `tools/accidentals.py` |
 | `web/favicon.svg`, `web/icons/` | logotyp och appikoner, byggda av `tools/icons.py` |
