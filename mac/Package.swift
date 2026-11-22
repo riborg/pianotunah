@@ -6,9 +6,10 @@ import PackageDescription
 
 let package = Package(
     name: "PianoTunahCore",
-    // macOS 27 as a version string: with tools version 6.0 the newest named
-    // version is .v15 (.v27 needs tools version 6.4).
-    platforms: [.macOS("27.0")],
+    // The core uses no recent APIs, so it asks only for macOS 15. That lets
+    // CI run its tests on GitHub's macOS runners (Apple's libm, arm64),
+    // which may not have macOS 27 yet. The app itself targets macOS 27.
+    platforms: [.macOS(.v15)],
     products: [
         .library(name: "PianoTunahCore", targets: ["PianoTunahCore"]),
     ],

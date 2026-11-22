@@ -84,3 +84,16 @@ jobs:
       - name: Swift core tests
         working-directory: mac
         run: swift test
+
+  # The same tests with Apple's Foundation and libm on arm64, where the app
+  # runs: the DSP and format fixtures must hold there too.
+  swift-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Swift core tests on macOS
+        working-directory: mac
+        run: |
+          swift --version
+          uname -m
+          swift test

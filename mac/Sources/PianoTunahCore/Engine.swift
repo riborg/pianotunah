@@ -429,8 +429,9 @@ public final class Engine {
     ///   shorter than the analyzer's FFT (16384), or one before
     ///   ``startAudio(sampleRate:)``, is skipped (``Idle/shortBuffer``):
     ///   only the clocks and ``stats`` move and the spectrogram scrolls by
-    ///   one empty column; the signal and the survey key stay as they were, so a short first buffer after a device change
-    ///   is harmless. A buffer between the FFT size and ``bufferSize`` is
+    ///   one empty column; the signal and the survey key stay as they
+    ///   were, so a short first buffer after a device change is harmless.
+    ///   A buffer between the FFT size and ``bufferSize`` is
     ///   analysed with coarser bass and zoom and counted in
     ///   ``Stats/undersized``.
     /// - time: the audio clock when the buffer ends, in s.
