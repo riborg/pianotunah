@@ -4,7 +4,7 @@ import SwiftUI
 
 /// The tuner card of the open piano: the reference, the tone, the mode and
 /// the microphone above the dial; the status and the key's target and
-/// measurement below it.
+/// measurement below it, then the keyboard with the curve.
 ///
 /// Shortcuts as in the web version: ← → the previous and next key, A Auto,
 /// L Lock, and space (or T) the reference tone.
@@ -23,6 +23,8 @@ struct TunerView: View {
                         .frame(maxWidth: 560)
                     TunerReadout(snapshot: snapshot, listening: tuner.isListening, palette: palette)
                     TunerWarnings(snapshot: snapshot, palette: palette)
+                    KeyboardBlock(snapshot: snapshot)
+                        .padding(.top, 10)
                 }
                 .padding(20)
                 .frame(maxWidth: .infinity)

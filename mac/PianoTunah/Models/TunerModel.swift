@@ -48,13 +48,18 @@ struct TunerSnapshot: Sendable {
     /// The pluck for the key: partial 1 including overpull, and its B.
     var toneF1 = 440.0
     var toneB = 0.0
+    /// Every key, for the keyboard, the curve and the table; shared between
+    /// snapshots until the engine changes a key.
+    var keys = TunerKeys()
+    /// The latest key that is done, to flash.
+    var flash: KeyFlash?
 
     init(pianoID: String) {
         self.pianoID = pianoID
     }
 
     /// The engine as it is now. On the analysis queue.
-    init(_ engine: Engine, reference: Bool) {
+    init(_ engine: Engine, reference: Bool, keys: TunerKeys, flash: KeyFlash?) {
         let k = engine.key
         let t = engine.targets
         pianoID = engine.piano.id
@@ -79,6 +84,8 @@ struct TunerSnapshot: Sendable {
         undersized = engine.stats.undersized
         toneF1 = engine.goalF1(k)
         toneB = t.inharmonicity[k]
+        self.keys = keys
+        self.flash = flash
     }
 }
 
@@ -143,6 +150,11 @@ final class TunerCore: @unchecked Sendable {
     private var dirty = false
     private var messages: [Engine.Message] = []
     private var reference = false
+    /// The keys as last built, and whether an event has changed them since.
+    private var keys = TunerKeys()
+    private var keysChanged = true
+    private var flash: KeyFlash?
+    private var flashSerial = 0
 
     private static let log = Logger(subsystem: "io.github.riborg.pianotunah", category: "engine")
 
@@ -160,6 +172,8 @@ final class TunerCore: @unchecked Sendable {
         messages = []
         generation = nil
         reference = false
+        keysChanged = true
+        flash = nil
         if let piano {
             let engine = Engine(piano: piano)
             engine.onEvent = { [unowned self] in self.handle($0) }
@@ -199,6 +213,8 @@ final class TunerCore: @unchecked Sendable {
     func perform(_ command: (Engine) -> Void) {
         guard let engine else { return }
         command(engine)
+        // A command may change a key without an event, such as the partial.
+        keysChanged = true
         publish()
     }
 
@@ -206,6 +222,13 @@ final class TunerCore: @unchecked Sendable {
         switch event {
         case .dirty, .saved:
             dirty = true
+            keysChanged = true
+        case .flash(let k):
+            flashSerial += 1
+            flash = KeyFlash(key: k, serial: flashSerial)
+            keysChanged = true
+        case .key, .mode, .targets, .survey, .order, .measureB:
+            keysChanged = true
         case .message(let m):
             messages.append(m)
         case .log(let line):
@@ -216,7 +239,13 @@ final class TunerCore: @unchecked Sendable {
     }
 
     private func publish() {
-        var update = Update(snapshot: engine.map { TunerSnapshot($0, reference: reference) }, changes: nil, messages: messages)
+        if keysChanged, let engine {
+            keys = TunerKeys(engine, revision: keys.revision + 1)
+            keysChanged = false
+        }
+        var update = Update(
+            snapshot: engine.map { TunerSnapshot($0, reference: reference, keys: keys, flash: flash) },
+            changes: nil, messages: messages)
         if dirty, let engine { update.changes = EngineChanges(engine.piano) }
         dirty = false
         messages = []
@@ -338,6 +367,20 @@ final class TunerModel {
 
     func setMode(_ mode: Engine.Mode) {
         perform { $0.setMode(mode) }
+    }
+
+    /// Selects key k (clamped to the keyboard); leaves Auto.
+    func selectKey(_ k: Int) {
+        perform { $0.selectKey(k) }
+    }
+
+    /// Starts an All A survey, and the microphone if it is off.
+    func surveyAllA() {
+        perform {
+            $0.setSurveyPlan(.allA)
+            $0.setMode(.survey)
+        }
+        if !isListening { startListening() }
     }
 
     /// Plucks the current key's target, overpull included.

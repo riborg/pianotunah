@@ -1,0 +1,286 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ cents" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ cent"
+          }
+        }
+      }
+    },
+    "%@ cents · %@" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ cent · %@"
+          }
+        }
+      }
+    },
+    "%@ measured" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ uppmätt"
+          }
+        }
+      }
+    },
+    "%@ measured, differs from the neighbours and is not used" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ uppmätt, avviker från grannarna och används inte"
+          }
+        }
+      }
+    },
+    "%@ model" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ modell"
+          }
+        }
+      }
+    },
+    "%@, %@ cents" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, %@ cent"
+          }
+        }
+      }
+    },
+    "%@, not measured" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, ej mätt"
+          }
+        }
+      }
+    },
+    "Before" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Före"
+          }
+        }
+      }
+    },
+    "Close" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nära"
+          }
+        }
+      }
+    },
+    "Curve" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurva"
+          }
+        }
+      }
+    },
+    "Deviation" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvikelse"
+          }
+        }
+      }
+    },
+    "Key" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tangent"
+          }
+        }
+      }
+    },
+    "key %lld" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tangent %lld"
+          }
+        }
+      }
+    },
+    "Keyboard" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klaviatur"
+          }
+        }
+      }
+    },
+    "Measured B" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uppmätt B"
+          }
+        }
+      }
+    },
+    "Note" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ton"
+          }
+        }
+      }
+    },
+    "Now" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nu"
+          }
+        }
+      }
+    },
+    "Outside" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utanför"
+          }
+        }
+      }
+    },
+    "Partial" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delton"
+          }
+        }
+      }
+    },
+    "Show as table" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visa som tabell"
+          }
+        }
+      }
+    },
+    "Survey all A" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kartlägg alla A"
+          }
+        }
+      }
+    },
+    "Target" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mål"
+          }
+        }
+      }
+    },
+    "Target (cents)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mål (cent)"
+          }
+        }
+      }
+    },
+    "Target (Hz)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mål (Hz)"
+          }
+        }
+      }
+    },
+    "Target curve in cents per key" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Målkurva i cent per tangent"
+          }
+        }
+      }
+    },
+    "Target vs equal temperament" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mål mot liksvävande"
+          }
+        }
+      }
+    },
+    "The curve is estimated from the size of the piano." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurvan är uppskattad från pianots storlek."
+          }
+        }
+      }
+    },
+    "Within tolerance" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inom tolerans"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
