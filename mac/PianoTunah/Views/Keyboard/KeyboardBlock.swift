@@ -89,7 +89,7 @@ private struct KeyMarker: View {
         let fill = good ? palette.good : palette.accent
         let ink = good ? palette.surface : KeyColors.of(scheme).accentInk
         VStack(spacing: 0) {
-            Text(verbatim: noteName(key))
+            Text(noteText(noteName(key), size: 13))
                 .font(.system(size: 13, weight: .semibold, design: .monospaced))
                 .foregroundStyle(ink.color)
                 .lineLimit(1)

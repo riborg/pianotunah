@@ -41,7 +41,7 @@ struct KeyTable: View {
                 }
                 .alignment(.trailing)
                 TableColumn(Text("Note", tableName: "Keyboard")) { s in
-                    Text(verbatim: noteName(s.key))
+                    Text(noteText(noteName(s.key), size: 12))
                 }
                 .alignment(.trailing)
                 TableColumn(Text("Target (cents)", tableName: "Keyboard")) { s in

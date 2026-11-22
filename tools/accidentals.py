@@ -1,7 +1,9 @@
-"""Builds web/fonts/accidentals.woff2: ♭ ♮ ♯ from Bravura Text, scaled and
-moved to sit in text like letters (Bravura places them for a staff, so ♭
-rises far above capitals and ♯ hangs below the baseline). Run with the
-original font as argument:
+"""Builds web/fonts/accidentals.woff2 for the web and
+mac/PianoTunah/Fonts/Accidentals.ttf for the Mac app, the same font: ♭ ♮ ♯
+from Bravura Text, scaled and moved to sit in text like letters (Bravura
+places them for a staff, so ♭ rises far above capitals and ♯ hangs below the
+baseline). The licence goes along with each, as OFL.txt. Run with the
+original font (github.com/steinbergmedia/bravura, redist/otf) as argument:
 
   docker run --rm -v "$PWD":/w -w /w python:3.12-alpine sh -c \\
     "pip install -q fonttools brotli && python tools/accidentals.py BravuraText.otf"
@@ -9,6 +11,7 @@ original font as argument:
 Bravura is under the SIL Open Font License with the Reserved Font Name
 "Bravura", so the modified font has its own name. See web/fonts/OFL.txt.
 """
+import shutil
 import sys
 
 from fontTools.fontBuilder import FontBuilder
@@ -52,6 +55,9 @@ fb.setupHorizontalHeader(ascent=900, descent=-200)
 fb.setupNameTable({
     "familyName": "Piano Tunah Accidentals",
     "styleName": "Regular",
+    # Core Text finds a font by these; the Mac app asks for the PostScript name.
+    "fullName": "Piano Tunah Accidentals Regular",
+    "psName": "PianoTunahAccidentals-Regular",
     "copyright": 'Copyright © 2015, Steinberg Media Technologies GmbH, with Reserved Font Name "Bravura". '
     "Modified for Piano Tunah: three accidentals scaled and moved for text.",
     "licenseDescription": "SIL Open Font License, Version 1.1",
@@ -59,6 +65,8 @@ fb.setupNameTable({
 })
 fb.setupOS2(sTypoAscender=900, sTypoDescender=-200, usWinAscent=900, usWinDescent=200)
 fb.setupPost()
+fb.save("mac/PianoTunah/Fonts/Accidentals.ttf")
+shutil.copyfile("web/fonts/OFL.txt", "mac/PianoTunah/Fonts/OFL.txt")
 fb.font.flavor = "woff2"
 fb.save("web/fonts/accidentals.woff2")
 print({n: widths[n] for n in GLYPHS})

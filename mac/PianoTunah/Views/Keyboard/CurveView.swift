@@ -203,7 +203,7 @@ private struct CurveTip: View {
         let decimal = DecimalSeparator(locale)
         let s = state
         Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 2) {
-            row(Text(verbatim: noteName(s.key)), Text("key \(s.key)", tableName: "Keyboard"))
+            row(Text(noteText(noteName(s.key), size: 12)), Text("key \(s.key)", tableName: "Keyboard"))
             row(
                 Text("Target", tableName: "Keyboard"),
                 Text("\(fmtC(s.targetCents, decimal: decimal)) cents · \(fmtHz(s.targetHz, decimal: decimal))", tableName: "Keyboard")

@@ -137,7 +137,7 @@ The audio callback and the render block must not allocate memory or take locks. 
   - The app follows the language macOS gives it (System Settings › General › Language & Region, per app). The web's language picker is not carried over.
   - Sentences that are assembled from pieces today become whole sentences.
   - Help becomes Markdown in the app.
-  - The ♭ ♮ ♯ font is bundled as OTF under its OFL licence.
+  - The ♭ ♮ ♯ font is bundled as TrueType (`mac/PianoTunah/Fonts/Accidentals.ttf`, built by `tools/accidentals.py` with the web font) under its OFL licence, with OFL.txt beside it.
 - **Colors:** the ~23 CSS variables become color assets with light and dark variants. Auto/Light/Dark sets `NSApp.appearance`.
 
 Estimate: core 1,100–1,300 lines plus 600 lines of tests, app 4,000–5,000 lines.

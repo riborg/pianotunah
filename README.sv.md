@@ -94,4 +94,4 @@ Webbläsare tillåter mikrofonen bara över https eller på `localhost`, så app
 
 Piano Tunah är allmän egendom enligt [CC0 1.0](LICENSE). Den skrevs med [Claude](https://claude.ai) som medprogrammerare. Du får använda den till vad som helst utan att ange källa.
 
-Undantaget är `web/fonts/accidentals.woff2`, som har ♭ ♮ ♯ bearbetade från [Bravura Text](https://github.com/steinbergmedia/bravura) av Steinberg. Dess licens är SIL Open Font License 1.1, i [web/fonts/OFL.txt](web/fonts/OFL.txt).
+Undantaget är typsnittet `web/fonts/accidentals.woff2`, och samma typsnitt för Mac i `mac/PianoTunah/Fonts/Accidentals.ttf`, som har ♭ ♮ ♯ bearbetade från [Bravura Text](https://github.com/steinbergmedia/bravura) av Steinberg. Dess licens är SIL Open Font License 1.1, i [web/fonts/OFL.txt](web/fonts/OFL.txt); Mac-appen har en kopia.

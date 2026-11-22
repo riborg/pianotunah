@@ -157,5 +157,7 @@ Servern svarar på `GET /api/tunings`, `GET|PUT|DELETE /api/tunings/{id}`, `GET 
 | `mac/` | macOS-appen: Swift-paketet `PianoTunahCore` och dess tester |
 | `mac/project.yml` | appens Xcode-projekt, för XcodeGen: target, bygginställningar, Info.plist |
 | `mac/PianoTunah/` | appen: SwiftUI-vyer, pianobiblioteket, menyer, uppdateringar, texter på engelska och svenska |
+| `mac/PianoTunah/Assets.xcassets/` | Mac-appens ikon, byggd av `tools/icons.py` |
+| `mac/PianoTunah/Fonts/` | samma typsnitt med ♭ ♮ ♯ som `web/fonts/`, med licensen, byggt av `tools/accidentals.py` |
 | `mac/scripts/` | Mac-releasen: bygge, signering, zip, appcast, kontroller och provkörningen |
 | `.github/workflows/` | CI, release, veckovis sårbarhetsskanning |

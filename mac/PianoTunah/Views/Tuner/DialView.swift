@@ -317,7 +317,7 @@ struct NoteName: View {
             Text(verbatim: letter)
                 .font(.system(size: size, weight: .semibold, design: .serif))
             if !accidental.isEmpty {
-                Text(verbatim: accidental)
+                Text(noteText(accidental, size: size * 0.6))
                     .font(small)
                     .baselineOffset(size * 0.3)
             }

@@ -81,7 +81,7 @@ private struct TunerHeader: View {
             Button {
                 tuner.playTone()
             } label: {
-                Text(verbatim: "▶ " + noteName(snapshot.key))
+                Text(noteText("▶ " + noteName(snapshot.key), size: 13))
                     .monospacedDigit()
             }
             .help("Play target tone (Space)")

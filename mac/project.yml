@@ -56,6 +56,8 @@ targets:
       base:
         PRODUCT_NAME: PianoTunah
         PRODUCT_BUNDLE_IDENTIFIER: io.github.riborg.pianotunah
+        # Assets.xcassets, drawn by tools/icons.py from the web's logo.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     # Written by xcodegen from these properties, and not committed.
     info:
       path: PianoTunah/Info.plist

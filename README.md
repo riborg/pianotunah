@@ -94,4 +94,4 @@ Over https you can install the page as an app with its own window and icon: in C
 
 Piano Tunah is in the public domain under [CC0 1.0](LICENSE). It was written with [Claude](https://claude.ai) as co-programmer. You can use it for anything without attribution.
 
-The exception is `web/fonts/accidentals.woff2`, which has ♭ ♮ ♯ adapted from [Bravura Text](https://github.com/steinbergmedia/bravura) by Steinberg. Its license is the SIL Open Font License 1.1, in [web/fonts/OFL.txt](web/fonts/OFL.txt).
+The exception is the font `web/fonts/accidentals.woff2`, and the same font for the Mac in `mac/PianoTunah/Fonts/Accidentals.ttf`, which has ♭ ♮ ♯ adapted from [Bravura Text](https://github.com/steinbergmedia/bravura) by Steinberg. Its license is the SIL Open Font License 1.1, in [web/fonts/OFL.txt](web/fonts/OFL.txt); the Mac app carries a copy.

@@ -137,7 +137,7 @@ Ljudcallbacken och renderblocket får inte allokera minne eller ta lås. Gränss
   - Appen följer språket som macOS ger den (Systeminställningar › Allmänt › Språk och region, per app). Webbens språkväljare följer inte med.
   - Meningar som byggs av bitar i dag blir hela meningar.
   - Hjälpen blir Markdown i appen.
-  - Typsnittet för ♭ ♮ ♯ följer med som OTF under sin OFL-licens.
+  - Typsnittet för ♭ ♮ ♯ följer med som TrueType (`mac/PianoTunah/Fonts/Accidentals.ttf`, byggt av `tools/accidentals.py` tillsammans med webbens typsnitt) under sin OFL-licens, med OFL.txt bredvid.
 - **Färger:** de ungefär 23 CSS-variablerna blir färgresurser med ljus och mörk variant. Auto/Ljust/Mörkt sätter `NSApp.appearance`.
 
 Uppskattning: kärnan 1 100–1 300 rader plus 600 rader tester, appen 4 000–5 000 rader.
