@@ -10,7 +10,7 @@ import { wavBlob } from '../web/js/mic.js';
 import { Saver } from '../web/js/saver.js';
 import { fmtC, parseNum } from '../web/js/format.js';
 import { newRun, nextPending, handled, wrongKey } from '../web/js/survey.js';
-import { buildOrder, nextPos, prevPos, clampPos, taskAt, progress, newConfirm, confirmReading, checkRows, tunedBefore } from '../web/js/order.js';
+import { buildOrder, nextPos, prevPos, clampPos, taskAt, progress, newConfirm, confirmReading, checkRows, tunedBefore, unisonAdvice } from '../web/js/order.js';
 
 const SR = 48000;
 const N = 32768;
@@ -372,6 +372,22 @@ test('tuning order: a third or sixth with the key is shown between its tuned nei
   assert.equal(lone.find((r) => name(r) === '35-39').above, undefined);
   // Without the tuned keys the rows are as before.
   assert.ok(checkRows(t, taskAt(order, at(39)), 88).every((r) => !r.below && !r.above));
+});
+
+test('tuning order: a clean unison off target is moved as a whole', () => {
+  const strings = (k) => (k <= 8 ? 1 : k <= 32 ? 2 : 3);
+  const clean = { clean: true, status: 'warn' };
+  // Three strings sound: mute one, move the pair, then the third string.
+  for (const what of ['unison', 'pull', 'third']) assert.equal(unisonAdvice({ k: 50, what }, strings, clean), 'shift3');
+  // Two strings sound: a key with two strings, or a double string unison pair.
+  assert.equal(unisonAdvice({ k: 20, what: 'unison' }, strings, clean), 'shift2');
+  assert.equal(unisonAdvice({ k: 50, what: 'pair' }, strings, clean), 'shift2');
+  // Nothing while the unison beats, when it is in tune, or for one string.
+  assert.equal(unisonAdvice({ k: 50, what: 'unison' }, strings, { clean: false, status: 'warn' }), null);
+  assert.equal(unisonAdvice({ k: 50, what: 'unison' }, strings, { clean: true, status: 'good' }), null);
+  assert.equal(unisonAdvice({ k: 50, what: 'one' }, strings, clean), null);
+  assert.equal(unisonAdvice({ k: 49, what: 'middle' }, strings, clean), null);
+  assert.equal(unisonAdvice({ k: 50, what: 'unison' }, strings, { clean: true, status: 'none' }), null);
 });
 
 test('recording: mono 32-bit float WAV', async () => {

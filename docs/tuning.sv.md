@@ -86,6 +86,8 @@ Med dubbelsträngsunison (DSU) tar du två granntangenter i taget. Håll ner bå
 
 Ta en tangent i taget. Frigör yttersträngarna och stäm dem rena mot den mittersta.
 
+En unison kan hamna en cent eller två fel när strängar läggs till, även om den första strängen låg på målet. Stämmer du om en sträng svävar den. När appen säger att en unison är ren men ligger fel flyttar du den som helhet: dämpa en yttersträng, vrid en sträng i paret lite åt det håll tonen ska, gör paret rent igen med den andra, ta sedan bort dämpningen och stäm den tredje strängen mot dem. Med två strängar hoppar du över dämpningen. Det gäller alla unisoner i steg 7–9.
+
 ### 9. Bas, E3 ner till A0
 
 Ta två tangenter i taget. Kila så att en sträng klingar, stäm den som oktav uppifrån och stäm sedan de andra strängarna mot den. Tangenter med en sträng har ingen unison att stämma. Slå längre anslag och låt tonen klinga. Kontrollera oktaven som 2:1, 4:2 och 6:3, och med decima, duodecima, dubbeloktav och septdecima. I djupbasen säger duodecima och dubbeloktav mer än oktaven, och svävningarna blir långsammare ju längre ner du kommer.

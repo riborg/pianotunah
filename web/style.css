@@ -487,6 +487,7 @@ select:disabled { opacity: 0.55; }
    buttons stay in place as it does. */
 .order-state { margin: 0; font-size: 14px; color: var(--good); }
 .order-state:empty { display: none; }
+.order-state.warn { color: var(--warn); }
 .chk.main { border-color: var(--accent); color: var(--ink); }
 /* Under the dial the explanation shows two lines until it is opened, so the
    buttons stay close to the dial. Beside it there is room for all of it in a

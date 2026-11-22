@@ -86,6 +86,8 @@ With double string unison (DSU), take two neighbouring keys at a time. Hold both
 
 Take one key at a time. Free the outer strings and tune them pure against the middle one.
 
+A unison can end up a cent or two off when strings are added, even with the first string on target. Retuning one string then makes it beat. When the app says a unison is clean but off, move it as a whole: mute an outer string, turn one string of the pair a little the way the pitch should go, make the pair pure again with the other, then take the mute out and tune the third string to them. With two strings, skip the mute. This holds for every unison in steps 7–9.
+
 ### 9. Bass, E3 down to A0
 
 Take two keys at a time. Wedge so one string sounds, tune it as an octave from above, then tune the other strings against it. Keys with one string have no unison to tune. Use longer strikes and let the note ring. Check the octave as 2:1, 4:2 and 6:3, and with the tenth, twelfth, double octave and seventeenth. In the deep bass the twelfth and the double octave tell you more than the octave, and the beats get slower further down.

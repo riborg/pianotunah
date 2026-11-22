@@ -1184,6 +1184,7 @@ function rebuildOrder() {
     build();
   }
   state.orderConfirm = order.newConfirm(state.attacks);
+  state.orderAdvice = null;
 }
 
 // Select the key the order is on.
@@ -1228,8 +1229,11 @@ function trackOrder(k) {
   if (!t || t.k !== k || refPlaying()) return;
   const s = statusClass(state.display);
   // Tasks with more than one string sounding must also be clean, not only on pitch.
-  const unison = ['unison', 'pull', 'pair', 'third'].includes(t.what);
-  const ok = state.order[state.orderPos.step].loose ? s !== 'bad' : s === 'good' && !(unison && (state.beating || state.unison.length < 8));
+  const unison = order.UNISON_TASKS.has(t.what);
+  const clean = !state.beating && state.unison.length >= 8;
+  const ok = state.order[state.orderPos.step].loose ? s !== 'bad' : s === 'good' && !(unison && !clean);
+  // A clean unison off target gets a hint on moving it as a whole.
+  state.orderAdvice = state.order[state.orderPos.step].loose ? null : order.unisonAdvice(t, strings, { clean, status: s });
   const done = order.confirmReading(state.orderConfirm, state.attacks, ok);
   renderOrderState();
   if (!done) return;
@@ -1242,7 +1246,12 @@ function trackOrder(k) {
 
 function renderOrderState() {
   const c = state.orderConfirm;
-  $('order-state').textContent = orderTask() && c && c.cur > c.since && c.ok ? tr('order.confirm') : '';
+  const el = $('order-state');
+  const advice = orderTask() && state.orderAdvice;
+  el.textContent = advice
+    ? tr('order.' + advice, { c: num(state.display), dir: tr(state.display > 0 ? 'order.sharp' : 'order.flat') })
+    : orderTask() && c && c.cur > c.since && c.ok ? tr('order.confirm') : '';
+  el.classList.toggle('warn', !!advice);
 }
 
 const ivName = ({ semis, p }) => tr('iv.' + semis) + (semis === 12 ? ' ' + p.join(':') : '');
