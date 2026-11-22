@@ -43,13 +43,13 @@ The native Mac version is being built in `mac/`, following [docs/macos-port.md](
 ```sh
 # Regenerate the fixtures in mac/Tests/PianoTunahCoreTests/Fixtures/ after a
 # change to web/js/. Commit them with the change.
-docker run --rm --user "$(id -u):$(id -g)" -v "$PWD":/app -w /app node:26-alpine node test/fixtures.mjs
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD":/app -w /app node:26.13.1-alpine node test/fixtures.mjs
 
 # Swift tests of the core
 docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD/mac":/pkg -w /pkg swift:6.4 swift test
 ```
 
-CI regenerates the fixtures and fails if they differ from the committed ones. If it fails with no change to the JS, a new Node minor version has moved a `Math.*` result: regenerate, check that only the last digits moved, and commit.
+CI regenerates the fixtures in the same image and fails if they differ from the committed ones. Use exactly that image: Node takes `Math.pow` from the C library, and Alpine's (musl) and glibc's differ in the last bit of some values. To move to a new Node, change the image here and in `ci.yml`, regenerate, check that only the last digits moved, and commit.
 
 The piano documents `a` and `b` in the fixtures' `piano/` folder are copies of two real pianos with the id, name and notes replaced. `node test/fixtures.mjs --pianos data` takes new copies of the first two in `data/`.
 

@@ -44,13 +44,13 @@ Den inbyggda Mac-versionen byggs i `mac/` enligt [docs/macos-port.sv.md](docs/ma
 ```sh
 # Skapa om fixturerna i mac/Tests/PianoTunahCoreTests/Fixtures/ efter en
 # ändring i web/js/. Committa dem med ändringen.
-docker run --rm --user "$(id -u):$(id -g)" -v "$PWD":/app -w /app node:26-alpine node test/fixtures.mjs
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD":/app -w /app node:26.13.1-alpine node test/fixtures.mjs
 
 # Swift-tester av kärnan
 docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD/mac":/pkg -w /pkg swift:6.4 swift test
 ```
 
-CI skapar om fixturerna och misslyckas om de skiljer sig från de committade. Misslyckas den utan att JS:en har ändrats har en ny mindre version av Node flyttat ett `Math.*`-resultat: skapa om dem, kontrollera att bara de sista siffrorna har flyttat sig och committa.
+CI skapar om fixturerna i samma image och misslyckas om de skiljer sig från de committade. Använd exakt den imagen: Node tar `Math.pow` från C-biblioteket, och Alpines (musl) och glibc:s skiljer sig i sista biten för vissa värden. För att byta Node: ändra imagen här och i `ci.yml`, skapa om, kontrollera att bara de sista siffrorna har flyttat sig och committa.
 
 Pianodokumenten `a` och `b` i fixturernas mapp `piano/` är kopior av två riktiga pianon med id, namn och anteckningar utbytta. `node test/fixtures.mjs --pianos data` tar nya kopior av de två första i `data/`.
 
