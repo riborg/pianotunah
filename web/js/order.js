@@ -148,12 +148,13 @@ export function confirmReading(c, attack, ok) {
 const WINDOWED = new Set([3, 4, 9]);
 
 // The nearest interval of the same size below and above row whose keys are
-// both tuned, for the window slower < row < faster.
+// both tuned, for the window slower < row < faster. The key being tuned is
+// not in tuned, so a neighbour never moves with it.
 function neighbours(T, row, tuned, top) {
   const find = (dir) => {
     for (let lo = row.lo + dir; lo >= 1 && lo + row.semis <= top; lo += dir) {
       const hi = lo + row.semis;
-      if (tuned.has(lo) && tuned.has(hi)) return { lo, hi, beat: intervalBeat(T, lo, hi, row.p) };
+      if (tuned.has(lo) && tuned.has(hi)) return { lo, hi, p: row.p, beat: intervalBeat(T, lo, hi, row.p) };
     }
     return undefined;
   };
@@ -180,11 +181,12 @@ export function checkRows(T, task, top, tuned = null) {
     if (f < 40 || f > 5000) continue;
     const row = { lo, hi, semis: hi - lo, p, beat: intervalBeat(T, lo, hi, p) };
     if (tuned && WINDOWED.has(row.semis) && (lo === task.k || hi === task.k)) {
-      Object.assign(row, neighbours(T, row, new Set([...tuned, task.k]), top));
+      Object.assign(row, neighbours(T, row, tuned, top));
     }
     rows.push(row);
   }
   // A check shown as a neighbour in a window needs no row of its own.
-  const shown = new Set(rows.flatMap((r) => [r.below, r.above]).filter(Boolean).map((n) => `${n.lo}-${n.hi}`));
-  return rows.filter((r, i) => (i === 0 && task.from) || !shown.has(`${r.lo}-${r.hi}`));
+  const id = (r) => `${r.lo}-${r.hi}-${r.p}`;
+  const shown = new Set(rows.flatMap((r) => [r.below, r.above]).filter(Boolean).map(id));
+  return rows.filter((r, i) => (i === 0 && task.from) || !shown.has(id(r)));
 }

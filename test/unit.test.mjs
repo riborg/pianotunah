@@ -366,6 +366,10 @@ test('tuning order: a third or sixth with the key is shown between its tuned nei
   assert.equal(bd.above, undefined);
   // F3: F3–A3 is the only third tuned, so it has no neighbours.
   assert.ok(rowsFor(33).every((r) => !r.below && !r.above));
+  // A neighbour never holds the key being tuned: with 36–40, 37–41 and 38–42
+  // untuned, B3–E♭4 is not taken as the window above G3–B3.
+  const lone = checkRows(t, { k: 39, from: 34, what: 'middle', checks: [[35, 39]] }, 88, new Set([34, 35, 38, 43]));
+  assert.equal(lone.find((r) => name(r) === '35-39').above, undefined);
   // Without the tuned keys the rows are as before.
   assert.ok(checkRows(t, taskAt(order, at(39)), 88).every((r) => !r.below && !r.above));
 });
