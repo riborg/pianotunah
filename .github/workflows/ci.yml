@@ -101,3 +101,19 @@ jobs:
           swift --version
           test "$(uname -m)" = arm64 # the fixtures must hold on Apple silicon
           swift test
+
+  # The app itself: the Xcode project is generated from mac/project.yml and
+  # built unsigned, so every change to the app is compiled on a Mac.
+  app-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Build the app
+        working-directory: mac
+        run: |
+          xcodebuild -version
+          xcodegen generate
+          xcodebuild -project PianoTunah.xcodeproj -scheme PianoTunah -configuration Debug \
+            -destination 'platform=macOS' build CODE_SIGNING_ALLOWED=NO

@@ -54,6 +54,17 @@ CI skapar om fixturerna i samma image och misslyckas om de skiljer sig från de 
 
 Pianodokumenten `a` och `b` i fixturernas mapp `piano/` är kopior av två riktiga pianon med id, namn och anteckningar utbytta. `node test/fixtures.mjs --pianos data` tar nya kopior av de två första i `data/`.
 
+### Appen i Xcode
+
+Appen behöver en Mac med Xcode 26 eller senare. Dess Xcode-projekt genereras från `mac/project.yml` av [XcodeGen](https://github.com/yonaskolb/XcodeGen) och committas inte, så generera det på nytt efter en pull som lägger till eller tar bort filer:
+
+```sh
+brew install xcodegen
+cd mac && xcodegen generate && open PianoTunah.xcodeproj
+```
+
+Kör schemat `PianoTunah` med ⌘R. Debug-byggen signeras för att köras lokalt, utan utvecklarkonto. Pianona sparas i `~/Library/Application Support/Piano Tunah/`. CI bygger appen på samma sätt vid varje push, osignerad.
+
 ## Release
 
 ```sh
@@ -96,4 +107,6 @@ Servern svarar på `GET /api/tunings`, `GET|PUT|DELETE /api/tunings/{id}`, `GET 
 | `test/` | enhets- och end-to-end-tester |
 | `test/fixtures.mjs` | fixturer för Swift-testerna, skrivna från webbens JS |
 | `mac/` | macOS-appen: Swift-paketet `PianoTunahCore` och dess tester |
+| `mac/project.yml` | appens Xcode-projekt, för XcodeGen: target, bygginställningar, Info.plist |
+| `mac/PianoTunah/` | appen: SwiftUI-vyer, pianobiblioteket, menyer, texter på engelska och svenska |
 | `.github/workflows/` | CI, release, veckovis sårbarhetsskanning |

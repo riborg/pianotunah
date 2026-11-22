@@ -53,6 +53,17 @@ CI regenerates the fixtures in the same image and fails if they differ from the 
 
 The piano documents `a` and `b` in the fixtures' `piano/` folder are copies of two real pianos with the id, name and notes replaced. `node test/fixtures.mjs --pianos data` takes new copies of the first two in `data/`.
 
+### The app in Xcode
+
+The app needs a Mac with Xcode 26 or later. Its Xcode project is generated from `mac/project.yml` by [XcodeGen](https://github.com/yonaskolb/XcodeGen) and is not committed, so generate it again after a pull that adds or removes files:
+
+```sh
+brew install xcodegen
+cd mac && xcodegen generate && open PianoTunah.xcodeproj
+```
+
+Run the scheme `PianoTunah` with ⌘R. Debug builds are signed to run locally, without a developer account. The pianos are saved in `~/Library/Application Support/Piano Tunah/`. CI builds the app the same way on every push, unsigned.
+
 ## Release
 
 ```sh
@@ -95,4 +106,6 @@ The server answers `GET /api/tunings`, `GET|PUT|DELETE /api/tunings/{id}`, `GET 
 | `test/` | unit and end-to-end tests |
 | `test/fixtures.mjs` | fixtures for the Swift tests, written from the web JS |
 | `mac/` | the macOS app: Swift package `PianoTunahCore` and its tests |
+| `mac/project.yml` | the app's Xcode project, for XcodeGen: target, build settings, Info.plist |
+| `mac/PianoTunah/` | the app: SwiftUI views, the piano library, menus, strings in English and Swedish |
 | `.github/workflows/` | CI, release, weekly vulnerability scan |

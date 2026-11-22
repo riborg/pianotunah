@@ -1,0 +1,60 @@
+# The macOS app, for XcodeGen: `xcodegen generate` in this folder writes
+# PianoTunah.xcodeproj, which is not committed. See DEVELOP.md and
+# docs/macos-port.md. The core is the Swift package in this same folder.
+name: PianoTunah
+options:
+  developmentLanguage: en
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    # The release job overrides both.
+    MARKETING_VERSION: 0.0.0
+    CURRENT_PROJECT_VERSION: 1
+    # Sign to Run Locally; the release job signs with its own certificate.
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+    # No App Sandbox and no hardened runtime (docs/adr/0004).
+    ENABLE_APP_SANDBOX: NO
+    ENABLE_HARDENED_RUNTIME: NO
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+
+packages:
+  PianoTunahCore:
+    path: .
+
+targets:
+  PianoTunah:
+    type: application
+    platform: macOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: PianoTunah
+    dependencies:
+      - package: PianoTunahCore
+        product: PianoTunahCore
+    settings:
+      base:
+        PRODUCT_NAME: PianoTunah
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.riborg.pianotunah
+    # Written by xcodegen from these properties, and not committed.
+    info:
+      path: PianoTunah/Info.plist
+      properties:
+        CFBundleDisplayName: Piano Tunah
+        CFBundleName: Piano Tunah
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, sv]
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.music
+        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        # English here; Swedish in PianoTunah/InfoPlist.xcstrings.
+        NSMicrophoneUsageDescription: Piano Tunah listens to the piano through the microphone to measure how far each key is from its target.
+    scheme: {}
