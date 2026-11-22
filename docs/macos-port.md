@@ -181,6 +181,11 @@ The app updates itself from GitHub Releases with [Sparkle](https://sparkle-proje
    5. saves the zip and the appcast as workflow artifacts.
 3. **`publish`** needs both. It uploads the two files to the draft and publishes it (`gh release edit --draft=false`, plus `--prerelease` for tags with `-`).
 
+**As built** (phase 6), three things the steps above did not say:
+- **The public key is not in the repository.** `SUPublicEDKey` is the build setting `SPARKLE_PUBLIC_KEY`, empty in `mac/project.yml`. The `mac` job derives it from `SPARKLE_ED_PRIVATE_KEY` (CryptoKit, `mac/scripts/ed-key.sh`), so the private key is the only key secret and the two cannot disagree. With the key empty, as in every Xcode and CI build, the app never starts Sparkle and has no *Check for Updates…*, so a development build never updates itself.
+- **The steps are scripts** in `mac/scripts/`, run by `release.sh`. Before anything is uploaded, `check-release.sh` unpacks the zip and checks the signatures, the Info.plist and every field of the appcast, including that the app's own `SUPublicEDKey` accepts the zip's signature.
+- **CI dry-runs the release** on every push (`release-dry-run`): `dry-run.sh` makes a throwaway certificate with `openssl` and a throwaway key with `generate_keys` in a temporary keychain, and runs the same scripts for `v0.0.1`.
+
 If the Mac job fails, the release stays a draft and the run is red. `releases/latest` then keeps pointing at the previous release, which has its appcast, so installed apps see no 404 and simply stay on the version they have. The image is published either way. Fix the build, or build on your Mac, upload the two files to the draft by hand, and publish it.
 
 Pre-release tags (`-rc.1`) build the Mac app too, so a pre-release can be tried by downloading it. Its appcast is never read, because `latest` skips pre-releases.

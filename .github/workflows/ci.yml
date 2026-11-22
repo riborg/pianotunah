@@ -118,3 +118,27 @@ jobs:
           xcodebuild -project PianoTunah.xcodeproj -target PianoTunah -showBuildSettings | grep MACOSX_DEPLOYMENT_TARGET
           xcodebuild -project PianoTunah.xcodeproj -scheme PianoTunah -configuration Debug \
             -destination 'platform=macOS' build CODE_SIGNING_ALLOWED=NO
+      # Without SUPublicEDKey the app never starts Sparkle (Updater.swift);
+      # only the release job sets it.
+      - name: Development builds do not update themselves
+        run: |
+          plist=$(find ~/Library/Developer/Xcode/DerivedData -path '*/Build/Products/Debug/PianoTunah.app/Contents/Info.plist' | head -n 1)
+          test -n "$plist"
+          key=$(/usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' "$plist")
+          test -z "$key"
+          echo "SUPublicEDKey is empty in $plist"
+
+  # The Mac release (mac/scripts/release.sh, run by release.yml) for a fake
+  # v0.0.1 with a throwaway certificate and EdDSA key: build in Release,
+  # sign, zip, sign the zip, write the appcast and check them, without the
+  # real secrets. Nothing is uploaded.
+  release-dry-run:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Select the newest Xcode
+        run: mac/scripts/select-xcode.sh
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Release dry run
+        run: mac/scripts/dry-run.sh

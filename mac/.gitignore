@@ -4,3 +4,5 @@
 # Written by xcodegen from project.yml.
 /PianoTunah.xcodeproj/
 /PianoTunah/Info.plist
+# Release builds by scripts/ (DEVELOP.md).
+/build/

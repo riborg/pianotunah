@@ -8,6 +8,7 @@ import SwiftUI
 struct PianoTunahApp: App {
     @State private var library: PianoLibrary
     @State private var tuner: TunerModel
+    @State private var updater = Updater()
 
     init() {
         let library = PianoLibrary()
@@ -22,6 +23,7 @@ struct PianoTunahApp: App {
                 .environment(tuner)
         }
         .commands {
+            UpdateCommands(updater: updater)
             PianoCommands(library: library)
         }
 

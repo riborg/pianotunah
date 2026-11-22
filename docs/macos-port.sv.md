@@ -181,6 +181,11 @@ Appen uppdaterar sig själv från GitHub Releases med [Sparkle](https://sparkle-
    5. sparar zip-filen och appcasten som artefakter i arbetsflödet.
 3. **`publish`** behöver båda. Det laddar upp de två filerna till utkastet och publicerar det (`gh release edit --draft=false`, plus `--prerelease` för taggar med `-`).
 
+**Som det byggdes** (fas 6), tre saker som stegen ovan inte sa:
+- **Den publika nyckeln ligger inte i repot.** `SUPublicEDKey` är bygginställningen `SPARKLE_PUBLIC_KEY`, tom i `mac/project.yml`. Jobbet `mac` räknar fram den ur `SPARKLE_ED_PRIVATE_KEY` (CryptoKit, `mac/scripts/ed-key.sh`), så den privata nyckeln är den enda nyckelhemligheten och de två kan inte gå isär. När nyckeln är tom, som i varje bygge från Xcode och CI, startar appen aldrig Sparkle och har inget *Sök efter uppdateringar…*, så ett utvecklingsbygge uppdaterar aldrig sig självt.
+- **Stegen är skript** i `mac/scripts/`, som körs av `release.sh`. Innan något laddas upp packar `check-release.sh` upp zip-filen och kontrollerar signaturerna, Info.plist och varje fält i appcasten, också att appens egen `SUPublicEDKey` godtar zip-filens signatur.
+- **CI provkör releasen** vid varje push (`release-dry-run`): `dry-run.sh` skapar ett engångscertifikat med `openssl` och en engångsnyckel med `generate_keys` i en tillfällig nyckelring och kör samma skript för `v0.0.1`.
+
 Om Mac-jobbet fallerar förblir releasen ett utkast och körningen blir röd. `releases/latest` pekar då kvar på den förra releasen, som har sin appcast, så installerade appar får ingen 404 utan stannar på den version de har. Imagen publiceras i vilket fall som helst. Rätta bygget, eller bygg på din Mac, ladda upp de två filerna till utkastet för hand och publicera det.
 
 Förhandstaggar (`-rc.1`) bygger också Mac-appen, så att en förhandsrelease kan provas genom att laddas ner. Dess appcast läses aldrig, eftersom `latest` hoppar över förhandsreleaser.

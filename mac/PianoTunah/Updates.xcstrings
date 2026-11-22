@@ -1,0 +1,17 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Check for Updates…" : {
+      "comment" : "App menu item: look for a new version now.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sök efter uppdateringar…"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
