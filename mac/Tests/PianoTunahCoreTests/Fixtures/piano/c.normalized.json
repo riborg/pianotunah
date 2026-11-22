@@ -1,0 +1,39 @@
+{
+  "about": "store.normalize(input): settings through migrateSettings and over DEFAULT_SETTINGS, missing fields filled in. Decoding the input must give these values; encoding again must give the input back, key order aside.",
+  "input": "piano/c.input.json",
+  "normalized": {
+    "id": "00000000-0000-4000-8000-00000000000c",
+    "name": "Fixture piano C",
+    "notes": "",
+    "createdAt": "2025-01-02T03:04:05.006Z",
+    "updatedAt": "2025-01-02T03:04:05.006Z",
+    "settings": {
+      "refA4": 442,
+      "temperament": "vallotti",
+      "root": 2,
+      "stretch": "light",
+      "midOctave": "4:2",
+      "trebleOctave": "4:2",
+      "bassOctave": "6:3",
+      "extraTreble": 0,
+      "extraBass": 0,
+      "pianoKind": "grand",
+      "sizeCm": 274,
+      "keyCount": 88,
+      "overpull": 0,
+      "tolerance": 2,
+      "twoStringsTo": 32,
+      "oneStringTo": 0,
+      "unisons": "one"
+    },
+    "inharmonicity": {"1": 0.00041, "49": 0.00052, "88": 0.0161},
+    "partials": {},
+    "keys": {"49": {"hz": 441.3, "n": 1, "at": 1735787045006}},
+    "passStartedAt": "2025-01-02T03:04:05.006Z",
+    "order": {"step": 0, "i": 0},
+    "rev": 0,
+    "history": [],
+    "extra": {"kept": true, "list": [1, "two", null]}
+  },
+  "migratedSettings": {"refA4": 442, "temperament": "vallotti", "root": 2, "stretch": "light", "tolerance": 2, "pianoKind": "grand", "sizeCm": 274, "keyCount": 88}
+}
