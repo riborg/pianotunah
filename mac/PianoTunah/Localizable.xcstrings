@@ -11,6 +11,16 @@
         }
       }
     },
+    "%@ sounded %@ cents from its last reading. Not saved; strike it again to save it." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ lät %@ cent från förra avläsningen. Sparas inte; slå an igen för att spara."
+          }
+        }
+      }
+    },
     "%lld pianos could not be read." : {
       "localizations" : {
         "en" : {
@@ -47,26 +57,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "A4" : {
-      "localizations" : {
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A4"
-          }
-        }
-      }
-    },
-    "A4 from equal temperament" : {
-      "localizations" : {
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A4 mot liksvävande"
           }
         }
       }
@@ -151,6 +141,16 @@
         }
       }
     },
+    "Could not start the microphone: %@" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunde inte starta mikrofonen: %@"
+          }
+        }
+      }
+    },
     "Dark" : {
       "localizations" : {
         "sv" : {
@@ -191,12 +191,32 @@
         }
       }
     },
+    "Detect the key automatically (A)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hitta tangenten automatiskt (A)"
+          }
+        }
+      }
+    },
     "Export…" : {
       "localizations" : {
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Exportera…"
+          }
+        }
+      }
+    },
+    "Fundamental %@" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grundton %@"
           }
         }
       }
@@ -221,12 +241,22 @@
         }
       }
     },
-    "Keys" : {
+    "In tune" : {
       "localizations" : {
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tangenter"
+            "value" : "I stäm"
+          }
+        }
+      }
+    },
+    "Key %lld · target %@ cents" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tangent %lld · mål %@ cent"
           }
         }
       }
@@ -241,6 +271,36 @@
         }
       }
     },
+    "Listening …" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lyssnar …"
+          }
+        }
+      }
+    },
+    "Lock" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lås"
+          }
+        }
+      }
+    },
+    "Lock on the selected key (L)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lås på vald tangent (L)"
+          }
+        }
+      }
+    },
     "Make a new piano or import one from the Piano menu." : {
       "localizations" : {
         "sv" : {
@@ -251,12 +311,32 @@
         }
       }
     },
-    "Name" : {
+    "Measured %@" : {
       "localizations" : {
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Namn"
+            "value" : "Uppmätt %@"
+          }
+        }
+      }
+    },
+    "Measured partial %lld: %@" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uppmätt delton %lld: %@"
+          }
+        }
+      }
+    },
+    "Mode" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Läge"
           }
         }
       }
@@ -281,6 +361,26 @@
         }
       }
     },
+    "Next key" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nästa tangent"
+          }
+        }
+      }
+    },
+    "Next key (→)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nästa tangent (→)"
+          }
+        }
+      }
+    },
     "No piano" : {
       "localizations" : {
         "sv" : {
@@ -297,6 +397,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "OK"
+          }
+        }
+      }
+    },
+    "Open System Settings" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öppna Systeminställningar"
           }
         }
       }
@@ -321,6 +431,66 @@
         }
       }
     },
+    "Piano Tunah may not use the microphone. Allow it in System Settings › Privacy & Security › Microphone, then start the microphone again." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Piano Tunah får inte använda mikrofonen. Tillåt den i Systeminställningar › Integritet och säkerhet › Mikrofon och starta sedan mikrofonen igen."
+          }
+        }
+      }
+    },
+    "Play target tone (Space)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spela målton (mellanslag)"
+          }
+        }
+      }
+    },
+    "Previous key" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Föregående tangent"
+          }
+        }
+      }
+    },
+    "Previous key (←)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Föregående tangent (←)"
+          }
+        }
+      }
+    },
+    "Reference tone, not saved" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Referenston, sparas ej"
+          }
+        }
+      }
+    },
+    "Some frames had too few samples, so the bass is measured less precisely." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Några ramar hade för få samplingar, så basen mäts mindre noggrant."
+          }
+        }
+      }
+    },
     "Something went wrong" : {
       "localizations" : {
         "sv" : {
@@ -331,12 +501,42 @@
         }
       }
     },
-    "Target" : {
+    "Start microphone" : {
       "localizations" : {
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mål"
+            "value" : "Starta mikrofon"
+          }
+        }
+      }
+    },
+    "Start the microphone" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starta mikrofonen"
+          }
+        }
+      }
+    },
+    "Stop microphone" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stoppa mikrofon"
+          }
+        }
+      }
+    },
+    "The chosen microphone is not connected; using the system default." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den valda mikrofonen är inte ansluten; använder systemets standard."
           }
         }
       }
@@ -351,12 +551,82 @@
         }
       }
     },
+    "The input runs at %@ kHz. Piano Tunah measures best at 44.1 or 48 kHz." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingången går med %@ kHz. Piano Tunah mäter bäst med 44,1 eller 48 kHz."
+          }
+        }
+      }
+    },
+    "The note beats, twice a second or faster. Mute all strings but one with a felt strip or wedge." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tonen svävar, två gånger i sekunden eller fortare. Dämpa alla strängar utom en med filtremsa eller kil."
+          }
+        }
+      }
+    },
+    "Too high, lower" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "För högt, släpp efter"
+          }
+        }
+      }
+    },
+    "Too low, raise" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "För lågt, dra upp"
+          }
+        }
+      }
+    },
     "Untitled" : {
       "localizations" : {
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Namnlös"
+          }
+        }
+      }
+    },
+    "cents" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cent"
+          }
+        }
+      }
+    },
+    "overpull %@ cents" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "överdrag %@ cent"
+          }
+        }
+      }
+    },
+    "partial %lld %@" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "delton %lld %@"
           }
         }
       }

@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 /// library asks for.
 struct ContentView: View {
     @Environment(PianoLibrary.self) private var library
+    @Environment(TunerModel.self) private var tuner
     @AppStorage(ColorMode.storageKey) private var colorMode = ColorMode.auto
 
     var body: some View {
@@ -15,7 +16,11 @@ struct ContentView: View {
                 .navigationSplitViewColumnWidth(min: 180, ideal: 220)
         } detail: {
             if let piano = library.selected {
-                TunerPlaceholderView(piano: piano)
+                TunerView()
+                    .navigationTitle(Binding(
+                        get: { piano.name },
+                        set: { library.rename(piano.id, to: $0) }
+                    ))
             } else {
                 ContentUnavailableView(
                     "No piano",
@@ -26,6 +31,8 @@ struct ContentView: View {
         }
         .frame(minWidth: 640, minHeight: 400)
         .onChange(of: colorMode, initial: true) { colorMode.apply() }
+        // One engine per open piano: a new one when another is selected.
+        .onChange(of: library.selectedID, initial: true) { tuner.open(library.selected) }
         .fileImporter(isPresented: $library.isImporting, allowedContentTypes: [.json]) { result in
             if case .success(let url) = result { library.importFile(at: url) }
         }
