@@ -25,6 +25,7 @@ struct TunerView: View {
                     TunerWarnings(snapshot: snapshot, palette: palette)
                     KeyboardBlock(snapshot: snapshot)
                         .padding(.top, 10)
+                    FoldsView(snapshot: snapshot, listening: tuner.isListening)
                 }
                 .padding(20)
                 .frame(maxWidth: .infinity)

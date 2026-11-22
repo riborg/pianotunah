@@ -53,6 +53,8 @@ struct TunerSnapshot: Sendable {
     var keys = TunerKeys()
     /// The latest key that is done, to flash.
     var flash: KeyFlash?
+    /// The Beats and Partials folds (TunerModel+Folds.swift).
+    var folds = FoldsSnapshot()
 
     init(pianoID: String) {
         self.pianoID = pianoID
@@ -155,6 +157,8 @@ final class TunerCore: @unchecked Sendable {
     private var keysChanged = true
     private var flash: KeyFlash?
     private var flashSerial = 0
+    /// The folds under the dial (TunerModel+Folds.swift).
+    let folds = FoldsCore()
 
     private static let log = Logger(subsystem: "io.github.riborg.pianotunah", category: "engine")
 
@@ -218,6 +222,14 @@ final class TunerCore: @unchecked Sendable {
         publish()
     }
 
+    /// A command that changes the piano without an event of its own, such
+    /// as the partial: the piano is saved too.
+    func performSaving(_ command: (Engine) -> Void) {
+        guard engine != nil else { return }
+        dirty = true
+        perform(command)
+    }
+
     private func handle(_ event: Engine.Event) {
         switch event {
         case .dirty, .saved:
@@ -248,6 +260,7 @@ final class TunerCore: @unchecked Sendable {
         var update = Update(
             snapshot: engine.map { TunerSnapshot($0, reference: reference, keys: keys, flash: flash) },
             changes: nil, messages: messages)
+        if let engine { update.snapshot?.folds = folds.snapshot(engine) }
         if dirty, let engine { update.changes = EngineChanges(engine.piano) }
         dirty = false
         messages = []
@@ -396,6 +409,12 @@ final class TunerModel {
         queue.async { core.perform(command) }
     }
 
+    /// Runs `command` with the core on the analysis queue.
+    func send(_ command: @escaping @Sendable (TunerCore) -> Void) {
+        let core = core
+        queue.async { command(core) }
+    }
+
     // MARK: - Messages
 
     private func show(_ message: Engine.Message, decimal: DecimalSeparator) {
@@ -403,14 +422,22 @@ final class TunerModel {
         switch message {
         case .jump(let key, let cents):
             text = String(localized: "\(noteName(key)) sounded \(fmtC(cents, 0, decimal: decimal)) cents from its last reading. Not saved; strike it again to save it.")
+        case .bMeasured, .bOutlier, .bFailed:
+            guard let t = Self.inharmonicityText(message, decimal: decimal) else { return }
+            text = t
         default:
             // The others answer commands the app does not have yet.
             return
         }
+        showNotice(text)
+    }
+
+    /// Shows `text` as the notice for `seconds`.
+    func showNotice(_ text: String, seconds: Int = 5) {
         notice = Notice(text: text)
         noticeTask?.cancel()
         noticeTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(5))
+            try? await Task.sleep(for: .seconds(seconds))
             guard !Task.isCancelled else { return }
             self?.notice = nil
         }
