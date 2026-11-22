@@ -4,7 +4,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # agent/**: work branches of the macOS port, pushed only to get the
+    # macOS build checked; they are deleted afterwards.
+    branches: [main, 'agent/**']
   pull_request:
   workflow_call:
 

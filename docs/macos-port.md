@@ -6,14 +6,14 @@ Status: decided, being built on the branch `macos-port`. The app is for one Mac,
 
 ## Language: Swift, not Rust
 
-The app is Swift 6 with SwiftUI, AVAudioEngine and Foundation, for macOS 27 ([ADR 0001](adr/0001-native-mac-app-in-swift.md)).
+The app is Swift 6 with SwiftUI, AVAudioEngine and Foundation, for macOS 26 for now, later 27 ([ADR 0001](adr/0001-native-mac-app-in-swift.md)).
 
 - **The UI has to be SwiftUI or AppKit either way.** With Rust, either Swift draws the UI anyway and Rust is a library behind UniFFI, or the UI is something like egui or Tauri, which does not look or feel like a Mac app.
 - **The core is small.** theory, dsp, survey, order and format total about 1,200 lines of JS. A Rust core would add a second toolchain, a C or UniFFI bridge and an xcframework build to the project. That costs more than writing 1,200 lines of Swift.
 - **Audio is Apple's.** Microphone permission, device choice, voice processing, sleep and device changes all go through AVFoundation and Core Audio. Rust's `cpal` covers less of this, and the Swift glue would still be needed.
 - **Rust would pay off only if one core served both the web (as WASM) and the Mac.** Nobody has asked for that, and the web version works in JS. If the need comes, the Swift core and its fixtures (below) are a precise specification to port from.
 
-The app targets the current macOS (27) and supports no older versions, so it uses the newest SwiftUI and Observation APIs directly, with no availability checks. That needs the Xcode whose SDK is macOS 27. Phase 3 starts by checking that the installed Xcode has it. If it does not, the deployment target follows the SDK the installed Xcode has. Swift 6 language mode with strict concurrency checking.
+The app supports one macOS version and no older ones, so it uses the newest SwiftUI and Observation APIs directly, with no availability checks. The deployment target is macOS 26 for now: GitHub's macOS runners have Xcode 26.6 and no macOS 27 SDK yet (November 2026), and every step of the app is compiled there. It runs on macOS 27 as it is. When the runners get Xcode 27, the target (`mac/project.yml`, `sparkle:minimumSystemVersion`) moves to 27 in one change. Swift 6 language mode with strict concurrency checking.
 
 ## Shape
 
@@ -175,7 +175,7 @@ The app updates itself from GitHub Releases with [Sparkle](https://sparkle-proje
    4. writes `appcast.xml` with one `<item>` for this version:
       - `sparkle:version` = `CFBundleVersion`;
       - `sparkle:shortVersionString` = the tag without `v`;
-      - `sparkle:minimumSystemVersion` = 27.0;
+      - `sparkle:minimumSystemVersion` = the deployment target (26.0 for now);
       - a `sparkle:releaseNotesLink` to the GitHub Release;
       - an `<enclosure>` whose `url` is the tag's own asset, `releases/download/vX.Y.Z/PianoTunah.zip`, never the `latest` URL, with `sparkle:edSignature` and `length` from `sign_update`;
    5. saves the zip and the appcast as workflow artifacts.
@@ -185,7 +185,7 @@ If the Mac job fails, the release stays a draft and the run is red. `releases/la
 
 Pre-release tags (`-rc.1`) build the Mac app too, so a pre-release can be tried by downloading it. Its appcast is never read, because `latest` skips pre-releases.
 
-**Runner.** The job uses GitHub's newest macOS image and selects its newest Xcode. If that Xcode does not have the macOS 27 SDK yet, the job fails and the rule above applies. If that happens more than once, register your Mac as a self-hosted runner for this job.
+**Runner.** The job uses GitHub's newest macOS image and selects its newest Xcode. That Xcode must have the SDK of the deployment target; if it does not, the job fails and the rule above applies. If that happens more than once, register your Mac as a self-hosted runner for this job.
 
 **One-time setup on your Mac.**
 - Sparkle's `generate_keys` makes the EdDSA key pair.
@@ -211,4 +211,4 @@ Phases 0–2 can run entirely here on Linux. From phase 3 on, the app is built a
 1. **Distribution:** for your own use, installed from GitHub Releases. The app watches GitHub and updates itself when a new version is released ([ADR 0004](adr/0004-mac-app-updates-itself-from-github.md)).
 2. **Several devices:** not needed. The Mac app is used on its own, so there is no sync ([ADR 0002](adr/0002-mac-app-stores-web-json-locally.md)).
 3. **UI language:** follow macOS.
-4. **Minimum version:** macOS 27, the current one.
+4. **Minimum version:** macOS 26 for now, so that CI can build the app; 27 once GitHub's runners have Xcode 27.
