@@ -692,4 +692,351 @@ const ORDER_SETTINGS = [
   });
 }
 
+// ---------------------------------------------------------------------------
+// Engine: scenarios of frames and commands, played as engine.test.mjs plays
+// them, with the events and the state after each step.
+
+{
+  const engine = await import('../web/js/engine.js');
+  const { Engine, FRAME_MS } = engine;
+  const SR = 44100;
+  const N = 32768; // the ring buffer the engine reads each frame
+  const DT = FRAME_MS / 1000;
+  const WALL = Date.UTC(2026, 10, 1); // wall clock at time 0
+  const T = computeTargets(DEFAULT_SETTINGS);
+  const hzAt = (k, c, n = 1) => partialFreq(T.freq[k], T.B[k], n) * 2 ** (c / 1200);
+
+  rmSync(join(OUT, 'engine'), { recursive: true, force: true });
+
+  // A take: one continuous recording of a room with a piano in it, as the
+  // unit tests' room() makes it, but with the noise drawn once per sample so
+  // that frames are windows of the same sound. strikes: [k, cents, at (s),
+  // unison cents, unison strength]; each strike damps the note before it
+  // 0.3 s ahead.
+  const takes = {};
+  function take(name, secs, strikes) {
+    let seed = 11;
+    const noise = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648 - 0.5) * 0.0004;
+    const voices = strikes.map(([k, c, at, unison = 0, ua = 1], i) => {
+      const f1 = T.freq[k] * 2 ** (c / 1200);
+      const ps = [];
+      for (let p = 1; p <= 10; p++) {
+        const f = partialFreq(f1, T.B[k], p);
+        if (f > SR / 2.2) break;
+        ps.push([f, 1 / p, p]);
+        if (unison) ps.push([f * 2 ** (unison / 1200), ua / p, 2 * p]);
+      }
+      return { ps, at, damp: i + 1 < strikes.length ? strikes[i + 1][2] - 0.3 : null };
+    });
+    const x = new Float32Array(Math.round(secs * SR));
+    for (let i = 0; i < x.length; i++) {
+      const ti = i / SR;
+      let y = noise();
+      for (const v of voices) {
+        const age = ti - v.at;
+        if (age < 0) continue;
+        let env = 0.25 * Math.exp(-age * 0.6) * Math.min(1, age * 200);
+        if (v.damp !== null && ti > v.damp) env *= Math.exp(-(ti - v.damp) / 0.03);
+        if (env < 1e-6) continue;
+        for (const [f, a, ph] of v.ps) y += a * env * Math.sin(2 * Math.PI * f * age + ph);
+      }
+      x[i] = y;
+    }
+    const file = `${name}.f32`;
+    writeF32(`engine/${file}`, x);
+    takes[file] = x;
+    return { file, length: x.length, strikes };
+  }
+
+  // The N samples ending at sample `end` of a take, zeros before its start.
+  function windowOf(file, end) {
+    const x = takes[file];
+    const b = new Float32Array(N);
+    const from = end - N;
+    b.set(x.subarray(Math.max(0, from), end), Math.max(0, -from));
+    return b;
+  }
+
+  const takeList = [
+    // A4: +5 cents, then −0.3 with a weaker second string 5 cents above it
+    // (readings swing), then +0.2 ringing long.
+    take('a4', 5.4, [[49, 5, 0.15], [49, -0.3, 1.45, 5, 0.3], [49, 0.2, 3.0]]),
+    // A4 as a unison 10 cents out: beats.
+    take('a4-unison', 3.3, [[49, 0, 0.15, 10]]),
+    // A survey: G4 struck for C4, then C4, then E4.
+    take('survey', 3.5, [[47, 0, 0.15], [40, 0, 1.3], [44, 0, 2.7]]),
+  ];
+
+  const piano = (settings = {}, extra = {}) => store.normalize({
+    id: 'engine', name: 'Engine', notes: '', createdAt: '2026-10-01T00:00:00.000Z', updatedAt: '2026-10-01T00:00:00.000Z',
+    passStartedAt: '2026-10-01T00:00:00.000Z', settings: { ...DEFAULT_SETTINGS, ...settings }, inharmonicity: {}, partials: {}, keys: {},
+    history: [], order: { step: 0, i: 0 }, rev: 1, ...extra,
+  });
+  const rec = (k, c, bc = c, at = WALL - 86400000) => ({ hz: hzAt(k, c), n: 1, bhz: hzAt(k, bc), bn: 1, at });
+
+  // What can be seen of the engine after a step.
+  const pair = (o, ks) => (o ? Object.fromEntries(ks.map((k) => [k, o[k]])) : null);
+  function snap(e) {
+    const k = e.key;
+    const m = e.beatMeter;
+    const sk = e.survey;
+    const col = e.frameCol;
+    return {
+      key: k, mode: e.mode, top: e.top(), signal: e.signal, stable: e.stable,
+      level: e.level, prevLevel: e.prevLevel, levels: e.levels, noise: e.noise, gate: e.gate(),
+      attacks: e.attacks, inAttack: e.inAttack, cand: e.cand, candCount: e.candCount, autoFrames: e.autoFrames, shift: e.shift,
+      readings: e.readings.length, reading: e.readings.length ? [e.readings.at(-1).c, e.readings.at(-1).hz] : null, refTainted: e.refTainted,
+      display: e.display, measHz: e.measHz, beatHz: e.beatHz,
+      strobe: e.strobe.map((s) => [s.p, s.c]), strobeReadings: e.strobeReadings, partialDevs: e.partialDevs,
+      col: col && { c: col.c, n: col.col.length, bins: [0, 12, 24, 36, 47].map((i) => col.col[i]) }, spec: e.spec.length,
+      specCols: e.spec.filter((c) => c).length,
+      beating: e.beating, beatKnown: e.beatKnown, beatFedAt: e.beatFedAt, beatUnheard: e.beatUnheard(), unisonSkip: e.unisonSkip,
+      meter: { levels: m.ts.length, span: m.span, hits: m.hits, misses: m.misses, on: m.on, quiet: m.quiet },
+      frameTime: e.frameTime,
+      rec: e.tuning.keys[k] ? { ...e.tuning.keys[k] } : null, measured: Object.keys(e.tuning.keys).length,
+      dev: e.curDev(k), before: e.beforeDev(k), goal: e.goal(k), statusDev: e.statusDev(k),
+      status: e.statusClass(e.statusDev(k)), shown: e.statusClass(e.display), tolerance: e.tolerance(),
+      partial: e.partialOf(k), strings: e.strings(k), B: e.T.B[k], freq: e.T.freq[k], sine: e.sineFreq(), goalF1: e.goalF1(k),
+      bBad: e.bBad, inharmonicity: e.tuning.inharmonicity,
+      bReadings: e.bReadings, measureB: e.measureB, jump: e.jump,
+      survey: sk && {
+        waitAttack: sk.waitAttack, pitch: sk.pitch.length, lastPitch: sk.pitch.at(-1) ?? null, bs: sk.bs.length, lastB: sk.bs.at(-1) ?? null,
+        ms: sk.ms, lost: sk.lost, wrong: sk.wrong, wrongFrames: sk.wrongFrames, heard: pair(sk.heard, ['key', 'score', 'margin']),
+      },
+      run: e.run && { done: e.run.done, skipped: e.run.skipped, offsets: e.run.offsets },
+      surveyPlan: e.surveyPlan, needsB: e.needsB(k), surveyed: e.isSurveyed(k),
+      orderOn: e.orderOn, orderActive: e.orderActive(), orderPos: e.orderPos, task: pair(e.orderTask(), ['k', 'what']),
+      orderSteps: e.order.map((s) => s.tasks.length), confirm: e.orderConfirm, advice: e.orderAdvice, recheck: e.orderRecheck,
+      tuningOrder: e.tuning.order,
+      midShift: e.midShift(), refAdvice: e.refAdvice(), pitchAdvice: e.pitchAdvice(), suggestedOverpull: e.suggestedOverpull(),
+      fitRefHz: e.fitRefHz(), passStats: e.passStats(), recheckKeys: e.recheckKeys(),
+      stats: e.stats, history: e.tuning.history.length, lastPass: e.tuning.history.at(-1) ?? null, passStartedAt: e.tuning.passStartedAt,
+    };
+  }
+
+  // The parts of the piano the engine changes, at the end of a scenario.
+  const tuningOut = (t) => pair(t, ['settings', 'keys', 'inharmonicity', 'partials', 'order', 'history', 'passStartedAt']);
+
+  const scenarios = [];
+  function scenario(name, about, p, script) {
+    const events = [];
+    const e = new Engine({ emit: (type, data) => events.push({ type, ...data }) });
+    const steps = [];
+    let prev = {};
+    const record = (step) => {
+      const s = JSON.parse(serialize(snap(e)));
+      const state = {};
+      for (const k of Object.keys(s)) if (JSON.stringify(s[k]) !== JSON.stringify(prev[k])) state[k] = s[k];
+      prev = s;
+      steps.push({ ...step, events: events.splice(0), state });
+    };
+    const input = JSON.parse(JSON.stringify(p));
+    const run = {
+      e,
+      do(cmd, ...args) {
+        const ret = cmd === 'open' ? e.open(JSON.parse(JSON.stringify(args[0]))) : e[cmd](...args);
+        record({ do: cmd, args, ...(ret !== undefined ? { ret } : {}) });
+        return ret;
+      },
+      // Frames every FRAME_MS from t0 (s) while t < t1, or until until().
+      // nowScale: the steady clock runs that much faster than the audio.
+      frames(file, t0, t1, { ref = false, nowScale = 1, until, each } = {}) {
+        for (let t = t0; t < t1 - 1e-9; t += DT) {
+          const end = Math.round(t * SR);
+          const time = end / SR;
+          const now = time * 1000 * nowScale;
+          const wall = WALL + time * 1000;
+          const res = e.frame(windowOf(file, end), { time, now, wall, ref });
+          record({ do: 'frame', take: file, end, time, now, wall, ref, idle: res.idle });
+          if (JSON.stringify(res.events) !== JSON.stringify(steps.at(-1).events)) throw new Error(`${name}: frame events differ from emitted`);
+          each?.(t);
+          if (until?.()) return t + DT;
+        }
+        return t1;
+      },
+    };
+    e.open(JSON.parse(JSON.stringify(p)));
+    record({ do: 'open' });
+    run.do('startAudio', SR);
+    script(run, e);
+    const file = `engine/${name}.json`;
+    scenarios.push(name);
+    write(file, { name, about, sampleRate: SR, frameSize: N, piano: input, steps, tuning: tuningOut(e.tuning) });
+    return e;
+  }
+
+  const expect = (ok, what) => {
+    if (!ok) throw new Error(`engine fixture: ${what}`);
+  };
+
+  // Lock: saved once 9 readings hold still, Before kept, the swing of a weak
+  // second string does not stop the save.
+  {
+    const e = scenario('lock-save', 'Lock on A4: three strikes; each is saved once its readings hold still, also the second, whose readings swing with a weak second string; Before stays the first.', piano(), (r, e) => {
+      r.do('selectKey', 49, true);
+      let saved2 = false;
+      r.frames('a4.f32', 0.09, 4.2, { each: (t) => (saved2 ||= t > 1.45 && t < 3.0 && e.stable) });
+      expect(saved2, 'the swinging strike is saved');
+    });
+    expect(Math.abs(e.curDev(49) - 0.2) < 0.2 && Math.abs(e.beforeDev(49) - 5) < 0.2, 'lock-save readings');
+  }
+  scenario('lock-ref', 'Lock on A4 while a reference tone is heard: nothing saved or followed; once the tone stops, its readings are dropped.', piano(), (r, e) => {
+    r.do('selectKey', 49, true);
+    r.frames('a4.f32', 0.09, 1.3, { ref: true });
+    expect(!e.tuning.keys[49] && e.signal, 'not saved while ref');
+    r.frames('a4.f32', 1.3, 2.1);
+  });
+  scenario('auto-follow', 'Auto, starting on C4: follows A4 when it is struck and saves it.', piano(), (r, e) => {
+    r.do('selectKey', 40, false);
+    r.frames('a4.f32', 0.09, 1.6);
+    expect(e.key === 49 && e.mode === 'auto' && e.tuning.keys[49], 'auto follows and saves');
+  });
+  scenario('auto-ref', 'Auto, starting on C4, with a reference tone heard: A4 is not followed.', piano(), (r, e) => {
+    r.do('selectKey', 40, false);
+    r.frames('a4.f32', 0.09, 1.2, { ref: true });
+    expect(e.key === 40, 'ref not followed');
+  });
+  scenario('jump', 'Lock on A4 saved 55 cents flat: a reading 60 cents away is not saved but told once; the next strike confirms it.', piano({}, { keys: { 49: rec(49, -55) } }), (r, e) => {
+    r.do('selectKey', 49, true);
+    r.frames('a4.f32', 0.09, 1.45);
+    expect(e.curDev(49) < -54 && e.jump, 'jump waits');
+    r.frames('a4.f32', 1.45, 3.0);
+    expect(Math.abs(e.curDev(49)) < 1, 'jump confirmed');
+  });
+  scenario('measure-b', 'Measure B on A4, with the steady clock 4 times the audio clock: stored with a message after 4 s of it. Then one that fails at once.', piano(), (r, e) => {
+    r.do('selectKey', 49, true);
+    const t = r.frames('a4.f32', 0.09, 0.6);
+    const end = Math.round(t * SR);
+    r.do('startMeasureB', (end / SR) * 1000 * 4);
+    r.frames('a4.f32', t, 2.4, { nowScale: 4, until: () => !e.measureB });
+    expect(!e.measureB && e.tuning.inharmonicity[49], 'B measured');
+    r.do('startMeasureB', 0);
+    r.do('finishMeasureB');
+  });
+  scenario('beats', 'Lock on A4 struck as a unison 10 cents out: the beat check finds it beating; another key starts the check over.', piano(), (r, e) => {
+    r.do('selectKey', 49, true);
+    r.frames('a4-unison.f32', 0.09, 3.3);
+    expect(e.beatKnown && e.beating, 'beats');
+    r.do('selectKey', 50, true);
+  });
+  scenario('order-confirm', 'The tuning order on A4 of the middle step: with a tolerance of 2.5 cents: 5 cents sharp does not count, the swinging strike and the next, both in tune, move on to A3.', piano({ tolerance: 2.5 }), (r, e) => {
+    r.do('setOrderOn', true);
+    r.do('goOrder', { step: 3, i: 0 });
+    r.frames('a4.f32', 0.09, 4.3);
+    expect(e.orderPos.step === 3 && e.orderPos.i === 1 && e.key === 37, 'order moved on');
+  });
+  scenario('order-advice', 'The tuning order on the pull of A4 with A4 at 441 Hz: each strike is off target; the long clean one gets the advice to move the unison.', piano({ refA4: 441 }), (r, e) => {
+    r.do('setOrderOn', true);
+    r.do('goOrder', { step: 7, i: 0 });
+    r.frames('a4.f32', 0.09, 5.4);
+    expect(e.orderAdvice === 'shift3' && e.orderPos.i === 0, 'advice');
+  });
+  scenario('order-beating', 'The tuning order on the pull of A4, struck as a beating unison on pitch: not in tune until it is clean.', piano(), (r, e) => {
+    r.do('setOrderOn', true);
+    r.do('goOrder', { step: 7, i: 0 });
+    r.frames('a4-unison.f32', 0.09, 3.3);
+    expect(e.orderPos.i === 0 && e.beating, 'beating unison not done');
+  });
+
+  // A full survey with four keys left: a wrong key, a skip, one with B.
+  {
+    const keys = {};
+    const inh = {};
+    for (let k = 1; k <= 88; k++) if (![40, 41, 44, 47].includes(k)) keys[k] = { hz: hzAt(k, 1), n: 1, at: WALL - 86400000, mapped: true };
+    for (const k of [40, 41, 47]) inh[k] = Number(T.B[k].toPrecision(4));
+    scenario('survey', 'A full survey with C4, C♯4, E4 and G4 left: G4 struck for C4 is noticed, C4 measured, C♯4 skipped, E4 measured with B, G4 skipped; back to Lock at A4.', piano({}, { keys, inharmonicity: inh }), (r, e) => {
+      r.do('setSurveyPlan', 'full');
+      r.do('setMode', 'survey');
+      expect(e.key === 40, 'survey starts at C4');
+      let t = r.frames('survey.f32', 0.09, 1.25);
+      expect(e.survey.wrong === 47 && e.key === 40, 'wrong key noticed');
+      t = r.frames('survey.f32', t, 2.65, { until: () => e.key !== 40 });
+      expect(e.key === 41, 'C4 measured');
+      r.do('skipSurveyKey');
+      expect(e.key === 44, 'skipped to E4');
+      t = r.frames('survey.f32', t, 3.5, { until: () => e.key !== 44 });
+      expect(e.key === 47, 'E4 measured');
+      r.do('skipSurveyKey');
+      expect(e.mode === 'lock' && e.key === 49, 'survey done');
+    });
+  }
+  scenario('survey-commands', 'Survey plans: a full survey continues after the keys surveyed before, a new plan starts the run over; redo and skip.', piano({}, { keys: Object.fromEntries([1, 2, 3].map((k) => [k, { hz: hzAt(k, 0), n: 1, at: WALL, mapped: true }])) }), (r) => {
+    r.do('setSurveyPlan', 'full');
+    r.do('setMode', 'survey');
+    r.do('setSurveyPlan', 'quick');
+    r.do('skipSurveyKey');
+    r.do('redoSurveyKey');
+    r.do('setMode', 'lock');
+    r.do('setMode', 'auto');
+  });
+  scenario('order-commands', 'Tuning order commands: next, previous, skip, back to the order key, DSU, the last step and off.', piano({}, { keys: { 40: rec(40, 4), 41: rec(41, 0) } }), (r, e) => {
+    r.do('setOrderOn', true);
+    r.do('orderNext');
+    r.do('orderPrev');
+    r.do('orderPrev');
+    r.do('orderSkip');
+    r.do('orderSkip');
+    r.do('goOrder', { step: e.orderStepIndex('treble'), i: 0 });
+    r.do('setMode', 'auto');
+    r.do('selectKey', 20, false);
+    r.do('orderBack');
+    r.do('goOrder', { step: e.orderStepIndex('treble'), i: 4 });
+    r.do('setUnisons', 'dsu');
+    r.do('goOrder', { step: e.orderStepIndex('finish'), i: 0 });
+    r.do('orderNext');
+    r.do('goOrder', { step: 0, i: 0 });
+    r.do('setOrderOn', false);
+    r.do('goOrder', { step: e.orderStepIndex('middle'), i: 1 });
+    r.do('open', piano({}, { keys: { 45: { hz: hzAt(45, -7), n: 1, at: WALL } }, order: { step: 9, i: 0 } }));
+    r.do('setOrderOn', true);
+  });
+  {
+    const keys = (c, ks) => Object.fromEntries(ks.map((k) => [k, rec(k, c)]));
+    scenario('advice', 'The middle before tuning: reference advice, pitch advice and the reference that fits, on pianos opened one after another.', piano({}, { keys: keys(-12, [40, 44]) }), (r) => {
+      r.do('open', piano({}, { keys: keys(-12, [20, 40, 44, 49, 70]) }));
+      r.do('open', piano({ refA4: 442 }, { keys: keys(-30, [40, 41, 42]) }));
+      r.do('open', piano({}, { keys: keys(6, [40, 41, 42]) }));
+      r.do('open', piano({}, { keys: keys(-2, [40, 41, 42]) }));
+      r.do('open', piano({ overpull: 25, tolerance: 1 }, { keys: { 49: { hz: hzAt(49, 4.5), n: 1, bhz: hzAt(49, -20), bn: 1, at: WALL } } }));
+      r.do('selectKey', 49, true);
+    });
+  }
+  {
+    const keys = { 40: rec(40, 0.5, -10), 41: rec(41, 3, -6), 42: rec(42, -8) };
+    const history = Array.from({ length: 30 }, (_, i) => ({ startedAt: String(i), endedAt: String(i), refA4: 440, measured: 1, meanAbsBefore: 1, meanAbsAfter: 1 }));
+    scenario('pass', 'A new pass: the summary goes to the history, which keeps 30, and the measurements are cleared; then one with nothing measured.', piano({}, { keys, order: { step: 5, i: 2 }, history }), (r) => {
+      r.do('selectKey', 41, true);
+      r.do('newPass', WALL);
+      r.do('newPass', WALL + 1000);
+    });
+  }
+  scenario('settings', 'Strings per key, the partial and the key, clamped.', piano({ keyCount: 85 }), (r) => {
+    r.do('setStrings', 100, 30);
+    r.do('setStrings', 24.6, 9.4);
+    r.do('selectKey', 100, true);
+    r.do('selectKey', 49, true);
+    for (const d of [1, -1, 1, 1, 1, 1, 1, 1, 1, 1, -9]) r.do('setPartial', d);
+    r.do('recompute');
+    r.do('stopAudio');
+  });
+
+  write('engine/clamps.json', {
+    about: 'engine.js clamping rules and step ranges.',
+    clampRef: [379, 500, 440.06, 441.94, 440.05, 415.3, NaN].map((x) => ({ x, out: engine.clampRef(x) })),
+    clampSize: [['upright', NaN], ['upright', 0], ['upright', 200], ['grand', 139.6], ['grand', 212.4], ['grand', 212.5], ['upright', 89.5]].map(([kind, v]) => ({ kind, v, out: engine.clampSize(kind, v) })),
+    clampStrings: [[88, 100, 120], [88, 20, 30], [85, NaN, -3], [88, 24.6, 9.4], [88, 0.5, 0.5]].map(([top, two, one]) => ({ top, two, one, out: engine.clampStrings(top, two, one) })),
+    clampPartial: [-1, 0, 1, 3, 8, 9].map((n) => ({ n, out: engine.clampPartial(n) })),
+    stepRange: ['pitch', 'raise', 'strip', 'middle', 'temperament', 'upper', 'treble', 'pull', 'bass', 'finish'].flatMap((id) => [88, 85].map((top) => ({ id, top, out: engine.stepRange(id, top) }))),
+  });
+
+  write('engine/index.json', {
+    about: 'Engine scenarios (engine/<name>.json). Each starts with a new Engine on `piano` (normalized), opened, then startAudio(sampleRate). Steps: do = a command with args (ret: what it returned), or "frame": the frameSize samples of engine/<take> ending at sample `end` (zeros before its start), with time, now, wall and ref. After each step: the events in order (emit(type, data) as { type, ...data }) and `state`, the fields of the snapshot that changed since the previous step. Decisions, events and keys must match exactly, numbers within 1e-9 relative (1e-9 absolute near zero). tuning: the piano at the end.',
+    sampleRate: SR,
+    frameSize: N,
+    frameMs: FRAME_MS,
+    takes: takeList,
+    scenarios,
+  });
+}
+
 console.log(`Wrote ${written.length} files to ${OUT.slice(ROOT.length + 1)}`);

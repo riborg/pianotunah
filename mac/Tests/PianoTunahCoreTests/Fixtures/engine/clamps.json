@@ -1,0 +1,51 @@
+{
+  "about": "engine.js clamping rules and step ranges.",
+  "clampRef": [
+    {"x": 379, "out": 380},
+    {"x": 500, "out": 480},
+    {"x": 440.06, "out": 440.1},
+    {"x": 441.94, "out": 441.9},
+    {"x": 440.05, "out": 440.1},
+    {"x": 415.3, "out": 415.3},
+    {"x": "NaN", "out": "NaN"}
+  ],
+  "clampSize": [
+    {"kind": "upright", "v": "NaN", "out": 120},
+    {"kind": "upright", "v": 0, "out": 120},
+    {"kind": "upright", "v": 200, "out": 150},
+    {"kind": "grand", "v": 139.6, "out": 140},
+    {"kind": "grand", "v": 212.4, "out": 212},
+    {"kind": "grand", "v": 212.5, "out": 213},
+    {"kind": "upright", "v": 89.5, "out": 90}
+  ],
+  "clampStrings": [
+    {"top": 88, "two": 100, "one": 120, "out": {"two": 88, "one": 88}},
+    {"top": 88, "two": 20, "one": 30, "out": {"two": 20, "one": 20}},
+    {"top": 85, "two": "NaN", "one": -3, "out": {"two": 0, "one": 0}},
+    {"top": 88, "two": 24.6, "one": 9.4, "out": {"two": 25, "one": 9}},
+    {"top": 88, "two": 0.5, "one": 0.5, "out": {"two": 1, "one": 1}}
+  ],
+  "clampPartial": [{"n": -1, "out": 1}, {"n": 0, "out": 1}, {"n": 1, "out": 1}, {"n": 3, "out": 3}, {"n": 8, "out": 8}, {"n": 9, "out": 8}],
+  "stepRange": [
+    {"id": "pitch", "top": 88, "out": null},
+    {"id": "pitch", "top": 85, "out": null},
+    {"id": "raise", "top": 88, "out": null},
+    {"id": "raise", "top": 85, "out": null},
+    {"id": "strip", "top": 88, "out": [33, 49]},
+    {"id": "strip", "top": 85, "out": [33, 49]},
+    {"id": "middle", "top": 88, "out": null},
+    {"id": "middle", "top": 85, "out": null},
+    {"id": "temperament", "top": 88, "out": [33, 44]},
+    {"id": "temperament", "top": 85, "out": [33, 44]},
+    {"id": "upper", "top": 88, "out": [45, 48]},
+    {"id": "upper", "top": 85, "out": [45, 48]},
+    {"id": "treble", "top": 88, "out": [50, 88]},
+    {"id": "treble", "top": 85, "out": [50, 85]},
+    {"id": "pull", "top": 88, "out": [49, 33]},
+    {"id": "pull", "top": 85, "out": [49, 33]},
+    {"id": "bass", "top": 88, "out": [32, 1]},
+    {"id": "bass", "top": 85, "out": [32, 1]},
+    {"id": "finish", "top": 88, "out": null},
+    {"id": "finish", "top": 85, "out": null}
+  ]
+}
