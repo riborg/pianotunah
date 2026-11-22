@@ -33,7 +33,8 @@ targets:
   PianoTunah:
     type: application
     platform: macOS
-    deploymentTarget: "26.0"
+    # The deployment target is options.deploymentTarget above, the one place
+    # it is set; the release job reads it from there for the appcast.
     sources:
       - path: PianoTunah
     dependencies:

@@ -27,6 +27,11 @@ final class PianoLibrary {
 
     /// How long after a change the piano is saved.
     static let saveDelay: Duration = .seconds(2.5)
+    /// How long after a failed save it is tried again (as the web's saver).
+    static let retryDelay: Duration = .seconds(10)
+    /// A save has failed and has not succeeded since: the error was shown
+    /// once, and saves are retried every `retryDelay`.
+    @ObservationIgnored private var saveFailing = false
 
     @ObservationIgnored private let store: PianoStore
     @ObservationIgnored private var unsaved: Set<String> = []
@@ -163,9 +168,13 @@ final class PianoLibrary {
 
     private func scheduleSave(_ id: String) {
         unsaved.insert(id)
+        scheduleSave(after: PianoLibrary.saveDelay)
+    }
+
+    private func scheduleSave(after delay: Duration) {
         saveTask?.cancel()
         saveTask = Task { [weak self] in
-            try? await Task.sleep(for: PianoLibrary.saveDelay)
+            try? await Task.sleep(for: delay)
             guard !Task.isCancelled else { return }
             self?.saveNow()
         }
@@ -184,8 +193,15 @@ final class PianoLibrary {
                 try store.save(piano)
                 unsaved.remove(id)
             } catch {
-                errorMessage = String(localized: "Could not save “\(piano.name)”.")
+                // Shown once, not on every retry; the piano stays unsaved.
+                if !saveFailing {
+                    errorMessage = String(localized: "Could not save “\(piano.name)”.")
+                }
             }
         }
+        saveFailing = !unsaved.isEmpty
+        // Try again later; at quit this task never runs, but the files of
+        // every piano that did save are complete.
+        if saveFailing { scheduleSave(after: PianoLibrary.retryDelay) }
     }
 }

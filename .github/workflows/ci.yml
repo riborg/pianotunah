@@ -115,5 +115,6 @@ jobs:
         run: |
           xcodebuild -version
           xcodegen generate
+          xcodebuild -project PianoTunah.xcodeproj -target PianoTunah -showBuildSettings | grep MACOSX_DEPLOYMENT_TARGET
           xcodebuild -project PianoTunah.xcodeproj -scheme PianoTunah -configuration Debug \
             -destination 'platform=macOS' build CODE_SIGNING_ALLOWED=NO
