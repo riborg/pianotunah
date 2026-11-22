@@ -21,6 +21,9 @@ import Testing
     #expect(session.state == .stopped)
     #expect(session.input == nil)
     #expect(!session.startRecording())
+    #expect(session.recordingCut == nil)
+    session.restart() // only from running or failed
+    #expect(session.state == .stopped)
     let tones = TonePlayer()
     #expect(!tones.isSineOn)
     #expect(tones.audibleUntil == 0)

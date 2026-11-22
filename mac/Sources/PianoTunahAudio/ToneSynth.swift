@@ -16,7 +16,7 @@ import PianoTunahCore
 ///   (`setTargetAtTime`), and stopping ramps it out over 60 ms.
 ///
 /// Threads: not thread-safe. One thread owns it: the render callback, fed
-/// ``Command``s through an ``SPSCQueue``. ``apply(_:)`` and
+/// ``Command``s by a ``ToneControl``. ``apply(_:)`` and
 /// ``render(into:)`` neither allocate nor lock; all state lives in buffers
 /// allocated in `init`.
 public final class ToneSynth {

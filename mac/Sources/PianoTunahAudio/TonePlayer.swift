@@ -13,20 +13,14 @@ import Synchronization
 ///
 /// Threads: main actor, except ``audibleUntil`` and
 /// ``gatesReadings(now:)``, which any thread may read (the analysis queue,
-/// say), and the render block on the audio thread. Commands reach the
-/// render block through a lock-free ``SPSCQueue``; the block drains it and
-/// renders, without allocating or locking. The engine starts with the first
-/// tone and is rebuilt when the output device changes.
+/// say), and the render block on the audio thread. The render block owns a
+/// ``ToneControl``: plucks reach it through a lock-free queue, the sine's
+/// on/off and frequency through an atomic it reads every block, so a stop
+/// is never lost. It renders without allocating or locking. The engine
+/// starts with the first tone and is rebuilt when the output device
+/// changes.
 @MainActor
 public final class TonePlayer {
-    /// What the render block touches: made on the main actor, then used only
-    /// by the render thread (the synth) or by both ends of the queue.
-    private final class RenderState: @unchecked Sendable {
-        let synth: ToneSynth
-        let commands = SPSCQueue<ToneSynth.Command>(capacity: 64)
-        init(sampleRate: Double) { synth = ToneSynth(sampleRate: sampleRate) }
-    }
-
     /// The steady clock ``audibleUntil`` is in: s since boot.
     public nonisolated static func now() -> Double {
         ProcessInfo.processInfo.systemUptime
@@ -39,7 +33,7 @@ public final class TonePlayer {
     private let until = Atomic<UInt64>(0)
 
     private var engine: AVAudioEngine?
-    private var state: RenderState?
+    private var state: ToneControl?
     private var observer: (any NSObjectProtocol)?
 
     public init() {}
@@ -61,16 +55,19 @@ public final class TonePlayer {
     public func pluck(f1: Double, b: Double) -> Double {
         guard let state = running() else { return 0 }
         let seconds = ToneSynth.pluckSeconds(f1: f1, b: b, sampleRate: state.synth.sampleRate)
-        guard seconds > 0, state.commands.push(.pluck(f1: f1, b: b)) else { return 0 }
+        guard seconds > 0, state.pluck(f1: f1, b: b) else { return 0 }
         pluckUntil = max(pluckUntil, Self.now() + seconds)
         publish()
         return seconds
     }
 
-    /// The sustained sine at `hz`; if it is on, a new frequency.
+    /// The sustained sine at `hz`; if it is on, a new frequency. Ignored
+    /// unless `hz` is positive and finite.
     public func startSine(_ hz: Double) {
+        guard hz > 0, hz.isFinite else { return }
         if isSineOn { return setSine(hz) }
-        guard let state = running(), state.commands.push(.startSine(hz)) else { return }
+        guard let state = running() else { return }
+        state.setSine(hz)
         isSineOn = true
         sineHz = hz
         publish()
@@ -78,14 +75,15 @@ public final class TonePlayer {
 
     /// A new frequency for the sine, approached with τ = 10 ms.
     public func setSine(_ hz: Double) {
-        guard isSineOn, let state, state.commands.push(.setSine(hz)) else { return }
+        guard isSineOn, hz > 0, hz.isFinite, let state else { return }
+        state.setSine(hz)
         sineHz = hz
     }
 
     public func stopSine() {
         guard isSineOn else { return }
         isSineOn = false
-        state?.commands.push(.stopSine)
+        state?.setSine(nil) // cannot fail, unlike a queued command
         releaseUntil = Self.now() + ToneSynth.sineRelease
         publish()
     }
@@ -111,7 +109,7 @@ public final class TonePlayer {
 
     // MARK: Engine
 
-    private func running() -> RenderState? {
+    private func running() -> ToneControl? {
         if let state, engine?.isRunning == true { return state }
         shutdown()
         let engine = AVAudioEngine()
@@ -119,7 +117,7 @@ public final class TonePlayer {
         guard output.sampleRate > 0,
               let format = AVAudioFormat(standardFormatWithSampleRate: output.sampleRate, channels: 1)
         else { return nil }
-        let state = RenderState(sampleRate: output.sampleRate)
+        let state = ToneControl(sampleRate: output.sampleRate)
         let source = AVAudioSourceNode(format: format, renderBlock: Self.renderBlock(state))
         engine.attach(source)
         engine.connect(source, to: engine.mainMixerNode, format: format)
@@ -150,13 +148,12 @@ public final class TonePlayer {
 
     // MARK: Audio thread
 
-    private nonisolated static func renderBlock(_ state: RenderState) -> AVAudioSourceNodeRenderBlock {
+    private nonisolated static func renderBlock(_ state: ToneControl) -> AVAudioSourceNodeRenderBlock {
         { isSilence, _, frameCount, bufferList in
-            while let command = state.commands.pop() { state.synth.apply(command) }
             let buffers = UnsafeMutableAudioBufferListPointer(bufferList)
             guard buffers.count > 0, let first = buffers[0].mData?.assumingMemoryBound(to: Float.self) else { return noErr }
             let count = min(Int(frameCount), Int(buffers[0].mDataByteSize) / 4)
-            let audible = state.synth.render(into: UnsafeMutableBufferPointer(start: first, count: count))
+            let audible = state.render(into: UnsafeMutableBufferPointer(start: first, count: count))
             for i in 1..<max(1, buffers.count) {
                 buffers[i].mData?.copyMemory(from: first, byteCount: count * 4)
             }

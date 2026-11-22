@@ -56,6 +56,10 @@ public final class MicInput {
 
     /// Starts the input on the device with `deviceUID` (nil: the system
     /// default). Call ``stop()`` before releasing it.
+    ///
+    /// The sink writes to `recorder` from its first buffer, before this
+    /// returns the sample rate: close a recording that must not take these
+    /// samples first.
     @discardableResult
     public func start(deviceUID: String?, ring: RingBuffer, recorder: Recorder) throws -> Info {
         stop()
