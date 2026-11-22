@@ -5,7 +5,7 @@ import {
   KEY_COUNT, A4, TEMPERAMENTS, PIANO_KINDS, STRETCH_PRESETS, OCTAVE_TYPES, sizeClass,
   computeTargets, bOutliers, recommendedOverpull, defaultPartial, partialFreq, centsBetween, noteName, pcName, pitchClass, isBlack,
 } from './theory.js';
-import { Analyzer, rmsDb, median } from './dsp.js';
+import { Analyzer, rmsDb, median, steady, STEADY_N, BeatMeter } from './dsp.js';
 import { listTunings, getTuning, saveTuning, deleteTuning, newTuning, normalize, duplicateTuning } from './store.js';
 import { num, short, fmtC, fmtHz, fmtB, parseNum } from './format.js';
 import { tr, trNodes, lang, locale, setLang, translateDom } from './i18n.js';
@@ -27,6 +27,7 @@ const REC_MAX_S = 120;
 const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', toneOnKey: 'pianotunah.toneOnKey', theme: 'pianotunah.theme', plan: 'pianotunah.mapPlan', tab: 'pianotunah.tab', curve: 'pianotunah.curve', partials: 'pianotunah.partials', beats: 'pianotunah.beats', mic: 'pianotunah.mic', order: 'pianotunah.order' };
 
 const mic = new Mic();
+const beatMeter = new BeatMeter(); // the beat check of the current note, see trackBeating
 const tones = new TonePlayer();
 
 const state = {
@@ -58,9 +59,11 @@ const state = {
   candCount: 0,
   autoFrames: 0, // frames in a row the current key has been a clear winner
   shift: 0, // auto mode: cents from the target where the current key was heard
-  unison: [], // readings for the beat check, see trackBeating
   unisonSkip: 0,
   beating: false,
+  beatKnown: false, // the beat check has decided for the current note
+  beatFedAt: 0, // audio clock when the beat check last heard the note
+  frameTime: 0, // audio clock at the end of the latest frame
   bReadings: [],
   bBad: new Set(), // keys whose measured B is left out, see bOutliers
   version: '', // the server's version when the page loaded, see checkVersion
@@ -818,6 +821,7 @@ function processFrame() {
 
 function analyseFrame() {
   const buf = mic.read();
+  state.frameTime = mic.time; // when buf ends, for the beat check
   const lvl = rmsDb(buf);
   state.prevLevel = state.level;
   state.level = lvl;
@@ -826,7 +830,11 @@ function analyseFrame() {
   const attack = lvl - Math.min(...state.levels) > 12;
   if (attack && !state.inAttack) state.attacks++; // once per attack, though it shows for a few frames
   state.inAttack = attack;
-  if (attack) Object.assign(state, { unison: [], unisonSkip: 0 }); // a new attack
+  // A new attack: the previous note's tail is not part of this one's reading.
+  if (attack) {
+    Object.assign(state, { readings: [], unisonSkip: 0, beatKnown: false, beatFedAt: state.frameTime });
+    beatMeter.reset();
+  }
   // Noise floor: follows quickly down, slowly up, and hardly at all while a
   // note is heard, so a long decay is not mistaken for noise.
   const up = state.signal ? 0.02 : 0.15;
@@ -899,12 +907,12 @@ function measureCurrent(A) {
   if (!ref && state.refTainted) state.readings = []; // drop readings of the reference tone
   state.refTainted = ref;
   state.readings.push({ c: raw, hz: m.freq });
-  if (!ref) trackBeating(k, raw, m.prom);
-  if (state.readings.length > 7) state.readings.shift();
+  if (!ref) trackBeating(A, m.freq, m.prom);
+  if (state.readings.length > STEADY_N) state.readings.shift();
   const last = state.readings.slice(-5);
   const cs = last.map((r) => r.c);
   const sure = !auto || state.autoFrames >= 3;
-  state.stable = !ref && sure && last.length >= 4 && Math.max(...cs) - Math.min(...cs) < (k > 70 ? 1.5 : 0.8);
+  state.stable = !ref && sure && steady(state.readings.map((r) => r.c));
   state.signal = true;
   state.diag.readings++;
 
@@ -953,35 +961,26 @@ function measureCurrent(A) {
   updateReadout();
 }
 
-// Unisons out of tune make the reading swing with the beat. Readings from
-// 0.5 s after the attack, while the note is clearly heard and not being
-// damped, are fitted with a line so that a slow glide does not count. A swing
-// around it of more than 3 cents (4 in the treble) means the note beats; the
-// hint stays until a later note on the key is clean.
-function trackBeating(k, c, prom) {
+// A unison out of tune beats: the measured partial pulses (BeatMeter). Its
+// level is followed from 0.5 s after the attack, while the note is clearly
+// heard and not being damped. The hint stays until a later note on the key
+// is clean. A note that fades before the check has 1.5 s of it (short
+// strikes high up) cannot be judged; beatUnheard tells the order so, if the
+// check heard at least 0.5 s of it and found no beat starting.
+function trackBeating(A, f, prom) {
   if (prom < 25 || state.level < Math.max(...state.levels) - 12) return;
+  state.beatFedAt = state.frameTime;
   if (state.unisonSkip < 6) return void state.unisonSkip++;
-  const w = state.unison;
-  w.push(c);
-  if (w.length > 10) w.shift();
-  if (w.length < 8) return;
-  const n = w.length;
-  const mx = (n - 1) / 2;
-  const my = w.reduce((a, b) => a + b, 0) / n;
-  let sxy = 0;
-  let sxx = 0;
-  w.forEach((y, i) => {
-    sxy += (i - mx) * (y - my);
-    sxx += (i - mx) ** 2;
-  });
-  const res = w.map((y, i) => y - my - (sxy / sxx) * (i - mx)).sort((a, b) => a - b);
-  const swing = res[n - 2] - res[1];
-  if (swing > (k > 70 ? 4 : 3)) state.beating = true;
-  else if (w.length === 10 && swing < 1.5) state.beating = false;
+  beatMeter.add(A.buf, A.sr, f, state.frameTime);
+  const b = beatMeter.beats();
+  if (b !== null) Object.assign(state, { beating: b, beatKnown: true });
 }
 
+const beatUnheard = () => !state.beatKnown && beatMeter.quiet && state.frameTime - state.beatFedAt > 0.3;
+
 function resetBeating() {
-  Object.assign(state, { unison: [], unisonSkip: 0, beating: false });
+  beatMeter.reset();
+  Object.assign(state, { unisonSkip: 0, beating: false, beatKnown: false, beatFedAt: state.frameTime });
 }
 
 // A reading more than 50 cents from the key's last one is saved only when a
@@ -1230,7 +1229,8 @@ function trackOrder(k) {
   const s = statusClass(state.display);
   // Tasks with more than one string sounding must also be clean, not only on pitch.
   const unison = order.UNISON_TASKS.has(t.what);
-  const clean = !state.beating && state.unison.length >= 8;
+  // A note too short for the beat check counts on pitch alone.
+  const clean = !state.beating && (state.beatKnown || beatUnheard());
   const ok = state.order[state.orderPos.step].loose ? s !== 'bad' : s === 'good' && !(unison && !clean);
   // A clean unison off target gets a hint on moving it as a whole.
   state.orderAdvice = state.order[state.orderPos.step].loose ? null : order.unisonAdvice(t, strings, { clean, status: s });

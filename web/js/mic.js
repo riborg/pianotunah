@@ -18,6 +18,11 @@ export class Mic {
     return this.ctx.sampleRate;
   }
 
+  // Audio clock (s); read() returns the samples up to about now.
+  get time() {
+    return this.ctx.currentTime;
+  }
+
   // Name of the input in use, e.g. "MacBook Pro Microphone".
   get label() {
     return this.stream?.getAudioTracks()[0]?.label || '';

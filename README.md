@@ -16,7 +16,7 @@ Piano Tunah is a piano tuner that runs in the browser. It listens through the co
 - Temperaments: equal, Werckmeister III, Kirnberger III, Vallotti, Young II, ¼- and ⅙-comma meantone.
 - Reference A4 380–480 Hz, or set from the piano's current pitch. Overpull for pitch raises, with a recommended amount when the piano is flat.
 - Dial with needle and strobe rings, beat spectrogram and reference tone (piano or sine).
-- When a note beats and the reading jumps, a hint says the unisons are out of tune and need muting.
+- When a note beats twice a second or faster, a hint says the unisons are out of tune and need muting. Slower beats are left to the ear: a single string's sound pulses that slowly too.
 - Tuning curve above the keyboard with each measured key, colored by its deviation from target, and a table.
 - Upright or grand, size in cm, 85 or 88 keys.
 - The server saves tunings with a history per pass. You can export and import them as JSON.

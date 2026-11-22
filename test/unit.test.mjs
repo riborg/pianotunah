@@ -5,7 +5,7 @@ import {
   computeTargets, temperamentOffsets, partialFreq, centsBetween, noteName,
   migrateSettings, recommendedOverpull, octaveStretch, bOutliers, intervalBeat, DEFAULT_SETTINGS,
 } from '../web/js/theory.js';
-import { Analyzer } from '../web/js/dsp.js';
+import { Analyzer, steady, BeatMeter } from '../web/js/dsp.js';
 import { wavBlob } from '../web/js/mic.js';
 import { Saver } from '../web/js/saver.js';
 import { fmtC, parseNum } from '../web/js/format.js';
@@ -445,4 +445,74 @@ test('format: the sign of a cent value follows what is shown', () => {
 test('format: a typed number takes comma or point', () => {
   assert.deepEqual(['441,5', '441.5', ' 440 ', '440,', ',5'].map(parseNum), [441.5, 441.5, 440, 440, 0.5]);
   assert.ok(['', 'abc', '441,5,1', '4e2', '441 Hz', '1.2.3'].every((s) => Number.isNaN(parseNum(s))));
+});
+
+test('steady: a reading that swings a few cents counts, a glide or a short run does not', () => {
+  // F4 on a real piano, single readings 90 ms apart: never five in a row within 0.8 cents.
+  const f4 = [2.9, 3.5, 2.7, 1.3, 4.1, 3.5, 0.6, 2.2, 2.6];
+  assert.equal(steady(f4), true);
+  // Two stray readings (the attack, a neighbour) do not stop it.
+  assert.equal(steady([2.6, 34.7, 2.5, 4.1, 2.9, 3, 0.2, 2.4, 2.1]), true);
+  // A string still moving: 0.4 cents per reading, though the middle five lie within 2 cents.
+  assert.equal(steady([0, 0.4, 0.8, 1.2, 1.6, 2, 2.4, 2.8, 3.2]), false);
+  // Too few readings yet.
+  assert.equal(steady([3, 3, 3, 3, 3, 3, 3, 3]), false);
+  // The window is the latest nine.
+  assert.equal(steady([40, -30, ...f4]), true);
+});
+
+// Strings of A4: one at 440 Hz and others [Hz apart, strength] from it, fed
+// to a BeatMeter in frames 90 ms apart as the app does. Returns the meter and
+// its verdict after the last frame.
+function beatMeterOn(others, secs) {
+  const f = 440;
+  const x = new Float32Array(Math.round((secs + 0.7) * SR));
+  for (let i = 0; i < x.length; i++) {
+    const t = i / SR;
+    let y = Math.sin(2 * Math.PI * f * t);
+    others.forEach(([d, a], j) => (y += a * Math.sin(2 * Math.PI * (f + d) * t + 1 + j)));
+    x[i] = Math.exp(-t / 2.5) * y + noise();
+  }
+  const bm = new BeatMeter();
+  let verdict = null;
+  for (let end = N; end <= x.length; end += Math.round(0.09 * SR)) {
+    bm.add(x.subarray(end - N, end), SR, f, end / SR);
+    verdict = bm.beats();
+  }
+  return { bm, verdict };
+}
+
+test('beats: a pulse twice a second or faster counts, a slower one does not', () => {
+  assert.equal(beatMeterOn([[3, 0.5]], 1).verdict, null); // not enough of the note yet
+  assert.equal(beatMeterOn([], 2.5).verdict, false); // one string
+  assert.equal(beatMeterOn([[0.8, 0.5]], 2.5).verdict, false); // as slow as a single string's own pulse
+  for (const a of [1, 0.3]) {
+    const { bm, verdict } = beatMeterOn([[3, a]], 2.5);
+    assert.equal(verdict, true);
+    assert.ok(Math.abs(bm.pulse().rate - 3) < 0.15, `rate ${bm.pulse().rate}`);
+  }
+  // A beat must be missed three times in a row to count as gone.
+  const h = new BeatMeter();
+  h.pulse = () => ({ rate: 3, db: 3 });
+  assert.deepEqual([h.beats(), h.beats(), h.beats()], [null, null, true]);
+  h.pulse = () => ({ rate: 0.7, db: 3 });
+  assert.deepEqual([h.beats(), h.beats(), h.beats()], [null, null, false]);
+  // Too little heard, or a beat not yet confirmed: not quiet, so not counted clean.
+  assert.equal(beatMeterOn([[3, 0.5]], 0.3).bm.quiet, false);
+  const q = beatMeterOn([], 1).bm;
+  assert.equal(q.quiet, true);
+  q.pulse = () => ({ rate: 3, db: 3 });
+  q.beats();
+  assert.equal(q.quiet, false);
+  // A string with its own slow pulse, and a second string beating 3 a second.
+  assert.equal(beatMeterOn([[0.7, 0.3], [3, 0.7]], 2.5).verdict, true);
+  // Levels are taken once each, so frames that overlap give a steady grid.
+  const { bm } = beatMeterOn([[3, 1]], 2.5);
+  assert.ok(bm.ts.every((t, i) => !i || Math.abs(t - bm.ts[i - 1] - 0.02) < 1e-9));
+  // A gap the buffer cannot fill starts the meter again.
+  const g = new BeatMeter();
+  const buf = new Float32Array(N).map((_, i) => Math.sin((2 * Math.PI * 440 * i) / SR));
+  g.add(buf, SR, 440, 10);
+  g.add(buf, SR, 440, 12);
+  assert.ok(g.ts[0] > 11.8);
 });

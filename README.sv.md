@@ -16,7 +16,7 @@ Piano Tunah är en pianostämmare som körs i webbläsaren. Den lyssnar genom da
 - Temperaturer: liksvävande, Werckmeister III, Kirnberger III, Vallotti, Young II, medeltonstemperatur ¼ och ⅙ komma.
 - Referens A4 380–480 Hz, eller satt efter pianots nuvarande tonhöjd. Överdrag vid uppdragning, med ett föreslaget värde när pianot ligger lågt.
 - Ratt med visare och strobe-ringar, svävningsspektrogram och referenston (piano eller sinus).
-- När en ton svävar och mätvärdet hoppar säger en ledtråd att unisonerna är ostämda och behöver dämpas.
+- När en ton svävar två gånger i sekunden eller fortare säger en ledtråd att unisonerna är ostämda och behöver dämpas. Långsammare svävningar lämnas åt örat: en ensam strängs klang pulserar också så långsamt.
 - Stämkurva ovanför klaviaturen med varje mätt tangent, färgad efter avvikelsen från målet, och en tabell.
 - Pianino eller flygel, storlek i cm, 85 eller 88 tangenter.
 - Servern sparar stämningar med en historik per omgång. Du kan exportera och importera dem som JSON.

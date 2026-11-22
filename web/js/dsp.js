@@ -346,6 +346,153 @@ export function rmsDb(buf, len = 2048) {
   return 10 * Math.log10(s / len + 1e-20);
 }
 
+// Whether the latest STEADY_N readings (cents) hold still: the middle ones,
+// without the TRIM lowest and highest, lie within SPREAD cents, and the first
+// and last four (medians) are within DRIFT, so a string still gliding after
+// the pin moved does not count. On a real piano single readings swing 1–4
+// cents with the strings' own beats and the slow wave after the attack. Five
+// readings in a row within 0.8 cents were then met on only 4 of 19 notes of
+// F4 and A4, and at the wave's top or bottom; this test is met on 18 of them,
+// about 1 s after the attack, and on every note in the bass and treble
+// recordings.
+export const STEADY_N = 9;
+const TRIM = 2;
+const SPREAD = 2;
+const DRIFT = 1.5;
+export function steady(cs) {
+  if (cs.length < STEADY_N) return false;
+  const w = cs.slice(-STEADY_N);
+  const mid = [...w].sort((a, b) => a - b).slice(TRIM, STEADY_N - TRIM);
+  return mid[mid.length - 1] - mid[0] < SPREAD && Math.abs(median(w.slice(0, 4)) - median(w.slice(-4))) < DRIFT;
+}
+
+// Beats as the ear hears them: the strength of the measured partial pulsing.
+// Every ENV_HOP s, the partial's level (dB) over the last ENV_WIN s, kept
+// over the note. With BEAT_SPAN s of them the decay (a parabola) is taken
+// out, and the strongest pulse between 0.3 and 12 a second is found. The note
+// beats when that pulse is at least BEAT_RATE a second and BEAT_DB deep.
+// A single string pulses too, from its own slightly different modes, but
+// slowly: 0.55–0.9 a second on an upright's F4 and A4, and up to 1.4 with
+// three strings the ear heard as clean. Slower beats are left to the ear.
+// The swing of the readings could not tell those apart from a unison 15
+// cents out; the pulse rate can, at any balance of the strings. Over 1.5 s a
+// slow pulse is barely one cycle and can show for a moment as a faster one,
+// so a beat must be found BEAT_HITS times in a row (about 0.3 s), and it
+// must be missed as many times in a row to count as gone; the limit is about
+// 2 a second, not exactly. Bass partials (measured at 160 Hz and up) pulse
+// fast only shallowly, 1.1 dB at most on an upright's A0–E3. A fast beat weaker than a single
+// string's own slow pulse is not found: the fast band alone reaches 2.8 dB
+// on clean notes, from the harmonics of their deep slow pulses.
+const ENV_HOP = 0.02;
+const ENV_WIN = 0.04;
+const BEAT_SPAN = 1.5;
+const BEAT_FIT = 3; // s: only the latest levels, where the decay is near a parabola
+const BEAT_HITS = 3;
+const BEAT_RATE = 2;
+const BEAT_DB = 1.5;
+export class BeatMeter {
+  ts = [];
+  ys = [];
+  hits = 0;
+  misses = 0;
+  on = false;
+
+  reset() {
+    this.ts = [];
+    this.ys = [];
+    this.hits = 0;
+    this.misses = 0;
+    this.on = false;
+  }
+
+  // Seconds of levels taken since the last reset.
+  get span() {
+    return this.ts.length ? this.ts[this.ts.length - 1] - this.ts[0] : 0;
+  }
+
+  // buf: the latest samples, ending at time t (s, any steady clock); f: the
+  // partial's frequency. Only levels not taken yet are added, and on the
+  // first call only those of the last 0.1 s.
+  add(buf, sr, f, t) {
+    const M = Math.round(ENV_WIN * sr);
+    const w = hann(M);
+    const omega = (2 * Math.PI * f) / sr;
+    // A gap longer than buf can fill: the note was lost, start again.
+    if (this.ts.length && this.ts[this.ts.length - 1] < t - buf.length / sr + ENV_WIN) this.reset();
+    const from = this.ts.length ? this.ts[this.ts.length - 1] + ENV_HOP / 2 : t - 0.1;
+    for (let g = Math.ceil(from / ENV_HOP); g * ENV_HOP <= t; g++) {
+      const start = buf.length - Math.round((t - g * ENV_HOP) * sr) - M;
+      if (start < 0) continue;
+      this.ts.push(g * ENV_HOP);
+      this.ys.push(dftDb(buf, start, M, omega, w));
+    }
+    // Keep a little more than the fit needs, so the span stays known.
+    while (this.ts.length && this.ts[0] < t - BEAT_FIT - 1) {
+      this.ts.shift();
+      this.ys.shift();
+    }
+  }
+
+  // { rate, db } of the strongest pulse, or null before BEAT_SPAN s.
+  pulse() {
+    if (this.span < BEAT_SPAN) return null;
+    const i0 = this.ts.findIndex((t) => t >= this.ts[this.ts.length - 1] - BEAT_FIT);
+    const ts = this.ts.slice(i0);
+    const ys = this.ys.slice(i0);
+    const n = ts.length;
+    const x = ts.map((t) => t - ts[0]);
+    // Least squares parabola through the levels.
+    const S = [0, 0, 0, 0, 0];
+    const Y = [0, 0, 0];
+    x.forEach((t, i) => {
+      for (let e = 0; e < 5; e++) S[e] += t ** e;
+      for (let e = 0; e < 3; e++) Y[e] += t ** e * ys[i];
+    });
+    const m = [[S[0], S[1], S[2], Y[0]], [S[1], S[2], S[3], Y[1]], [S[2], S[3], S[4], Y[2]]];
+    for (let c = 0; c < 3; c++) {
+      for (let r = 0; r < 3; r++) {
+        if (r === c) continue;
+        const q = m[r][c] / m[c][c];
+        for (let j = c; j < 4; j++) m[r][j] -= q * m[c][j];
+      }
+    }
+    const [c0, c1, c2] = m.map((r, i) => r[3] / r[i]);
+    const res = ys.map((y, i) => y - c0 - c1 * x[i] - c2 * x[i] ** 2);
+    let best = { rate: 0, db: 0 };
+    for (let rate = 0.3; rate <= 12; rate += 0.05) {
+      let re = 0;
+      let im = 0;
+      res.forEach((v, i) => {
+        re += v * Math.cos(2 * Math.PI * rate * x[i]);
+        im += v * Math.sin(2 * Math.PI * rate * x[i]);
+      });
+      const db = (2 * Math.hypot(re, im)) / n;
+      if (db > best.db) best = { rate, db };
+    }
+    return best;
+  }
+
+  // true or false once BEAT_SPAN s are in, otherwise null; also null while a
+  // change is not yet confirmed BEAT_HITS times in a row. Call once per add.
+  beats() {
+    const p = this.pulse();
+    if (!p) return null;
+    const hit = p.rate >= BEAT_RATE && p.db >= BEAT_DB;
+    this.hits = hit ? this.hits + 1 : 0;
+    this.misses = hit ? 0 : this.misses + 1;
+    if (this.hits >= BEAT_HITS) this.on = true;
+    if (this.misses >= BEAT_HITS) this.on = false;
+    if (this.on) return this.misses ? null : true;
+    return this.hits ? null : false;
+  }
+
+  // Whether the meter heard the note without finding a beat that it could
+  // not yet confirm: then a note too short to decide may count as clean.
+  get quiet() {
+    return this.span >= 0.5 && !this.hits && !this.on;
+  }
+}
+
 export function median(a) {
   if (!a.length) return NaN;
   const s = [...a].sort((x, y) => x - y);
