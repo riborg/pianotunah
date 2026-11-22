@@ -2,16 +2,24 @@ import PianoTunahAudio
 import PianoTunahCore
 import SwiftUI
 
-/// The tuner card of the open piano: the reference, the tone, the mode and
-/// the microphone above the dial; the status and the key's target and
-/// measurement below it, then the keyboard with the curve.
+/// The tuner card of the open piano: the reference, the tone, the mode,
+/// the survey and the tuning order, and the microphone above the dial; the
+/// status and the key's target and measurement below it, the survey or
+/// tuning order panel beside it (under it in a narrow window), then the
+/// keyboard with the curve.
 ///
 /// Shortcuts as in the web version: ← → the previous and next key, A Auto,
-/// L Lock, and space (or T) the reference tone.
+/// L Lock, O the tuning order, and space (or T) the reference tone.
 struct TunerView: View {
     @Environment(TunerModel.self) private var tuner
     @Environment(\.colorScheme) private var scheme
     @FocusState private var focused: Bool
+    /// The width of the card, for where the panels go.
+    @State private var width: CGFloat = 0
+
+    /// From this width of the card on, the panels open beside the dial
+    /// rather than under it (style.css: 960 px less the page's margins).
+    private static let besideWidth: CGFloat = 900
 
     var body: some View {
         let palette = Palette.of(scheme)
@@ -19,16 +27,14 @@ struct TunerView: View {
             if let snapshot = tuner.snapshot {
                 VStack(spacing: 14) {
                     TunerHeader(snapshot: snapshot, palette: palette)
-                    DialView(snapshot: snapshot, listening: tuner.isListening) { tuner.step($0) }
-                        .frame(maxWidth: 560)
-                    TunerReadout(snapshot: snapshot, listening: tuner.isListening, palette: palette)
-                    TunerWarnings(snapshot: snapshot, palette: palette)
+                    main(snapshot, palette: palette)
                     KeyboardBlock(snapshot: snapshot)
                         .padding(.top, 10)
                     FoldsView(snapshot: snapshot, listening: tuner.isListening)
                 }
                 .padding(20)
                 .frame(maxWidth: .infinity)
+                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
             }
         }
         .background(palette.surface.color)
@@ -49,15 +55,46 @@ struct TunerView: View {
             tuner.playTone()
             return .handled
         }
-        .onKeyPress(characters: CharacterSet(charactersIn: "aAlLtT"), phases: .down) { press in
+        .onKeyPress(characters: CharacterSet(charactersIn: "aAlLoOtT"), phases: .down) { press in
             guard press.modifiers.isDisjoint(with: [.command, .control, .option]) else { return .ignored }
             switch press.characters.lowercased() {
             case "a": tuner.setMode(.auto)
             case "l": tuner.setMode(.lock)
+            case "o": tuner.toggleOrder()
             case "t": tuner.playTone()
             default: return .ignored
             }
             return .handled
+        }
+    }
+
+    /// The dial with what goes under it, and the open panel: beside the
+    /// dial in a wide card, under it in a narrow one. One layout that
+    /// changes, so the dial keeps its identity when a panel opens.
+    @ViewBuilder
+    private func main(_ snapshot: TunerSnapshot, palette: Palette) -> some View {
+        let hasPanel = snapshot.survey != nil || snapshot.order != nil
+        let beside = hasPanel && width >= Self.besideWidth
+        let layout = beside
+            ? AnyLayout(HStackLayout(alignment: .top, spacing: 20))
+            : AnyLayout(VStackLayout(spacing: 14))
+        layout {
+            VStack(spacing: 14) {
+                DialView(snapshot: snapshot, listening: tuner.isListening) { tuner.step($0) }
+                    .frame(maxWidth: 560)
+                TunerReadout(snapshot: snapshot, listening: tuner.isListening, palette: palette)
+                TunerWarnings(snapshot: snapshot, palette: palette)
+            }
+            .frame(maxWidth: 560)
+            .layoutPriority(1)
+            Group {
+                if let survey = snapshot.survey {
+                    SurveyPanel(survey: survey, palette: palette)
+                } else if let order = snapshot.order {
+                    OrderPanel(order: order, key: snapshot.key, wide: beside, palette: palette)
+                }
+            }
+            .frame(minWidth: beside ? 320 : nil, maxWidth: .infinity, alignment: .topLeading)
         }
     }
 }
@@ -70,8 +107,29 @@ private struct TunerHeader: View {
     @Environment(\.locale) private var locale
 
     var body: some View {
+        // One row, or two when the window is narrow (the web's flex-wrap).
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: 10) {
+                reference
+                Spacer(minLength: 8)
+                modes
+                MicControl(level: snapshot.level, palette: palette)
+            }
+            VStack(alignment: .trailing, spacing: 10) {
+                HStack(alignment: .top, spacing: 10) {
+                    reference
+                    Spacer(minLength: 8)
+                    MicControl(level: snapshot.level, palette: palette)
+                }
+                modes
+            }
+        }
+    }
+
+    /// The reference and the tone.
+    private var reference: some View {
         let decimal = DecimalSeparator(locale)
-        HStack(alignment: .top, spacing: 10) {
+        return HStack(alignment: .top, spacing: 10) {
             Text(verbatim: "A4 = " + fmtHz(snapshot.refA4, 1, decimal: decimal))
                 .font(.system(size: 13, design: .monospaced))
                 .foregroundStyle(palette.muted.color)
@@ -86,7 +144,13 @@ private struct TunerHeader: View {
                     .monospacedDigit()
             }
             .help("Play target tone (Space)")
-            Spacer(minLength: 8)
+        }
+    }
+
+    /// Auto and Lock, then the survey and the tuning order. The survey is a
+    /// mode of its own; the order shows outside it (Engine.orderActive).
+    private var modes: some View {
+        HStack(spacing: 10) {
             Picker("Mode", selection: Binding(
                 get: { snapshot.mode == .lock ? Engine.Mode.lock : .auto },
                 set: { tuner.setMode($0) }
@@ -99,8 +163,18 @@ private struct TunerHeader: View {
             .pickerStyle(.segmented)
             .labelsHidden()
             .fixedSize()
-            MicControl(level: snapshot.level, palette: palette)
+            Toggle(isOn: Binding(get: { snapshot.mode == .survey }, set: { _ in tuner.toggleSurvey() })) {
+                Text(LocalizedStringResource("mode.survey", defaultValue: "Survey", table: "Panels"))
+            }
+            .toggleStyle(.button)
+            .help(Text("Measure the piano key by key before tuning", tableName: "Panels"))
+            Toggle(isOn: Binding(get: { snapshot.orderOn }, set: { tuner.setOrderOn($0) })) {
+                Text("Tuning order", tableName: "Panels")
+            }
+            .toggleStyle(.button)
+            .help(Text("Step by step through the tuning (O)", tableName: "Panels"))
         }
+        .fixedSize()
     }
 }
 
@@ -180,10 +254,21 @@ private struct TunerReadout: View {
                     .multilineTextAlignment(.center)
             }
             if let notice = tuner.notice {
-                Text(verbatim: notice.text)
-                    .font(.system(size: 13))
-                    .foregroundStyle(palette.warn.color)
-                    .multilineTextAlignment(.center)
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(verbatim: notice.text)
+                        .font(.system(size: 13))
+                        .foregroundStyle((notice.kind == .ok ? palette.good : palette.warn).color)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button {
+                        tuner.clearNotice()
+                    } label: {
+                        Image(systemName: "xmark")
+                    }
+                    .buttonStyle(.borderless)
+                    .controlSize(.small)
+                    .accessibilityLabel(Text("Close", tableName: "Panels"))
+                }
             }
         }
         .frame(maxWidth: 560)

@@ -99,7 +99,7 @@ extension TunerModel {
             guard core.folds.beatsOpen != open else { return }
             core.folds.beatsOpen = open
             // A snapshot now, so the history shows also without a frame.
-            core.perform { _ in }
+            core.perform { _ in nil }
         }
     }
 
@@ -119,7 +119,7 @@ extension TunerModel {
         }
         guard let key = snapshot?.key else { return }
         let now = ProcessInfo.processInfo.systemUptime * 1000
-        send { $0.perform { _ = $0.startMeasureB(now: now) } }
+        send { core in core.perform { engine in _ = engine.startMeasureB(now: now); return nil } }
         showNotice(String(localized: "Strike \(noteName(key)) firmly and let it ring …", table: "Folds"), seconds: 4)
         Task { [weak self] in
             try? await Task.sleep(for: .seconds(6))
@@ -128,6 +128,7 @@ extension TunerModel {
             self?.send { core in
                 core.perform { engine in
                     if engine.measureB?.until == now + 4000 { engine.finishMeasureB() }
+                    return nil // the result comes as the engine's message event
                 }
             }
         }
