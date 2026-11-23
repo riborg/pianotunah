@@ -16,12 +16,20 @@ struct PianoList: View {
                     }
             }
         }
-        .toolbar {
-            if !ToolbarProbe.on("noNewPiano") {
-                ToolbarItem {
-                    Button("New Piano", systemImage: "plus") { library.newPiano() }
-                }
+        // New Piano sits under the list, not in the toolbar. As a sidebar
+        // toolbar item it made the app too slow to use from launch on
+        // macOS 27, with a flickering » and the main thread busy in toolbar
+        // layout; taking it out, and only that, made the app fast again.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            HStack {
+                Button("New Piano", systemImage: "plus") { library.newPiano() }
+                    .labelStyle(.iconOnly)
+                    .buttonStyle(.borderless)
+                    .help(Text("New Piano"))
+                Spacer()
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
         }
     }
 }
