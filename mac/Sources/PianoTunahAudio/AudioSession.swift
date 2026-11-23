@@ -15,9 +15,11 @@ import AppKit
 ///
 /// Restarts follow a ``RestartPolicy``: the engine's configuration change
 /// and the wake restart it 0.5 s later; a failed input is tried again when
-/// the inputs change or the Mac wakes; and after three automatic restarts
-/// in 10 s (an engine whose start changes its own configuration) the next
-/// is refused and the state stays ``State/failed(_:)`` until one of those
+/// the inputs change or the Mac wakes, and a running one when the inputs
+/// change so that it is no longer the one to use (unplugged, the chosen
+/// one back, the default moved); and after three automatic restarts in
+/// 10 s (an engine whose start changes its own configuration) the next is
+/// refused and the state stays ``State/failed(_:)`` until one of those
 /// or ``restart()``. While a restart waits, the state stays as it was.
 ///
 /// Threads: main actor. `onFrame` runs on ``analysisQueue``, a serial queue
@@ -148,10 +150,29 @@ public final class AudioSession {
     private func trigger(_ trigger: RestartPolicy.Trigger) {
         let applies = switch (trigger, state) {
         case (.configurationChange, .running), (.wake, .running), (.wake, .failed), (.inputsChanged, .failed): true
+        case (.inputsChanged, .running): input.map {
+            Self.isStale($0, chosenUID: deviceUID, connected: Set(devices.devices.map(\.uid)), defaultUID: devices.defaultUID)
+        } ?? false
         default: false
         }
         guard applies, case let .at(due)? = policy.request(trigger, at: Self.now()) else { return }
         scheduleRestart(at: due)
+    }
+
+    /// Whether the input in use is no longer the one to use, now that the
+    /// inputs changed: it was unplugged, the chosen one is back after a
+    /// fallback to the default, or the default moved while it is in use.
+    /// AVAudioEngine is not documented to restart for any of these, and
+    /// without a restart the app would go on with the built-in microphone
+    /// after the chosen one is plugged in, while Settings says it is not
+    /// connected and lists it.
+    nonisolated static func isStale(
+        _ input: MicInput.Info, chosenUID: String?, connected: Set<String>, defaultUID: String?
+    ) -> Bool {
+        guard let used = input.deviceUID else { return false }
+        if !connected.contains(used) { return true }
+        if let chosenUID { return input.usedFallback && connected.contains(chosenUID) }
+        return defaultUID != nil && used != defaultUID
     }
 
     private func scheduleRestart(at due: Double) {

@@ -17,8 +17,10 @@ import Synchronization
 /// ``ToneControl``: plucks reach it through a lock-free queue, the sine's
 /// on/off and frequency through an atomic it reads every block, so a stop
 /// is never lost. It renders without allocating or locking. The engine
-/// starts with the first tone and is rebuilt when the output device
-/// changes.
+/// starts with the first tone, is rebuilt when the output device changes,
+/// and stops ``idleSeconds`` after the last tone fell silent: an output
+/// that runs, even silent, keeps Core Audio from letting the Mac idle-sleep
+/// (`kAudioHardwarePropertySleepingIsAllowed` is off by default).
 @MainActor
 public final class TonePlayer {
     /// The steady clock ``audibleUntil`` is in: s since boot.
@@ -35,8 +37,19 @@ public final class TonePlayer {
     private var engine: AVAudioEngine?
     private var state: ToneControl?
     private var observer: (any NSObjectProtocol)?
+    private var idleStop: Task<Void, Never>?
 
-    public init() {}
+    /// How long the engine keeps running after the last tone, in s: long
+    /// enough that tuning, with a tone every few seconds, never waits for
+    /// it to start (a Bluetooth output can take a moment to wake).
+    public let idleSeconds: Double
+
+    public init(idleSeconds: Double = 60) {
+        self.idleSeconds = idleSeconds
+    }
+
+    /// The engine is running; for tests.
+    var isEngineRunning: Bool { engine?.isRunning == true }
 
     /// Until when (``now()``) a tone is audible: ∞ while the sine is on.
     public nonisolated var audibleUntil: Double {
@@ -105,6 +118,23 @@ public final class TonePlayer {
     private func publish() {
         let t = isSineOn ? Double.infinity : max(pluckUntil, releaseUntil)
         until.store(t.bitPattern, ordering: .releasing)
+        scheduleIdleStop(after: t)
+    }
+
+    /// Stops the engine ``idleSeconds`` after `silentFrom`, unless a tone
+    /// comes first (every tone publishes and so moves this). Nothing while
+    /// the sine is on or no engine runs.
+    private func scheduleIdleStop(after silentFrom: Double) {
+        idleStop?.cancel()
+        idleStop = nil
+        guard engine != nil, silentFrom.isFinite else { return }
+        let due = silentFrom + idleSeconds
+        idleStop = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(max(0, due - Self.now())))
+            guard !Task.isCancelled, let self, !self.isSineOn else { return }
+            self.idleStop = nil
+            self.shutdown()
+        }
     }
 
     // MARK: Engine
@@ -134,6 +164,8 @@ public final class TonePlayer {
         }
         self.engine = engine
         self.state = state
+        // Stopped when idle even if the tone that started it never plays.
+        scheduleIdleStop(after: Self.now())
         return state
     }
 

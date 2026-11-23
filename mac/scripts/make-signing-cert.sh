@@ -39,9 +39,12 @@ openssl req -x509 -newkey rsa:3072 -sha256 -days 3650 -nodes \
     -config "$work/cert.cnf" -keyout "$work/key.pem" -out "$work/cert.pem" 2>/dev/null
 
 # macOS's `security import` reads only the older PKCS#12 encryption. That
-# is LibreSSL's default (/usr/bin/openssl); OpenSSL 3 must be told.
+# is LibreSSL's default (/usr/bin/openssl); OpenSSL must be told. Any
+# OpenSSL, not only 3: 4 and later default to AES too, and a .p12 that
+# `security import` rejects is found only when the release job runs. 1.1
+# takes the same options.
 legacy=()
-if openssl version | grep -q '^OpenSSL 3'; then
+if openssl version | grep -q '^OpenSSL '; then
     legacy=(-keypbe PBE-SHA1-3DES -certpbe PBE-SHA1-3DES -macalg sha1)
 fi
 openssl pkcs12 -export -name "$name" -inkey "$work/key.pem" -in "$work/cert.pem" \

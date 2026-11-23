@@ -74,7 +74,13 @@ struct ContentView: View {
             document: library.exportFile,
             contentType: .json,
             defaultFilename: library.exportName
-        ) { _ in }
+        ) { result in
+            // A write that fails (a full disk, a volume gone) closed the panel
+            // without a word, as if the piano were saved. Cancel is no error.
+            if case .failure(let error) = result, (error as? CocoaError)?.code != .userCancelled {
+                library.errorMessage = String(localized: "Could not export the piano.")
+            }
+        }
         .confirmationDialog(
             deleteTitle,
             isPresented: Binding(

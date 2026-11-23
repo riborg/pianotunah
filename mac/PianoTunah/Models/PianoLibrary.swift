@@ -5,7 +5,7 @@ import PianoTunahCore
 
 /// The saved pianos and which one is open: one JSON file per piano in
 /// ~/Library/Application Support/Piano Tunah/, in the web's format
-/// (docs/adr/0002). A change is saved 2.5 s after the last one, and
+/// (docs/adr/0002). A change is saved at most 2.5 s after it is made, and
 /// whatever is left when the app quits.
 @MainActor @Observable
 final class PianoLibrary {
@@ -187,7 +187,11 @@ final class PianoLibrary {
 
     private func scheduleSave(_ id: String) {
         unsaved.insert(id)
-        scheduleSave(after: PianoLibrary.saveDelay)
+        // 2.5 s after the first unsaved change, not the last (the web's
+        // saver.markDirty): a ringing note changes the piano every frame,
+        // so a timer started again on each change never ran while the user
+        // kept tuning, and a crash lost the whole session.
+        if saveTask == nil { scheduleSave(after: PianoLibrary.saveDelay) }
     }
 
     private func scheduleSave(after delay: Duration) {

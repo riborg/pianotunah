@@ -5,8 +5,16 @@ struct PianoList: View {
     @Environment(PianoLibrary.self) private var library
 
     var body: some View {
-        @Bindable var library = library
-        List(selection: $library.selectedID) {
+        // A click on the empty space under the pianos (or ⌘-click on the
+        // open one) clears a List's selection. Passed on, that closed the
+        // tuner mid-tuning and its engine with it, a survey under way too,
+        // and showed "No piano" though there are pianos. Only another piano
+        // changes the selection here; deleting the last one clears it in
+        // the library.
+        List(selection: Binding(
+            get: { library.selectedID },
+            set: { if let id = $0 { library.selectedID = id } }
+        )) {
             ForEach(library.pianos, id: \.id) { piano in
                 Text(piano.name.isEmpty ? String(localized: "Untitled") : piano.name)
                     .contextMenu {

@@ -235,6 +235,9 @@ final class TunerCore: @unchecked Sendable {
         let result = command(engine)
         dirty = true
         keysChanged = true
+        // setStrings builds the order again without an event (app.js calls
+        // renderOrderPanel itself): the panel kept the old tasks.
+        orderChanged = true
         publish()
         return result
     }

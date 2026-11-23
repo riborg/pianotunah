@@ -87,9 +87,20 @@ public final class MicInput {
         engine.attach(sink)
         engine.connect(input, to: sink, format: format)
         engine.prepare()
+        // Watched before the start: the start itself can change the
+        // configuration (a Bluetooth headset switching to its hands-free
+        // profile and sample rate as the microphone opens), and a change
+        // posted before the observer is added would be lost, leaving the
+        // engine stopped while the session says it runs.
+        observer = NotificationCenter.default.addObserver(
+            forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.onConfigurationChange?() }
+        }
         do {
             try engine.start()
         } catch {
+            stop() // the observer
             throw Failure.engine(error.localizedDescription)
         }
         assert(!input.isVoiceProcessingEnabled, "voice processing must stay off")
@@ -102,11 +113,6 @@ public final class MicInput {
             deviceUID: device.flatMap { CoreAudioHAL.string($0, kAudioDevicePropertyDeviceUID) },
             usedFallback: usedFallback
         )
-        observer = NotificationCenter.default.addObserver(
-            forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main
-        ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.onConfigurationChange?() }
-        }
         self.engine = engine
         self.info = info
         return info
