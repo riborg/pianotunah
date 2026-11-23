@@ -106,8 +106,9 @@ struct OrderPanel: View {
             case .raise:
                 let p = order.suggestedOverpull
                 if p != 0 && order.overpull != p {
-                    let percent = Int(p.rounded())
-                    Button(String(localized: "Use \(percent)% overpull", table: "Panels")) { tuner.setOverpull(p) }
+                    // A FormatStyle, as in the inspector: "15 %" in Swedish.
+                    let percent = (p / 100).formatted(.percent.precision(.fractionLength(0)).locale(locale))
+                    Button(String(localized: "Use \(percent) overpull", table: "Panels")) { tuner.setOverpull(p) }
                         .buttonStyle(.borderedProminent)
                 }
                 Button { tuner.startFinePass() } label: { Text("Done: new pass for the fine tuning", tableName: "Panels") }

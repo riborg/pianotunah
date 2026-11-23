@@ -1269,12 +1269,12 @@
         }
       }
     },
-    "Use %lld%% overpull" : {
+    "Use %@ overpull" : {
       "localizations" : {
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Använd %lld %% överdrag"
+            "value" : "Använd %@ överdrag"
           }
         }
       }
