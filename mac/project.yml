@@ -1,0 +1,104 @@
+# The macOS app, for XcodeGen: `xcodegen generate` in this folder writes
+# PianoTunah.xcodeproj, which is not committed. See DEVELOP.md and
+# docs/macos-port.md. The core is the Swift package in this same folder.
+name: PianoTunah
+options:
+  developmentLanguage: en
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    # The release job overrides both.
+    MARKETING_VERSION: 0.0.0
+    CURRENT_PROJECT_VERSION: 1
+    # Sign to Run Locally; the release job signs with its own certificate.
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+    # The EdDSA public key for Sparkle's update check. Empty here, so local
+    # and CI builds never start the updater; the release job sets it.
+    SPARKLE_PUBLIC_KEY: ""
+    # No App Sandbox and no hardened runtime (docs/adr/0004).
+    ENABLE_APP_SANDBOX: NO
+    ENABLE_HARDENED_RUNTIME: NO
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+
+packages:
+  PianoTunahCore:
+    path: .
+  # Automatic updates (docs/adr/0004). An exact version, so an update of
+  # Sparkle is a reviewed change here. Its Package.swift pins the checksum of
+  # the binary it downloads.
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    exactVersion: 2.10.1
+
+targets:
+  PianoTunah:
+    type: application
+    platform: macOS
+    # The deployment target is options.deploymentTarget above, the one place
+    # it is set; the release job reads it from there for the appcast.
+    sources:
+      - path: PianoTunah
+    dependencies:
+      - package: PianoTunahCore
+        product: PianoTunahCore
+      - package: PianoTunahCore
+        product: PianoTunahAudio
+      - package: Sparkle
+    settings:
+      base:
+        PRODUCT_NAME: PianoTunah
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.riborg.pianotunah
+        # Assets.xcassets, drawn by tools/icons.py from the web's logo.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    # Written by xcodegen from these properties, and not committed.
+    info:
+      path: PianoTunah/Info.plist
+      properties:
+        CFBundleDisplayName: Piano Tunah
+        CFBundleName: Piano Tunah
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, sv]
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.music
+        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        # English here; Swedish in PianoTunah/InfoPlist.xcstrings.
+        NSMicrophoneUsageDescription: Piano Tunah listens to the piano through the microphone to measure how far each key is from its target.
+        # Sparkle (docs/macos-port.md, step 6). The feed skips pre-releases.
+        # The app starts the updater only when SUPublicEDKey is not empty.
+        SUFeedURL: https://github.com/riborg/pianotunah/releases/latest/download/appcast.xml
+        SUPublicEDKey: $(SPARKLE_PUBLIC_KEY)
+        SUEnableAutomaticChecks: true
+        SUAutomaticallyUpdate: true
+        SUScheduledCheckInterval: 86400
+    # ⌘U, and CI: the app's own tests run in PianoTunahTests.
+    scheme:
+      testTargets: [PianoTunahTests]
+
+  # Tests of the app's models (RecordingModel, …), hosted in the app: it
+  # starts as usual, without the microphone, and the tests reach its
+  # internals through @testable import. The core's tests are in the package.
+  PianoTunahTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: PianoTunahTests
+    # Only the app: its packages are linked into it, and linking them here
+    # again would give the tests a second copy of their types. Their modules
+    # are still importable from the build folder.
+    dependencies:
+      - target: PianoTunah
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.riborg.pianotunah.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/PianoTunah.app/Contents/MacOS/PianoTunah
+        BUNDLE_LOADER: $(TEST_HOST)

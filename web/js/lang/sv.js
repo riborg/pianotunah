@@ -411,7 +411,7 @@ export default {
 <p><strong>Auto och Lås:</strong> Auto hittar tangenten ur ljudet. Tangenter som mätts i omgången känns igen där de låter, även långt från målet. En omätt tangent mitt emellan två toner: klicka på den på klaviaturen så låses den.</p>
 <p><strong>Överdrag:</strong> vid uppdragning sjunker redan stämda strängar när belastningen ökar. Med 25 % stäms en ton som låg −20 cent till +5. Vid A4 = … Hz föreslår appen ett överdrag när mitten av pianot är mätt.</p>
 <p><strong>Strobe:</strong> en ring per deltons bakom visaren, numrerad i högra änden: innerst den uppmätta, sedan de två oktaverna ovanför. Stilla = rent, snurrar medurs = för högt. Står den inre ringen still men de andra snurrar, avviker strängens inharmonicitet från modellen; mät dess inharmonicitet under <em>Deltoner mot mål</em>.</p>
-<p><strong>Sinuston:</strong> välj <em>Sinuston</em> i menyn bredvid ▶ och spela den. Stäm tills svävningarna försvinner.</p>
+<p><strong>Sinuston:</strong> välj <em>Sinuston</em> i menyn bredvid ▶ och spela den. Den ljuder på den delton stämmaren mäter, så från B♭3 och nedåt ligger den en oktav eller mer över tangenten (från B♭1 och nedåt är deltonen 6 två oktaver och en kvint upp); ▶ visar vilken ton den spelar. Stäm tills svävningarna försvinner.</p>
 <p><strong>Temperatur:</strong> hur kvinterna fördelas inom oktaven. Liksvävande är standard för piano; de historiska under Stämning är för tidig musik.</p>
 <p class="keys-hint">Tangentbord: ← → byter tangent, L låser, A auto, O arbetsordning, T spelar eller stoppar målton, S öppnar inställningar, H hjälp.</p>`,
 };

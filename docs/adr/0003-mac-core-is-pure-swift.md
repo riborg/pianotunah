@@ -1,0 +1,3 @@
+# The Mac app's core is pure Swift with its own FFT, not vDSP
+
+`PianoTunahCore` (theory, DSP, survey, order, format, engine, the piano document) uses only the Swift standard library and Foundation. It ports dsp.js's own radix-2 FFT in Float64 and copies its recursive DFT and beat-search loops as written, instead of using Accelerate. That keeps the core building and testing on Linux in the `swift:6.4` container, next to the JS, and keeps it within the tolerances in step 1 of [docs/macos-port.md](../macos-port.md) on the shared fixtures. A 16,384-point FFT eleven times a second costs a Mac nothing. Swap in vDSP only behind a protocol, and only if profiling shows a need and the fixtures still pass. [Svenska](0003-mac-core-is-pure-swift.sv.md).

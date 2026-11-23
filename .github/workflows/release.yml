@@ -1,9 +1,15 @@
 # Release: push a tag vX.Y.Z.
-#   1. CI runs (tests and test build).
-#   2. The image is built for amd64 and arm64 and published on ghcr.io with
-#      the tags X.Y.Z, X.Y, X and latest (no latest for pre-releases,
-#      e.g. v1.0.0-rc.1).
-#   3. A GitHub Release is created with the commits since the previous tag.
+#   1. CI runs (tests, test build and the Mac release dry run).
+#   2. release: the image is built for amd64 and arm64 and published on
+#      ghcr.io with the tags X.Y.Z, X.Y, X and latest (no latest for
+#      pre-releases, e.g. v1.0.0-rc.1). A draft GitHub Release is created
+#      with the commits since the previous tag.
+#   3. mac, next to it: the Mac app is built, signed and zipped, and its
+#      Sparkle appcast written (mac/scripts/release.sh).
+#   4. publish: the zip and the appcast go into the draft, which is then
+#      published. If the Mac job fails, the release stays a draft and the
+#      installed apps stay on the previous version (docs/macos-port.md,
+#      step 6).
 name: Release
 
 on:
@@ -56,18 +62,89 @@ jobs:
           build-args: VERSION=${{ github.ref_name }}
           cache-from: type=gha
 
-      - name: Create GitHub Release
+      # A draft, so releases/latest never points at a release without the
+      # Mac app's appcast; publish makes it public. Only when the tag has no
+      # release yet, so a re-run continues with the same draft. gh, not the
+      # REST endpoint releases/tags/{tag}, which does not return drafts.
+      - name: Create the draft GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: |
+          # Only gh's "release not found" (or an HTTP 404) means there is none; any other
+          # error fails, rather than risk a second draft.
+          if gh release view "$TAG" > /dev/null 2> view-error.txt; then
+            echo "Continuing with the existing release $TAG."
+            exit 0
+          fi
+          if ! grep -qE '^(release not found|HTTP 404)' view-error.txt; then
+            echo "gh release view $TAG failed:" >&2
+            cat view-error.txt >&2
+            exit 1
+          fi
+
           prev=$(git describe --tags --abbrev=0 "$TAG^" 2>/dev/null || true)
           {
             echo "## Changes${prev:+ since $prev}"
             git log --no-merges --pretty='- %s' "${prev:+$prev..}$TAG"
             echo
             echo "Image: \`ghcr.io/${GITHUB_REPOSITORY}:${TAG#v}\`"
+            echo
+            echo "Mac app: \`PianoTunah.zip\` below."
           } > notes.md
-          flags=()
+          flags=(--draft --verify-tag)
           [[ "$TAG" == *-* ]] && flags+=(--prerelease)
           gh release create "$TAG" --title "$TAG" --notes-file notes.md "${flags[@]}"
+
+  mac:
+    needs: ci
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # CFBundleVersion is the number of commits up to the tag
+
+      - name: Select the newest Xcode
+        run: mac/scripts/select-xcode.sh
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Build, sign and zip the app, and write the appcast
+        env:
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+          MAC_SIGNING_P12: ${{ secrets.MAC_SIGNING_P12 }}
+          MAC_SIGNING_PASSWORD: ${{ secrets.MAC_SIGNING_PASSWORD }}
+          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+          OUT_DIR: ${{ runner.temp }}/mac-release
+        run: mac/scripts/release.sh
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: mac-release
+          path: |
+            ${{ runner.temp }}/mac-release/PianoTunah.zip
+            ${{ runner.temp }}/mac-release/appcast.xml
+          if-no-files-found: error
+
+  publish:
+    needs: [release, mac]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: mac-release
+          path: mac-release
+
+      - name: Upload the Mac app and the appcast, and publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release upload "$TAG" mac-release/PianoTunah.zip mac-release/appcast.xml --clobber
+          flags=(--draft=false)
+          [[ "$TAG" == *-* ]] && flags+=(--prerelease)
+          gh release edit "$TAG" "${flags[@]}"

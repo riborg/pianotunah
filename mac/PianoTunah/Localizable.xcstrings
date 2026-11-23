@@ -1,0 +1,744 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ (import)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (import)"
+          }
+        }
+      }
+    },
+    "%@ (partial %lld)" : {
+      "comment" : "Tone button: the note the sine plays and the partial it is.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (delton %lld)"
+          }
+        }
+      }
+    },
+    "%@ sounded %@ cents from its last reading. Not saved; strike it again to save it." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ lät %@ cent från förra avläsningen. Sparas inte; slå an igen för att spara."
+          }
+        }
+      }
+    },
+    "%lld pianos could not be read." : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%lld piano could not be read."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%lld pianos could not be read."
+                }
+              }
+            }
+          }
+        },
+        "sv" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld piano kunde inte läsas."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld pianon kunde inte läsas."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "All its measurements are deleted too. This cannot be undone." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alla dess mätningar raderas också. Det går inte att ångra."
+          }
+        }
+      }
+    },
+    "Also play when a key is clicked" : {
+      "comment" : "Tone menu: clicking a key on the keyboard plays the tone too.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spela också när en tangent klickas"
+          }
+        }
+      }
+    },
+    "Auto" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto"
+          }
+        }
+      }
+    },
+    "Color mode" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Färgläge"
+          }
+        }
+      }
+    },
+    "Could not create the folder for the pianos." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunde inte skapa mappen för pianona."
+          }
+        }
+      }
+    },
+    "Could not delete the piano." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunde inte radera pianot."
+          }
+        }
+      }
+    },
+    "Could not export the piano." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunde inte exportera pianot."
+          }
+        }
+      }
+    },
+    "Could not read the pianos." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunde inte läsa pianona."
+          }
+        }
+      }
+    },
+    "Could not save “%@”." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunde inte spara ”%@”."
+          }
+        }
+      }
+    },
+    "Could not start the microphone: %@" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunde inte starta mikrofonen: %@"
+          }
+        }
+      }
+    },
+    "Dark" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mörkt"
+          }
+        }
+      }
+    },
+    "Delete" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Radera"
+          }
+        }
+      }
+    },
+    "Delete “%@”?" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Radera ”%@”?"
+          }
+        }
+      }
+    },
+    "Delete…" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Radera…"
+          }
+        }
+      }
+    },
+    "Detect the key automatically (A)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hitta tangenten automatiskt (A)"
+          }
+        }
+      }
+    },
+    "Export…" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportera…"
+          }
+        }
+      }
+    },
+    "Fundamental %@" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grundton %@"
+          }
+        }
+      }
+    },
+    "Imported" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importerad"
+          }
+        }
+      }
+    },
+    "Import…" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importera…"
+          }
+        }
+      }
+    },
+    "In tune" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I stäm"
+          }
+        }
+      }
+    },
+    "Key %lld · target %@ cents" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tangent %lld · mål %@ cent"
+          }
+        }
+      }
+    },
+    "Light" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ljust"
+          }
+        }
+      }
+    },
+    "Listening …" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lyssnar …"
+          }
+        }
+      }
+    },
+    "Lock" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lås"
+          }
+        }
+      }
+    },
+    "Lock on the selected key (L)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lås på vald tangent (L)"
+          }
+        }
+      }
+    },
+    "Make a new piano or import one from the Piano menu." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skapa ett nytt piano eller importera ett från menyn Piano."
+          }
+        }
+      }
+    },
+    "Measured %@" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uppmätt %@"
+          }
+        }
+      }
+    },
+    "Measured partial %lld: %@" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uppmätt delton %lld: %@"
+          }
+        }
+      }
+    },
+    "Measurements are not saved while the sine tone is playing." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mätningar sparas inte medan sinustonen spelas."
+          }
+        }
+      }
+    },
+    "Mode" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Läge"
+          }
+        }
+      }
+    },
+    "New Piano" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nytt piano"
+          }
+        }
+      }
+    },
+    "New piano" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nytt piano"
+          }
+        }
+      }
+    },
+    "Next key" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nästa tangent"
+          }
+        }
+      }
+    },
+    "Next key (→)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nästa tangent (→)"
+          }
+        }
+      }
+    },
+    "No piano" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inget piano"
+          }
+        }
+      }
+    },
+    "OK" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
+    "Open System Settings" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öppna Systeminställningar"
+          }
+        }
+      }
+    },
+    "Piano" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Piano"
+          }
+        }
+      }
+    },
+    "Piano Tunah" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Piano Tunah"
+          }
+        }
+      }
+    },
+    "Piano Tunah may not use the microphone. Allow it in System Settings › Privacy & Security › Microphone, then start the microphone again." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Piano Tunah får inte använda mikrofonen. Tillåt den i Systeminställningar › Integritet och säkerhet › Mikrofon och starta sedan mikrofonen igen."
+          }
+        }
+      }
+    },
+    "Piano tone" : {
+      "comment" : "Tone menu: a short piano-like tone.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pianoton"
+          }
+        }
+      }
+    },
+    "Play sine tone %@ (Space)" : {
+      "comment" : "Tone button's tooltip while Sine is chosen.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spela sinuston %@ (mellanslag)"
+          }
+        }
+      }
+    },
+    "Play target tone (Space)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spela målton (mellanslag)"
+          }
+        }
+      }
+    },
+    "Previous key" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Föregående tangent"
+          }
+        }
+      }
+    },
+    "Previous key (←)" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Föregående tangent (←)"
+          }
+        }
+      }
+    },
+    "Reference tone" : {
+      "comment" : "Tone menu's tooltip and name.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Referenston"
+          }
+        }
+      }
+    },
+    "Reference tone, not saved" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Referenston, sparas ej"
+          }
+        }
+      }
+    },
+    "Sine" : {
+      "comment" : "Tone menu's button while Sine is chosen.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sinus"
+          }
+        }
+      }
+    },
+    "Sine tone" : {
+      "comment" : "Tone menu: a pure, sustained sine at the target frequency.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sinuston"
+          }
+        }
+      }
+    },
+    "Some frames had too few samples, so the bass is measured less precisely." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Några ramar hade för få samplingar, så basen mäts mindre noggrant."
+          }
+        }
+      }
+    },
+    "Something went wrong" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Något gick fel"
+          }
+        }
+      }
+    },
+    "Start microphone" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starta mikrofon"
+          }
+        }
+      }
+    },
+    "Start the microphone" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starta mikrofonen"
+          }
+        }
+      }
+    },
+    "Stop microphone" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stoppa mikrofon"
+          }
+        }
+      }
+    },
+    "Stop sine tone %@ (Space)" : {
+      "comment" : "Tone button's tooltip while the sine sounds.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stoppa sinuston %@ (mellanslag)"
+          }
+        }
+      }
+    },
+    "The chosen microphone is not connected; using the system default." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den valda mikrofonen är inte ansluten; använder systemets standard."
+          }
+        }
+      }
+    },
+    "The file is not a piano from Piano Tunah." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filen är inte ett piano från Piano Tunah."
+          }
+        }
+      }
+    },
+    "The input runs at %@ kHz. Piano Tunah measures best at 44.1 or 48 kHz." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingången går med %@ kHz. Piano Tunah mäter bäst med 44,1 eller 48 kHz."
+          }
+        }
+      }
+    },
+    "The note beats, twice a second or faster. Mute all strings but one with a felt strip or wedge." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tonen svävar, två gånger i sekunden eller fortare. Dämpa alla strängar utom en med filtremsa eller kil."
+          }
+        }
+      }
+    },
+    "Too high, lower" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "För högt, släpp efter"
+          }
+        }
+      }
+    },
+    "Too low, raise" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "För lågt, dra upp"
+          }
+        }
+      }
+    },
+    "Untitled" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namnlös"
+          }
+        }
+      }
+    },
+    "cents" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cent"
+          }
+        }
+      }
+    },
+    "overpull %@ cents" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "överdrag %@ cent"
+          }
+        }
+      }
+    },
+    "partial %lld %@" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "delton %lld %@"
+          }
+        }
+      }
+    },
+    "piano" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "piano"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

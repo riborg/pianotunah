@@ -1,0 +1,24 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "NSMicrophoneUsageDescription" : {
+      "comment" : "Asked once, the first time the app opens the microphone.",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Piano Tunah listens to the piano through the microphone to measure how far each key is from its target."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Piano Tunah lyssnar på pianot genom mikrofonen för att mäta hur långt varje tangent ligger från sitt mål."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

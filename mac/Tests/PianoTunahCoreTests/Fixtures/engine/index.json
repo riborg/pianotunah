@@ -1,0 +1,12 @@
+{
+  "about": "Engine scenarios (engine/<name>.json). Each starts with a new Engine on `piano` (normalized), opened, then startAudio(sampleRate). Steps: do = a command with args (ret: what it returned), or \"frame\": the frameSize samples of engine/<take> ending at sample `end` (zeros before its start), with time, now, wall and ref. After each step: the events in order (emit(type, data) as { type, ...data }) and `state`, the fields of the snapshot that changed since the previous step. Decisions, events and keys must match exactly, numbers within 1e-9 relative (1e-9 absolute near zero). tuning: the piano at the end.",
+  "sampleRate": 44100,
+  "frameSize": 32768,
+  "frameMs": 90,
+  "takes": [
+    {"file": "a4.f32", "length": 238140, "strikes": [[49, 5, 0.15], [49, -0.3, 1.45, 5, 0.3], [49, 0.2, 3]]},
+    {"file": "a4-unison.f32", "length": 145530, "strikes": [[49, 0, 0.15, 10]]},
+    {"file": "survey.f32", "length": 154350, "strikes": [[47, 0, 0.15], [40, 0, 1.3], [44, 0, 2.7]]}
+  ],
+  "scenarios": ["lock-save", "lock-ref", "auto-follow", "auto-ref", "jump", "measure-b", "beats", "order-confirm", "order-advice", "order-beating", "survey", "survey-commands", "order-commands", "advice", "pass", "settings"]
+}

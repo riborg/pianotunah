@@ -1,0 +1,11 @@
+{
+  "id": "00000000-0000-4000-8000-00000000000c",
+  "name": "Fixture piano C",
+  "createdAt": "2025-01-02T03:04:05.006Z",
+  "updatedAt": "2025-01-02T03:04:05.006Z",
+  "passStartedAt": "2025-01-02T03:04:05.006Z",
+  "settings": {"refA4": 442, "temperament": "vallotti", "root": 2, "stretch": "light", "pianoType": "concert", "tolerance": 2},
+  "inharmonicity": {"1": 0.00041, "49": 0.00052, "88": 0.0161},
+  "keys": {"49": {"hz": 441.3, "n": 1, "at": 1735787045006}},
+  "extra": {"kept": true, "list": [1, "two", null]}
+}

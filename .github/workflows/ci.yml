@@ -4,7 +4,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # agent/**: work branches of the macOS port, pushed only to get the
+    # macOS build checked; they are deleted afterwards.
+    branches: [main, 'agent/**']
   pull_request:
   workflow_call:
 
@@ -59,3 +61,91 @@ jobs:
           docker cp "$id:/pianotunah" ./pianotunah-bin
           docker rm "$id"
           "$(go env GOPATH)/bin/govulncheck" -mode=binary ./pianotunah-bin
+
+  # The Swift core (mac/) is tested against fixtures written from the web JS.
+  # They must be regenerated when the JS changes; see docs/macos-port.md.
+  # The same image as in DEVELOP.md: Node's Math.pow comes from the C
+  # library, and musl (Alpine) and glibc (setup-node) differ in the last bit.
+  fixtures:
+    runs-on: ubuntu-latest
+    container: node:26.13.1-alpine
+    steps:
+      - run: apk add --no-cache git
+      - uses: actions/checkout@v7
+      - name: Swift fixtures match the JS
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git rev-parse --is-inside-work-tree # the checks below need the clone
+          node test/fixtures.mjs
+          git diff --exit-code mac/Tests/PianoTunahCoreTests/Fixtures
+          test -z "$(git status --porcelain mac/Tests/PianoTunahCoreTests/Fixtures)"
+
+  swift:
+    runs-on: ubuntu-latest
+    container: swift:6.4
+    steps:
+      - uses: actions/checkout@v7
+      - name: Swift core tests
+        working-directory: mac
+        run: swift test
+
+  # The same tests with Apple's Foundation and libm on arm64, where the app
+  # runs: the DSP and format fixtures must hold there too.
+  swift-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Swift core tests on macOS
+        working-directory: mac
+        run: |
+          swift --version
+          test "$(uname -m)" = arm64 # the fixtures must hold on Apple silicon
+          swift test
+
+  # The app itself: the Xcode project is generated from mac/project.yml and
+  # built unsigned, so every change to the app is compiled on a Mac.
+  app-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Build the app
+        working-directory: mac
+        run: |
+          xcodebuild -version
+          xcodegen generate
+          xcodebuild -project PianoTunah.xcodeproj -target PianoTunah -showBuildSettings | grep MACOSX_DEPLOYMENT_TARGET
+          xcodebuild -project PianoTunah.xcodeproj -scheme PianoTunah -configuration Debug \
+            -destination 'platform=macOS' build CODE_SIGNING_ALLOWED=NO
+      # Without SUPublicEDKey the app never starts Sparkle (Updater.swift);
+      # only the release job sets it.
+      - name: Development builds do not update themselves
+        run: |
+          plist=$(find ~/Library/Developer/Xcode/DerivedData -path '*/Build/Products/Debug/PianoTunah.app/Contents/Info.plist' | head -n 1)
+          test -n "$plist"
+          key=$(/usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' "$plist")
+          test -z "$key"
+          echo "SUPublicEDKey is empty in $plist"
+      # The app's own tests (mac/PianoTunahTests), hosted in the app. Signed
+      # to run locally (ad hoc), as in Xcode, so the app can load them.
+      - name: App tests
+        working-directory: mac
+        run: |
+          xcodebuild -project PianoTunah.xcodeproj -scheme PianoTunah -configuration Debug \
+            -destination 'platform=macOS' test
+
+  # The Mac release (mac/scripts/release.sh, run by release.yml) for a fake
+  # v0.0.1 with a throwaway certificate and EdDSA key: build in Release,
+  # sign, zip, sign the zip, write the appcast and check them, without the
+  # real secrets. Nothing is uploaded.
+  release-dry-run:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Select the newest Xcode
+        run: mac/scripts/select-xcode.sh
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Release dry run
+        run: mac/scripts/dry-run.sh

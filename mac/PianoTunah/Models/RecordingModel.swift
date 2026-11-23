@@ -1,0 +1,263 @@
+import AppKit
+import Foundation
+import Observation
+import PianoTunahAudio
+import SwiftUI
+import UniformTypeIdentifiers
+
+/// A finished recording, for the save panel (`fileExporter`).
+struct WAVFile: FileDocument {
+    static var readableContentTypes: [UTType] { [.wav] }
+
+    var data: Data
+    /// The suggested name, pianotunah-YYYYMMDD-HHMMSS.wav as on the web.
+    var name: String
+
+    init(data: Data, name: String) {
+        self.data = data
+        self.name = name
+    }
+
+    init(configuration: ReadConfiguration) throws {
+        data = configuration.file.regularFileContents ?? Data()
+        name = configuration.file.filename ?? "pianotunah.wav"
+    }
+
+    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+        FileWrapper(regularFileWithContents: data)
+    }
+}
+
+/// Recording the microphone input to a WAV file (app.js `toggleRecording`
+/// and `finishRecording`): at most ``WAVWriter/maxSeconds``, then the save
+/// panel. Lives as long as the app, so a recording goes on while the
+/// Settings window is closed.
+///
+/// The recording ends by itself when it is full, when the microphone is
+/// stopped, or when the input is cut (``AudioSession/recordingCut``); it is
+/// then waiting in ``pending`` for the save panel: the Settings window's
+/// if it is open, else the main window's, from the notice there
+/// (``saveFromMain``). Quitting with a recording not yet saved asks first
+/// (``confirmQuit()``).
+@MainActor @Observable
+final class RecordingModel {
+    enum Outcome: Equatable {
+        /// Saved under this file name.
+        case saved(String)
+        /// The save panel was cancelled.
+        case discarded
+        /// The audio session refused to start one.
+        case notStarted
+        /// The recorder had nothing to save.
+        case empty
+        /// Writing the file failed, with the reason.
+        case saveFailed(String)
+    }
+
+    private(set) var isRecording = false
+    /// The length so far, s.
+    private(set) var seconds = 0.0
+    /// The finished recording, until it is saved or discarded.
+    var pending: WAVFile?
+    /// What became of the latest recording.
+    private(set) var outcome: Outcome?
+    /// The Settings window is open, so its save panel offers ``pending``.
+    var settingsOpen = false
+    /// The main window's save panel offers ``pending`` (its notice's Save…).
+    var saveFromMain = false
+    /// The quit alert and its save panel; tests put their own answers here.
+    @ObservationIgnored var quitPrompts = QuitPrompts.system
+
+    let session: AudioSession
+    @ObservationIgnored private var ticker: Task<Void, Never>?
+
+    init(session: AudioSession) {
+        self.session = session
+    }
+
+    static var maxSeconds: Double { WAVWriter.maxSeconds }
+
+    var canStart: Bool {
+        !isRecording && pending == nil && session.state == .running
+    }
+
+    func toggle() {
+        if isRecording { finish() } else { start() }
+    }
+
+    func start() {
+        guard canStart else { return }
+        outcome = nil
+        guard session.startRecording() else {
+            outcome = .notStarted
+            return
+        }
+        isRecording = true
+        seconds = 0
+        // app.js polls every 250 ms as well.
+        ticker = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(250))
+                guard let self else { return }
+                self.tick()
+            }
+        }
+    }
+
+    /// Ends the recording and hands it to the save panel.
+    func finish() {
+        guard isRecording else { return }
+        ticker?.cancel()
+        ticker = nil
+        isRecording = false
+        guard let data = session.stopRecording() else {
+            outcome = .empty
+            return
+        }
+        pending = WAVFile(data: data, name: Self.fileName(Date()))
+    }
+
+    /// The Settings window's save panel is wanted. It is on screen only
+    /// while that window is open (see ``panelOnScreen``).
+    var savesInSettings: Bool {
+        pending != nil && !saveFromMain
+    }
+
+    /// The main window's save panel is wanted, and on screen.
+    var savesInMain: Bool {
+        pending != nil && saveFromMain
+    }
+
+    /// A save panel for the recording is on screen: the main window's, or
+    /// the Settings window's while that window is open.
+    var panelOnScreen: Bool {
+        savesInMain || (savesInSettings && settingsOpen)
+    }
+
+    /// Whether the main window says that a recording waits to be saved:
+    /// it ended while the Settings window was closed.
+    var showsNotice: Bool {
+        pending != nil && !settingsOpen && !saveFromMain
+    }
+
+    /// The save panel's answer.
+    func exported(_ result: Result<URL, any Error>) {
+        pending = nil
+        saveFromMain = false
+        switch result {
+        case .success(let url): outcome = .saved(url.lastPathComponent)
+        case .failure(let error): outcome = .saveFailed(error.localizedDescription)
+        }
+    }
+
+    /// The user cancelled the save panel (its onCancellation): the
+    /// recording is discarded. Only this and ``exported(_:)`` end a pending
+    /// recording; a panel's binding going false (an alert taking focus, a
+    /// window closing) does not, so nothing is lost by accident.
+    func cancelled() {
+        saveFromMain = false
+        guard pending != nil else { return }
+        pending = nil
+        outcome = .discarded
+    }
+
+    /// The quit alert's buttons.
+    enum QuitChoice: Equatable {
+        case save, discard, stay
+    }
+
+    /// What ``confirmQuit()`` asks the user: the alert, the save panel for
+    /// a suggested file name (nil if cancelled), and a failed save.
+    struct QuitPrompts {
+        var ask: @MainActor () -> QuitChoice
+        var saveURL: @MainActor (_ suggestedName: String) -> URL?
+        var report: @MainActor (any Error) -> Void
+
+        /// NSAlert and NSSavePanel.
+        static var system: QuitPrompts {
+            QuitPrompts(ask: RecordingModel.askBeforeQuitting,
+                        saveURL: RecordingModel.chooseSaveURL,
+                        report: { _ = NSAlert(error: $0).runModal() })
+        }
+    }
+
+    /// Before the app quits (`applicationShouldTerminate`): a recording
+    /// still going is ended, and one not yet saved is offered for saving,
+    /// discarding or staying.
+    func confirmQuit() -> NSApplication.TerminateReply {
+        if isRecording { finish() }
+        guard let file = pending else { return .terminateNow }
+        switch quitPrompts.ask() {
+        case .save:
+            // A save panel is on screen already: save there, and quit again.
+            if panelOnScreen { return .terminateCancel }
+            guard let url = quitPrompts.saveURL(file.name) else { return .terminateCancel }
+            do {
+                try file.data.write(to: url, options: .atomic)
+            } catch {
+                // Kept, to be saved elsewhere.
+                quitPrompts.report(error)
+                return .terminateCancel
+            }
+            exported(.success(url))
+            return .terminateNow
+        case .discard:
+            pending = nil
+            outcome = .discarded
+            return .terminateNow
+        case .stay:
+            return .terminateCancel
+        }
+    }
+
+    private static func askBeforeQuitting() -> QuitChoice {
+        let alert = NSAlert()
+        alert.messageText = String(localized: "Save the recording before quitting?", table: "AppSettings",
+                                   comment: "Quit alert: a finished recording is not saved yet.")
+        alert.informativeText = String(localized: "If you quit without saving, the recording is lost.", table: "AppSettings",
+                                       comment: "Quit alert: what Discard means.")
+        alert.addButton(withTitle: String(localized: "Save…", table: "AppSettings",
+                                          comment: "Button: open the save panel for the recording."))
+        let discard = alert.addButton(withTitle: String(localized: "Discard", table: "AppSettings",
+                                                        comment: "Quit alert: quit without saving the recording."))
+        discard.hasDestructiveAction = true
+        alert.addButton(withTitle: String(localized: "Cancel", table: "AppSettings",
+                                          comment: "Quit alert: do not quit."))
+        switch alert.runModal() {
+        case .alertFirstButtonReturn: return .save
+        case .alertSecondButtonReturn: return .discard
+        default: return .stay
+        }
+    }
+
+    private static func chooseSaveURL(_ suggestedName: String) -> URL? {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.wav]
+        panel.nameFieldStringValue = suggestedName
+        guard panel.runModal() == .OK else { return nil }
+        return panel.url
+    }
+
+    private func tick() {
+        let recorder = session.recorder
+        seconds = min(recorder.recordedSeconds, Self.maxSeconds)
+        // Full, or closed by a stop or a cut of the input.
+        if recorder.isFull || !recorder.isRecording { finish() }
+    }
+
+    /// pianotunah-YYYYMMDD-HHMMSS.wav in local time, as app.js names it.
+    static func fileName(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.calendar = Calendar(identifier: .gregorian)
+        f.timeZone = .current
+        f.dateFormat = "yyyyMMdd-HHmmss"
+        return "pianotunah-\(f.string(from: date)).wav"
+    }
+
+    /// m:ss, as app.js shows it.
+    static func clock(_ seconds: Double) -> String {
+        let s = Int(seconds.rounded(.down))
+        return String(format: "%d:%02d", s / 60, s % 60)
+    }
+}
