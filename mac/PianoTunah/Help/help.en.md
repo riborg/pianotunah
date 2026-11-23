@@ -26,7 +26,7 @@ In the bass, partial 6, 4 or 2 is measured: the fundamental is weak and laptop m
 
 **Strobe:** one ring per partial behind the needle, numbered at the right end: innermost the measured one, then the two octaves above it. Still = in tune, turning clockwise = too high. If the inner ring stands still but the others turn, the string's inharmonicity differs from the model; measure its inharmonicity under *Partials vs target*.
 
-**Sine tone:** choose *Sine tone* in the menu next to ▶ above the dial (it reads *Piano* until then) and play it with ▶, T or space; ▶ turns into ■ and stops it. Tune until the beats disappear. *Also play when a key is clicked*, in the same menu, plays the tone when a key on the keyboard is clicked.
+**Sine tone:** choose *Sine tone* in the menu next to ▶ above the dial (it reads *Piano* until then) and play it with ▶, T or space; ▶ turns into ■ and stops it. It sounds at the partial the tuner measures, so from B♭3 down it lies an octave or more above the key (from B♭1 down, the partial 6 is two octaves and a fifth up); ▶ shows the note it plays. Tune until the beats disappear. *Also play when a key is clicked*, in the same menu, plays the tone when a key on the keyboard is clicked.
 
 **Temperament:** how the fifths are distributed within the octave. Equal temperament is the standard for pianos; the historical ones, under Historical temperaments in the piano's settings (⌥⌘I), are for early music.
 

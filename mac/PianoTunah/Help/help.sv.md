@@ -26,7 +26,7 @@ I basen mäts delton 6, 4 eller 2: grundtonen är svag och laptopmikrofoner hör
 
 **Strobe:** en ring per deltons bakom visaren, numrerad i högra änden: innerst den uppmätta, sedan de två oktaverna ovanför. Stilla = rent, snurrar medurs = för högt. Står den inre ringen still men de andra snurrar, avviker strängens inharmonicitet från modellen; mät dess inharmonicitet under *Deltoner mot mål*.
 
-**Sinuston:** välj *Sinuston* i menyn bredvid ▶ ovanför ratten (där står *Piano* tills dess) och spela den med ▶, T eller mellanslag; ▶ blir ■ och stoppar den. Stäm tills svävningarna försvinner. *Spela också när en tangent klickas*, i samma meny, spelar tonen när en tangent på klaviaturen klickas.
+**Sinuston:** välj *Sinuston* i menyn bredvid ▶ ovanför ratten (där står *Piano* tills dess) och spela den med ▶, T eller mellanslag; ▶ blir ■ och stoppar den. Den ljuder på den delton stämmaren mäter, så från B♭3 och nedåt ligger den en oktav eller mer över tangenten (från B♭1 och nedåt är deltonen 6 två oktaver och en kvint upp); ▶ visar vilken ton den spelar. Stäm tills svävningarna försvinner. *Spela också när en tangent klickas*, i samma meny, spelar tonen när en tangent på klaviaturen klickas.
 
 **Temperatur:** hur kvinterna fördelas inom oktaven. Liksvävande är standard för piano; de historiska, under Historiska temperaturer i pianots inställningar (⌥⌘I), är för tidig musik.
 
