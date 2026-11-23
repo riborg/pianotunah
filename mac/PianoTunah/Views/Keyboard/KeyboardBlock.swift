@@ -39,7 +39,7 @@ struct KeyboardBlock: View {
                         .padding(.bottom, 4)
                         .zIndex(1) // the tooltip over the keys
                 }
-                KeyboardView(keys: keys, current: current, flash: snapshot.flash) { tuner.selectKey($0) }
+                KeyboardView(keys: keys, current: current, flash: snapshot.flash) { tuner.clickKey($0) }
                     .frame(height: Self.keyboardHeight)
                     .padding(.horizontal, KeyboardLayout.inset)
             }

@@ -23,6 +23,17 @@
         }
       }
     },
+    "Cancel" : {
+      "comment" : "Quit alert: do not quit.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avbryt"
+          }
+        }
+      }
+    },
     "Chosen microphone (not connected)" : {
       "comment" : "Microphone picker: the stored input is not plugged in.",
       "localizations" : {
@@ -45,6 +56,17 @@
         }
       }
     },
+    "Discard" : {
+      "comment" : "Quit alert: quit without saving the recording.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Släng"
+          }
+        }
+      }
+    },
     "General" : {
       "comment" : "Settings tab.",
       "localizations" : {
@@ -52,6 +74,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Allmänt"
+          }
+        }
+      }
+    },
+    "If you quit without saving, the recording is lost." : {
+      "comment" : "Quit alert: what Discard means.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Om du avslutar utan att spara går inspelningen förlorad."
           }
         }
       }
@@ -188,6 +221,17 @@
         }
       }
     },
+    "Recording finished" : {
+      "comment" : "Main window: a recording ended while Settings was closed and is not saved yet.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspelningen är klar"
+          }
+        }
+      }
+    },
     "Recording saved: %@" : {
       "comment" : "Recording: saved under this file name (web rec.saved).",
       "localizations" : {
@@ -206,6 +250,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Samplingsfrekvens"
+          }
+        }
+      }
+    },
+    "Save the recording before quitting?" : {
+      "comment" : "Quit alert: a finished recording is not saved yet.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spara inspelningen innan du avslutar?"
           }
         }
       }
@@ -247,6 +302,17 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "Save…" : {
+      "comment" : "Button: open the save panel for the recording.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spara…"
           }
         }
       }

@@ -3,7 +3,8 @@ import UniformTypeIdentifiers
 
 /// The main window: the pianos in the sidebar, the open one beside them.
 /// It also shows the file panels, the confirmation and the errors that the
-/// library asks for.
+/// library asks for, and a recording that waits to be saved
+/// (RecordingNotice). Needs `RecordingModel` in the environment too.
 struct ContentView: View {
     @Environment(PianoLibrary.self) private var library
     @Environment(TunerModel.self) private var tuner
@@ -50,6 +51,7 @@ struct ContentView: View {
                 )
             }
         }
+        .overlay { RecordingNotice() }
         .frame(minWidth: 640, minHeight: 400)
         .onChange(of: colorMode, initial: true) { colorMode.apply() }
         // One engine per open piano: a new one when another is selected.

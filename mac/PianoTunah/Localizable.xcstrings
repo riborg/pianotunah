@@ -11,6 +11,17 @@
         }
       }
     },
+    "%@ (partial %lld)" : {
+      "comment" : "Tone button: the note the sine plays and the partial it is.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (delton %lld)"
+          }
+        }
+      }
+    },
     "%@ sounded %@ cents from its last reading. Not saved; strike it again to save it." : {
       "localizations" : {
         "sv" : {
@@ -67,6 +78,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alla dess mätningar raderas också. Det går inte att ångra."
+          }
+        }
+      }
+    },
+    "Also play when a key is clicked" : {
+      "comment" : "Tone menu: clicking a key on the keyboard plays the tone too.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spela också när en tangent klickas"
           }
         }
       }
@@ -331,6 +353,16 @@
         }
       }
     },
+    "Measurements are not saved while the sine tone is playing." : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mätningar sparas inte medan sinustonen spelas."
+          }
+        }
+      }
+    },
     "Mode" : {
       "localizations" : {
         "sv" : {
@@ -441,6 +473,28 @@
         }
       }
     },
+    "Piano tone" : {
+      "comment" : "Tone menu: a short piano-like tone.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pianoton"
+          }
+        }
+      }
+    },
+    "Play sine tone %@ (Space)" : {
+      "comment" : "Tone button's tooltip while Sine is chosen.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spela sinuston %@ (mellanslag)"
+          }
+        }
+      }
+    },
     "Play target tone (Space)" : {
       "localizations" : {
         "sv" : {
@@ -471,12 +525,45 @@
         }
       }
     },
+    "Reference tone" : {
+      "comment" : "Tone menu's tooltip and name.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Referenston"
+          }
+        }
+      }
+    },
     "Reference tone, not saved" : {
       "localizations" : {
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Referenston, sparas ej"
+          }
+        }
+      }
+    },
+    "Sine" : {
+      "comment" : "Tone menu's button while Sine is chosen.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sinus"
+          }
+        }
+      }
+    },
+    "Sine tone" : {
+      "comment" : "Tone menu: a pure, sustained sine at the target frequency.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sinuston"
           }
         }
       }
@@ -527,6 +614,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stoppa mikrofon"
+          }
+        }
+      }
+    },
+    "Stop sine tone %@ (Space)" : {
+      "comment" : "Tone button's tooltip while the sine sounds.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stoppa sinuston %@ (mellanslag)"
           }
         }
       }

@@ -1,3 +1,4 @@
+import AppKit
 import PianoTunahAudio
 import SwiftUI
 
@@ -8,6 +9,7 @@ import SwiftUI
 /// the help window.
 @main
 struct PianoTunahApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @State private var library: PianoLibrary
     @State private var tuner: TunerModel
     @State private var updater = Updater()
@@ -22,7 +24,9 @@ struct PianoTunahApp: App {
         let tuner = TunerModel(library: library)
         tuner.restoreInput()
         _tuner = State(initialValue: tuner)
-        _recording = State(initialValue: RecordingModel(session: tuner.session))
+        let recording = RecordingModel(session: tuner.session)
+        _recording = State(initialValue: recording)
+        AppDelegate.recording = recording
     }
 
     var body: some Scene {
@@ -30,6 +34,7 @@ struct PianoTunahApp: App {
             ContentView()
                 .environment(library)
                 .environment(tuner)
+                .environment(recording)
         }
         .commands {
             UpdateCommands(updater: updater)
@@ -49,5 +54,16 @@ struct PianoTunahApp: App {
             HelpView()
         }
         .defaultSize(width: 620, height: 720)
+    }
+}
+
+/// Asks before quitting with a recording that is not saved.
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    /// The app's recording, set as the app starts.
+    static var recording: RecordingModel?
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        Self.recording?.confirmQuit() ?? .terminateNow
     }
 }

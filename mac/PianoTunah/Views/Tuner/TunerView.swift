@@ -137,13 +137,7 @@ private struct TunerHeader: View {
                 .padding(.vertical, 4)
                 .background(Capsule().fill(palette.sunk.color))
                 .padding(.top, 2)
-            Button {
-                tuner.playTone()
-            } label: {
-                Text(noteText("▶ " + noteName(snapshot.key), size: 13))
-                    .monospacedDigit()
-            }
-            .help("Play target tone (Space)")
+            ToneButton(snapshot: snapshot)
         }
     }
 
@@ -175,6 +169,66 @@ private struct TunerHeader: View {
             .help(Text("Step by step through the tuning (O)", tableName: "Panels"))
         }
         .fixedSize()
+    }
+}
+
+/// The reference tone, as the web's split button: ▶ plays it, the menu
+/// beside it chooses Piano or Sine and whether clicking a key plays it too.
+/// While the sine sounds, ▶ turns into ■ and stops it. The sine sounds at
+/// the measured partial, in the bass and tenor an octave or more above the
+/// key, so the button names the note it plays.
+private struct ToneButton: View {
+    let snapshot: TunerSnapshot
+    @Environment(TunerModel.self) private var tuner
+    @AppStorage(ToneKind.storageKey) private var kind = ToneKind.piano
+    @AppStorage(ToneKind.onKeyStorageKey) private var onKey = false
+
+    var body: some View {
+        HStack(spacing: 2) {
+            Button {
+                tuner.playTone()
+            } label: {
+                Text(noteText((tuner.sineOn ? "■ " : "▶ ") + noteName(playedKey), size: 13))
+                    .monospacedDigit()
+            }
+            .help(title)
+            .accessibilityLabel(Text(verbatim: title))
+            Menu {
+                Picker(selection: Binding(get: { kind }, set: {
+                    kind = $0
+                    tuner.toneKindChanged($0)
+                })) {
+                    Text("Piano tone").tag(ToneKind.piano)
+                    Text("Sine tone").tag(ToneKind.sine)
+                } label: {
+                    Text("Reference tone")
+                }
+                .pickerStyle(.inline)
+                .labelsHidden()
+                Divider()
+                Toggle("Also play when a key is clicked", isOn: $onKey)
+            } label: {
+                kind == .sine ? Text("Sine") : Text("Piano")
+            }
+            .fixedSize()
+            .help("Reference tone")
+        }
+    }
+
+    /// The key whose note the tone is: the sine's partial n lies
+    /// 12·log2(n) semitones above the key.
+    private var playedKey: Int {
+        let n = kind == .sine ? snapshot.partial : 1
+        return min(keyCount, snapshot.key + Int((12 * log2(Double(n))).rounded()))
+    }
+
+    private var title: String {
+        guard kind == .sine else { return String(localized: "Play target tone (Space)") }
+        let note = noteName(playedKey)
+        let what = snapshot.partial > 1 ? String(localized: "\(note) (partial \(snapshot.partial))") : note
+        return tuner.sineOn
+            ? String(localized: "Stop sine tone \(what) (Space)")
+            : String(localized: "Play sine tone \(what) (Space)")
     }
 }
 

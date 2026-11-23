@@ -31,9 +31,13 @@ struct SettingsView: View {
         }
         .frame(width: 480)
         // Here rather than on the Recording tab, so a recording that ended
-        // by itself is offered for saving on whichever tab is open.
+        // by itself is offered for saving on whichever tab is open. One that
+        // ended while the window was closed is offered in the main window
+        // (RecordingNotice), and here once the window opens.
+        .onAppear { recording.settingsOpen = true }
+        .onDisappear { recording.settingsOpen = false }
         .fileExporter(
-            isPresented: Binding(get: { recording.pending != nil }, set: { if !$0 { recording.dismissed() } }),
+            isPresented: Binding(get: { recording.savesInSettings }, set: { if !$0 { recording.dismissed() } }),
             document: recording.pending,
             contentType: .wav,
             defaultFilename: recording.pending?.name,

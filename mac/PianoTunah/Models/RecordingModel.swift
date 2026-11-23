@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Observation
 import PianoTunahAudio
@@ -34,7 +35,10 @@ struct WAVFile: FileDocument {
 ///
 /// The recording ends by itself when it is full, when the microphone is
 /// stopped, or when the input is cut (``AudioSession/recordingCut``); it is
-/// then waiting in ``pending`` for the save panel.
+/// then waiting in ``pending`` for the save panel: the Settings window's
+/// if it is open, else the main window's, from the notice there
+/// (``saveFromMain``). Quitting with a recording not yet saved asks first
+/// (``confirmQuit()``).
 @MainActor @Observable
 final class RecordingModel {
     enum Outcome: Equatable {
@@ -57,6 +61,13 @@ final class RecordingModel {
     var pending: WAVFile?
     /// What became of the latest recording.
     private(set) var outcome: Outcome?
+    /// The Settings window is open, so its save panel offers ``pending``.
+    var settingsOpen = false
+    /// The main window's save panel offers ``pending`` (its notice's Save…).
+    var saveFromMain = false
+    /// Quitting asks what to do with ``pending``; neither save panel opens
+    /// meanwhile.
+    private(set) var quitting = false
 
     let session: AudioSession
     @ObservationIgnored private var ticker: Task<Void, Never>?
@@ -107,9 +118,26 @@ final class RecordingModel {
         pending = WAVFile(data: data, name: Self.fileName(Date()))
     }
 
+    /// Whether the Settings window's save panel is up.
+    var savesInSettings: Bool {
+        pending != nil && !saveFromMain && !quitting
+    }
+
+    /// Whether the main window's save panel is up.
+    var savesInMain: Bool {
+        pending != nil && saveFromMain && !quitting
+    }
+
+    /// Whether the main window says that a recording waits to be saved:
+    /// it ended while the Settings window was closed.
+    var showsNotice: Bool {
+        pending != nil && !settingsOpen && !saveFromMain && !quitting
+    }
+
     /// The save panel's answer.
     func exported(_ result: Result<URL, any Error>) {
         pending = nil
+        saveFromMain = false
         switch result {
         case .success(let url): outcome = .saved(url.lastPathComponent)
         case .failure(let error): outcome = .saveFailed(error.localizedDescription)
@@ -119,9 +147,58 @@ final class RecordingModel {
     /// The save panel closed. Without a call of ``exported(_:)`` it was
     /// cancelled; that call may also come after this one and then wins.
     func dismissed() {
+        // While the quit alert is up the save panels' bindings read false,
+        // and SwiftUI may report that as a dismissal: the recording must
+        // survive it, so Cancel in the alert still finds it.
+        guard !quitting else { return }
+        saveFromMain = false
         guard pending != nil else { return }
         pending = nil
         outcome = .discarded
+    }
+
+    /// Before the app quits (`applicationShouldTerminate`): a recording
+    /// still going is ended, and one not yet saved is offered for saving,
+    /// discarding or staying.
+    func confirmQuit() -> NSApplication.TerminateReply {
+        quitting = true
+        defer { quitting = false }
+        if isRecording { finish() }
+        guard let file = pending else { return .terminateNow }
+        let alert = NSAlert()
+        alert.messageText = String(localized: "Save the recording before quitting?", table: "AppSettings",
+                                   comment: "Quit alert: a finished recording is not saved yet.")
+        alert.informativeText = String(localized: "If you quit without saving, the recording is lost.", table: "AppSettings",
+                                       comment: "Quit alert: what Discard means.")
+        alert.addButton(withTitle: String(localized: "Save…", table: "AppSettings",
+                                          comment: "Button: open the save panel for the recording."))
+        let discard = alert.addButton(withTitle: String(localized: "Discard", table: "AppSettings",
+                                                        comment: "Quit alert: quit without saving the recording."))
+        discard.hasDestructiveAction = true
+        alert.addButton(withTitle: String(localized: "Cancel", table: "AppSettings",
+                                          comment: "Quit alert: do not quit."))
+        switch alert.runModal() {
+        case .alertFirstButtonReturn:
+            let panel = NSSavePanel()
+            panel.allowedContentTypes = [.wav]
+            panel.nameFieldStringValue = file.name
+            guard panel.runModal() == .OK, let url = panel.url else { return .terminateCancel }
+            do {
+                try file.data.write(to: url, options: .atomic)
+            } catch {
+                // Kept, to be saved elsewhere.
+                NSAlert(error: error).runModal()
+                return .terminateCancel
+            }
+            exported(.success(url))
+            return .terminateNow
+        case .alertSecondButtonReturn:
+            pending = nil
+            outcome = .discarded
+            return .terminateNow
+        default:
+            return .terminateCancel
+        }
     }
 
     private func tick() {

@@ -11,6 +11,9 @@ import PianoTunahCore
 struct TunerSnapshot: Sendable {
     /// The piano the engine has open.
     var pianoID: String
+    /// From the engine; false for the stand-in shown until its first
+    /// snapshot arrives, whose targets are only defaults.
+    var fromEngine = false
     var key = a4
     /// The highest key: A7 on older pianos, otherwise C8.
     var top = keyCount
@@ -48,6 +51,9 @@ struct TunerSnapshot: Sendable {
     /// The pluck for the key: partial 1 including overpull, and its B.
     var toneF1 = 440.0
     var toneB = 0.0
+    /// The sine for the key: the goal at the measured partial, Hz (JS:
+    /// engine.sineFreq).
+    var sineHz = 440.0
     /// Every key, for the keyboard, the curve and the table; shared between
     /// snapshots until the engine changes a key.
     var keys = TunerKeys()
@@ -74,6 +80,7 @@ struct TunerSnapshot: Sendable {
         let k = engine.key
         let t = engine.targets
         pianoID = engine.piano.id
+        fromEngine = true
         key = k
         top = engine.top
         mode = engine.mode
@@ -95,6 +102,7 @@ struct TunerSnapshot: Sendable {
         undersized = engine.stats.undersized
         toneF1 = engine.goalF1(k)
         toneB = t.inharmonicity[k]
+        sineHz = engine.sineFreq(k)
         self.keys = keys
         self.flash = flash
         surveyScope = engine.surveyPlan
@@ -362,6 +370,9 @@ final class TunerModel {
     /// The microphone. Observable itself: its state and input.
     let session: AudioSession
     let tones: TonePlayer
+    /// The sine tone sounds (`tones.isSineOn`, observed for the ▶ button;
+    /// TunerModel+Tone.swift keeps it up to date).
+    var sineOn = false
 
     private let library: PianoLibrary
     private let core: TunerCore
@@ -405,6 +416,7 @@ final class TunerModel {
     func open(_ piano: Piano?) {
         guard piano?.id != openID else { return }
         openID = piano?.id
+        stopSine()
         snapshot = piano.map { TunerSnapshot(pianoID: $0.id) }
         clearNotice()
         let core = core
@@ -438,6 +450,7 @@ final class TunerModel {
         // Frames of a piano closed meanwhile are dropped.
         guard let s = update.snapshot, s.pianoID == openID else { return }
         snapshot = s
+        followSine(s)
         for m in update.messages { show(m, decimal: DecimalSeparator(Locale.current)) }
     }
 
@@ -480,12 +493,6 @@ final class TunerModel {
     /// Selects key k (clamped to the keyboard); leaves Auto.
     func selectKey(_ k: Int) {
         perform { $0.selectKey(k) }
-    }
-
-    /// Plucks the current key's target, overpull included.
-    func playTone() {
-        guard let s = snapshot, s.toneF1 > 0 else { return }
-        tones.pluck(f1: s.toneF1, b: s.toneB)
     }
 
     // MARK: - Survey

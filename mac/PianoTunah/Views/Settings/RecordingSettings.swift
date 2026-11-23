@@ -53,9 +53,9 @@ struct RecordingSettings: View {
                     }
                 }
             }
-            if !recording.isRecording, recording.outcome != nil || tuner.session.recordingCut != nil {
+            if !recording.isRecording, recording.outcome != nil || cut != nil {
                 Section {
-                    if let cut = tuner.session.recordingCut {
+                    if let cut {
                         cutText(cut)
                     }
                     if let outcome = recording.outcome {
@@ -66,6 +66,12 @@ struct RecordingSettings: View {
         }
         .formStyle(.grouped)
         .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// Why the latest recording stopped early. Not shown once a new one was
+    /// refused: the old warning would read as the reason.
+    private var cut: AudioSession.RecordingCut? {
+        recording.outcome == .notStarted ? nil : tuner.session.recordingCut
     }
 
     private func cutText(_ cut: AudioSession.RecordingCut) -> some View {
