@@ -22,33 +22,34 @@ struct ContentView: View {
                 .navigationSplitViewColumnWidth(min: 180, ideal: 220)
         } detail: {
             if let piano = library.selected {
-                TunerView()
+                Group {
+                    if ToolbarProbe.on("noTuner") { Color.clear } else { TunerView() }
+                }
                     // The tuner keeps room of its own beside the sidebar and
                     // the inspector, so the window grows for them instead.
-                    // Squeezed to nothing, the toolbar hid its items behind »
-                    // and laid itself out again without end, every frame.
                     .frame(minWidth: Self.tunerMinWidth)
-                    .navigationTitle(Binding(
-                        get: { piano.name },
-                        set: { library.rename(piano.id, to: $0) }
-                    ))
-                    .inspector(isPresented: $inspectorShown) {
+                    .pianoTitle(piano.name, editable: !ToolbarProbe.on("plainTitle")) {
+                        library.rename(piano.id, to: $0)
+                    }
+                    .inspector(isPresented: ToolbarProbe.on("noInspector") ? .constant(false) : $inspectorShown) {
                         PianoInspector()
                             .inspectorColumnWidth(min: 280, ideal: 320, max: 460)
                     }
                     .toolbar {
-                        ToolbarItem(placement: .primaryAction) {
-                            Button {
-                                inspectorShown.toggle()
-                            } label: {
-                                Label {
-                                    Text("Piano Settings", tableName: "Inspector")
-                                } icon: {
-                                    Image(systemName: "sidebar.trailing")
+                        if !ToolbarProbe.on("noInspectorButton") {
+                            ToolbarItem(placement: .primaryAction) {
+                                Button {
+                                    inspectorShown.toggle()
+                                } label: {
+                                    Label {
+                                        Text("Piano Settings", tableName: "Inspector")
+                                    } icon: {
+                                        Image(systemName: "sidebar.trailing")
+                                    }
                                 }
+                                .keyboardShortcut("i", modifiers: [.command, .option])
+                                .help(Text("Show or hide the piano’s settings (⌥⌘I)", tableName: "Inspector"))
                             }
-                            .keyboardShortcut("i", modifiers: [.command, .option])
-                            .help(Text("Show or hide the piano’s settings (⌥⌘I)", tableName: "Inspector"))
                         }
                     }
             } else {
@@ -59,7 +60,9 @@ struct ContentView: View {
                 )
             }
         }
-        .overlay { RecordingNotice() }
+        .overlay {
+            if !ToolbarProbe.on("noOverlay") { RecordingNotice() }
+        }
         .frame(minWidth: 640, minHeight: 400)
         .onChange(of: colorMode, initial: true) { colorMode.apply() }
         // One engine per open piano: a new one when another is selected.
@@ -105,5 +108,18 @@ struct ContentView: View {
     private var deleteTitle: Text {
         let name = library.pianos.first { $0.id == library.pendingDeleteID }?.name ?? ""
         return Text("Delete “\(name)”?")
+    }
+}
+
+private extension View {
+    /// The piano's name as the window title, renamed in place when
+    /// `editable` (ToolbarProbe's plainTitle turns that off).
+    @ViewBuilder
+    func pianoTitle(_ name: String, editable: Bool, rename: @escaping (String) -> Void) -> some View {
+        if editable {
+            navigationTitle(Binding(get: { name }, set: rename))
+        } else {
+            navigationTitle(name)
+        }
     }
 }

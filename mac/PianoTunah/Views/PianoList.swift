@@ -17,8 +17,10 @@ struct PianoList: View {
             }
         }
         .toolbar {
-            ToolbarItem {
-                Button("New Piano", systemImage: "plus") { library.newPiano() }
+            if !ToolbarProbe.on("noNewPiano") {
+                ToolbarItem {
+                    Button("New Piano", systemImage: "plus") { library.newPiano() }
+                }
             }
         }
     }
