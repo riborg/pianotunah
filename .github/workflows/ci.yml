@@ -127,6 +127,13 @@ jobs:
           key=$(/usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' "$plist")
           test -z "$key"
           echo "SUPublicEDKey is empty in $plist"
+      # The app's own tests (mac/PianoTunahTests), hosted in the app. Signed
+      # to run locally (ad hoc), as in Xcode, so the app can load them.
+      - name: App tests
+        working-directory: mac
+        run: |
+          xcodebuild -project PianoTunah.xcodeproj -scheme PianoTunah -configuration Debug \
+            -destination 'platform=macOS' test
 
   # The Mac release (mac/scripts/release.sh, run by release.yml) for a fake
   # v0.0.1 with a throwaway certificate and EdDSA key: build in Release,

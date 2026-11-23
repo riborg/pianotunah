@@ -65,6 +65,8 @@ cd mac && xcodegen generate && open PianoTunah.xcodeproj
 
 Kör schemat `PianoTunah` med ⌘R. Debug-byggen signeras för att köras lokalt, utan utvecklarkonto. Pianona sparas i `~/Library/Application Support/Piano Tunah/`. CI bygger appen på samma sätt vid varje push, osignerad.
 
+Appens egna tester ligger i `mac/PianoTunahTests/` (målet `PianoTunahTests`, körs med ⌘U). De körs inuti appen, som startar som vanligt men utan mikrofonen, och testar dess modeller, till exempel vad avslut gör med en osparad inspelning. Dialoger som avslutsfrågan ligger bakom en söm som testerna svarar i (`RecordingModel.quitPrompts`). CI kör dem vid varje push. Kärnans tester ligger kvar i Swift-paketet (`swift test`).
+
 Bara release-jobbet ger appen Sparkles publika nyckel (bygginställningen `SPARKLE_PUBLIC_KEY`, som skrivs till `SUPublicEDKey`). Utan den startar appen aldrig uppdateraren och har inget *Sök efter uppdateringar…*, så ett bygge från Xcode byter aldrig ut sig självt mot en release. CI kontrollerar att ett Debug-bygge saknar nyckel.
 
 ## Release

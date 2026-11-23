@@ -64,6 +64,8 @@ cd mac && xcodegen generate && open PianoTunah.xcodeproj
 
 Run the scheme `PianoTunah` with ⌘R. Debug builds are signed to run locally, without a developer account. The pianos are saved in `~/Library/Application Support/Piano Tunah/`. CI builds the app the same way on every push, unsigned.
 
+The app's own tests are in `mac/PianoTunahTests/` (the target `PianoTunahTests`, run with ⌘U). They run inside the app, which starts as usual but without the microphone, and test its models, such as what quitting does with an unsaved recording. Dialogs such as the quit alert sit behind a seam that the tests answer (`RecordingModel.quitPrompts`). CI runs them on every push. The core's tests stay in the Swift package (`swift test`).
+
 Only the release job gives the app Sparkle's public key (the build setting `SPARKLE_PUBLIC_KEY`, written to `SUPublicEDKey`). Without it the app never starts the updater and has no *Check for Updates…*, so a build from Xcode never replaces itself with a release. CI checks that a Debug build has no key.
 
 ## Release

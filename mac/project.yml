@@ -79,4 +79,26 @@ targets:
         SUEnableAutomaticChecks: true
         SUAutomaticallyUpdate: true
         SUScheduledCheckInterval: 86400
-    scheme: {}
+    # ⌘U, and CI: the app's own tests run in PianoTunahTests.
+    scheme:
+      testTargets: [PianoTunahTests]
+
+  # Tests of the app's models (RecordingModel, …), hosted in the app: it
+  # starts as usual, without the microphone, and the tests reach its
+  # internals through @testable import. The core's tests are in the package.
+  PianoTunahTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: PianoTunahTests
+    # Only the app: its packages are linked into it, and linking them here
+    # again would give the tests a second copy of their types. Their modules
+    # are still importable from the build folder.
+    dependencies:
+      - target: PianoTunah
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.riborg.pianotunah.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/PianoTunah.app/Contents/MacOS/PianoTunah
+        BUNDLE_LOADER: $(TEST_HOST)

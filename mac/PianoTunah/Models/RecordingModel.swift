@@ -65,8 +65,8 @@ final class RecordingModel {
     var settingsOpen = false
     /// The main window's save panel offers ``pending`` (its notice's Save…).
     var saveFromMain = false
-    /// Quitting asks what to do with ``pending``; neither save panel opens
-    /// meanwhile.
+    /// The quit alert and its save panel; tests put their own answers here.
+    @ObservationIgnored var quitPrompts = QuitPrompts.system
 
     let session: AudioSession
     @ObservationIgnored private var ticker: Task<Void, Never>?
@@ -161,12 +161,56 @@ final class RecordingModel {
         outcome = .discarded
     }
 
+    /// The quit alert's buttons.
+    enum QuitChoice: Equatable {
+        case save, discard, stay
+    }
+
+    /// What ``confirmQuit()`` asks the user: the alert, the save panel for
+    /// a suggested file name (nil if cancelled), and a failed save.
+    struct QuitPrompts {
+        var ask: @MainActor () -> QuitChoice
+        var saveURL: @MainActor (_ suggestedName: String) -> URL?
+        var report: @MainActor (any Error) -> Void
+
+        /// NSAlert and NSSavePanel.
+        static var system: QuitPrompts {
+            QuitPrompts(ask: RecordingModel.askBeforeQuitting,
+                        saveURL: RecordingModel.chooseSaveURL,
+                        report: { _ = NSAlert(error: $0).runModal() })
+        }
+    }
+
     /// Before the app quits (`applicationShouldTerminate`): a recording
     /// still going is ended, and one not yet saved is offered for saving,
     /// discarding or staying.
     func confirmQuit() -> NSApplication.TerminateReply {
         if isRecording { finish() }
         guard let file = pending else { return .terminateNow }
+        switch quitPrompts.ask() {
+        case .save:
+            // A save panel is on screen already: save there, and quit again.
+            if panelOnScreen { return .terminateCancel }
+            guard let url = quitPrompts.saveURL(file.name) else { return .terminateCancel }
+            do {
+                try file.data.write(to: url, options: .atomic)
+            } catch {
+                // Kept, to be saved elsewhere.
+                quitPrompts.report(error)
+                return .terminateCancel
+            }
+            exported(.success(url))
+            return .terminateNow
+        case .discard:
+            pending = nil
+            outcome = .discarded
+            return .terminateNow
+        case .stay:
+            return .terminateCancel
+        }
+    }
+
+    private static func askBeforeQuitting() -> QuitChoice {
         let alert = NSAlert()
         alert.messageText = String(localized: "Save the recording before quitting?", table: "AppSettings",
                                    comment: "Quit alert: a finished recording is not saved yet.")
@@ -180,29 +224,18 @@ final class RecordingModel {
         alert.addButton(withTitle: String(localized: "Cancel", table: "AppSettings",
                                           comment: "Quit alert: do not quit."))
         switch alert.runModal() {
-        case .alertFirstButtonReturn:
-            // A save panel is on screen already: save there, and quit again.
-            if panelOnScreen { return .terminateCancel }
-            let panel = NSSavePanel()
-            panel.allowedContentTypes = [.wav]
-            panel.nameFieldStringValue = file.name
-            guard panel.runModal() == .OK, let url = panel.url else { return .terminateCancel }
-            do {
-                try file.data.write(to: url, options: .atomic)
-            } catch {
-                // Kept, to be saved elsewhere.
-                NSAlert(error: error).runModal()
-                return .terminateCancel
-            }
-            exported(.success(url))
-            return .terminateNow
-        case .alertSecondButtonReturn:
-            pending = nil
-            outcome = .discarded
-            return .terminateNow
-        default:
-            return .terminateCancel
+        case .alertFirstButtonReturn: return .save
+        case .alertSecondButtonReturn: return .discard
+        default: return .stay
         }
+    }
+
+    private static func chooseSaveURL(_ suggestedName: String) -> URL? {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.wav]
+        panel.nameFieldStringValue = suggestedName
+        guard panel.runModal() == .OK else { return nil }
+        return panel.url
     }
 
     private func tick() {
