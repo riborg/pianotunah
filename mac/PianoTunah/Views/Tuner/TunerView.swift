@@ -315,7 +315,7 @@ private struct TunerReadout: View {
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                     Button {
-                        tuner.clearNotice()
+                        tuner.closeNotice()
                     } label: {
                         Image(systemName: "xmark")
                     }

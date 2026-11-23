@@ -379,6 +379,9 @@ final class TunerModel {
     private let queue: DispatchQueue
     @ObservationIgnored private var openID: String?
     @ObservationIgnored private var noticeTask: Task<Void, Never>?
+    /// The sticky notice that a passing one covers; it shows again when
+    /// that one is gone, so a survey's result is not lost to a warning.
+    @ObservationIgnored private var coveredNotice: Notice?
     @ObservationIgnored private let defaults = UserDefaults.standard
 
     /// What the web version keeps in localStorage: the survey's scope and
@@ -651,9 +654,18 @@ final class TunerModel {
 
     // MARK: - Messages
 
+    /// Closes the notice shown (its ×); a sticky one it covered shows again.
+    func closeNotice() {
+        noticeTask?.cancel()
+        notice = coveredNotice
+        coveredNotice = nil
+    }
+
+    /// Removes every notice, as when another piano opens.
     func clearNotice() {
         noticeTask?.cancel()
         notice = nil
+        coveredNotice = nil
     }
 
     private func show(_ message: TunerMessage, decimal: DecimalSeparator) {
@@ -687,15 +699,23 @@ final class TunerModel {
         post(Notice(text: text), seconds: Double(seconds))
     }
 
-    /// Shows `notice`, for `seconds` unless it is sticky.
-    private func post(_ notice: Notice, seconds: Double = 6) {
-        self.notice = notice
+    /// Shows `notice`, for `seconds` unless it is sticky. A passing notice
+    /// covers a sticky one only while it shows (the web replaces it).
+    /// Internal for the tests.
+    func post(_ notice: Notice, seconds: Double = 6) {
         noticeTask?.cancel()
+        if notice.sticky {
+            coveredNotice = nil
+        } else if let shown = self.notice, shown.sticky {
+            coveredNotice = shown
+        }
+        self.notice = notice
         guard !notice.sticky else { return }
         noticeTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(seconds))
-            guard !Task.isCancelled else { return }
-            self?.notice = nil
+            guard !Task.isCancelled, let self else { return }
+            self.notice = self.coveredNotice
+            self.coveredNotice = nil
         }
     }
 
