@@ -36,6 +36,8 @@ struct PianoTunahApp: App {
                 .environment(tuner)
                 .environment(recording)
         }
+        // Room at first launch for the sidebar, the tuner and the inspector.
+        .defaultSize(width: 1280, height: 820)
         .commands {
             UpdateCommands(updater: updater)
             PianoCommands(library: library)

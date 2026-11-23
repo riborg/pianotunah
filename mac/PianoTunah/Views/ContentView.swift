@@ -11,6 +11,9 @@ struct ContentView: View {
     @AppStorage(ColorMode.storageKey) private var colorMode = ColorMode.auto
     /// The piano's settings beside the tuner, open or closed across launches.
     @AppStorage("inspectorShown") private var inspectorShown = true
+    /// The narrowest the tuner gets: the dial, the header's controls and the
+    /// title above them.
+    static let tunerMinWidth: CGFloat = 440
 
     var body: some View {
         @Bindable var library = library
@@ -20,6 +23,11 @@ struct ContentView: View {
         } detail: {
             if let piano = library.selected {
                 TunerView()
+                    // The tuner keeps room of its own beside the sidebar and
+                    // the inspector, so the window grows for them instead.
+                    // Squeezed to nothing, the toolbar hid its items behind »
+                    // and laid itself out again without end, every frame.
+                    .frame(minWidth: Self.tunerMinWidth)
                     .navigationTitle(Binding(
                         get: { piano.name },
                         set: { library.rename(piano.id, to: $0) }
