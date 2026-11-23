@@ -13,7 +13,8 @@ let package = Package(
     name: "PianoTunahCore",
     // The core uses no recent APIs, so it asks only for macOS 15. That lets
     // CI run its tests on GitHub's macOS runners (Apple's libm, arm64),
-    // which may not have macOS 27 yet. The app itself targets macOS 27.
+    // which may not have macOS 27 yet. The app's own target is
+    // options.deploymentTarget in project.yml.
     platforms: [.macOS(.v15)],
     products: [
         .library(name: "PianoTunahCore", targets: ["PianoTunahCore"]),

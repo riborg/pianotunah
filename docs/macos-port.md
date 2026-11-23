@@ -177,7 +177,7 @@ The app updates itself from GitHub Releases with [Sparkle](https://sparkle-proje
       - `sparkle:shortVersionString` = the tag without `v`;
       - `sparkle:minimumSystemVersion` = the deployment target, read from `mac/project.yml` so that it is set in one place (26.0 for now);
       - a `sparkle:releaseNotesLink` to the GitHub Release;
-      - an `<enclosure>` whose `url` is the tag's own asset, `releases/download/vX.Y.Z/PianoTunah.zip`, never the `latest` URL, with `sparkle:edSignature` and `length` from `sign_update`;
+      - an `<enclosure>` whose `url` is the tag's own asset, `releases/download/vX.Y.Z/PianoTunah.zip`, never the `latest` URL, with `sparkle:edSignature` from `sign_update` and `length` the zip's size in bytes;
    5. saves the zip and the appcast as workflow artifacts.
 3. **`publish`** needs both. It uploads the two files to the draft and publishes it (`gh release edit --draft=false`, plus `--prerelease` for tags with `-`).
 
