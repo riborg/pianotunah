@@ -177,7 +177,7 @@ Appen uppdaterar sig själv från GitHub Releases med [Sparkle](https://sparkle-
       - `sparkle:shortVersionString` = taggen utan `v`;
       - `sparkle:minimumSystemVersion` = deployment target, läst från `mac/project.yml` så att den bara anges på ett ställe (26.0 tills vidare);
       - en `sparkle:releaseNotesLink` till GitHub-releasen;
-      - en `<enclosure>` vars `url` är taggens egen fil, `releases/download/vX.Y.Z/PianoTunah.zip`, aldrig `latest`-adressen, med `sparkle:edSignature` och `length` från `sign_update`;
+      - en `<enclosure>` vars `url` är taggens egen fil, `releases/download/vX.Y.Z/PianoTunah.zip`, aldrig `latest`-adressen, med `sparkle:edSignature` från `sign_update` och `length` som zip-filens storlek i byte;
    5. sparar zip-filen och appcasten som artefakter i arbetsflödet.
 3. **`publish`** behöver båda. Det laddar upp de två filerna till utkastet och publicerar det (`gh release edit --draft=false`, plus `--prerelease` för taggar med `-`).
 
