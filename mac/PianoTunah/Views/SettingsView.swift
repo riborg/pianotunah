@@ -37,11 +37,13 @@ struct SettingsView: View {
         .onAppear { recording.settingsOpen = true }
         .onDisappear { recording.settingsOpen = false }
         .fileExporter(
-            isPresented: Binding(get: { recording.savesInSettings }, set: { if !$0 { recording.dismissed() } }),
+            // Ended only by onCompletion or onCancellation, never by the binding.
+            isPresented: Binding(get: { recording.savesInSettings }, set: { _ in }),
             document: recording.pending,
-            contentType: .wav,
+            contentTypes: [.wav],
             defaultFilename: recording.pending?.name,
-            onCompletion: { recording.exported($0) }
+            onCompletion: { recording.exported($0) },
+            onCancellation: { recording.cancelled() }
         )
     }
 }

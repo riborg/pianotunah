@@ -67,7 +67,6 @@ final class RecordingModel {
     var saveFromMain = false
     /// Quitting asks what to do with ``pending``; neither save panel opens
     /// meanwhile.
-    private(set) var quitting = false
 
     let session: AudioSession
     @ObservationIgnored private var ticker: Task<Void, Never>?
@@ -118,21 +117,27 @@ final class RecordingModel {
         pending = WAVFile(data: data, name: Self.fileName(Date()))
     }
 
-    /// Whether the Settings window's save panel is up. The quit alert
-    /// leaves it alone: hiding it would read as the user dismissing it.
+    /// The Settings window's save panel is wanted. It is on screen only
+    /// while that window is open (see ``panelOnScreen``).
     var savesInSettings: Bool {
         pending != nil && !saveFromMain
     }
 
-    /// Whether the main window's save panel is up.
+    /// The main window's save panel is wanted, and on screen.
     var savesInMain: Bool {
         pending != nil && saveFromMain
+    }
+
+    /// A save panel for the recording is on screen: the main window's, or
+    /// the Settings window's while that window is open.
+    var panelOnScreen: Bool {
+        savesInMain || (savesInSettings && settingsOpen)
     }
 
     /// Whether the main window says that a recording waits to be saved:
     /// it ended while the Settings window was closed.
     var showsNotice: Bool {
-        pending != nil && !settingsOpen && !saveFromMain && !quitting
+        pending != nil && !settingsOpen && !saveFromMain
     }
 
     /// The save panel's answer.
@@ -145,13 +150,11 @@ final class RecordingModel {
         }
     }
 
-    /// The save panel closed. Without a call of ``exported(_:)`` it was
-    /// cancelled; that call may also come after this one and then wins.
-    func dismissed() {
-        // While the quit alert is up the save panels' bindings read false,
-        // and SwiftUI may report that as a dismissal: the recording must
-        // survive it, so Cancel in the alert still finds it.
-        guard !quitting else { return }
+    /// The user cancelled the save panel (its onCancellation): the
+    /// recording is discarded. Only this and ``exported(_:)`` end a pending
+    /// recording; a panel's binding going false (an alert taking focus, a
+    /// window closing) does not, so nothing is lost by accident.
+    func cancelled() {
         saveFromMain = false
         guard pending != nil else { return }
         pending = nil
@@ -162,8 +165,6 @@ final class RecordingModel {
     /// still going is ended, and one not yet saved is offered for saving,
     /// discarding or staying.
     func confirmQuit() -> NSApplication.TerminateReply {
-        quitting = true
-        defer { quitting = false }
         if isRecording { finish() }
         guard let file = pending else { return .terminateNow }
         let alert = NSAlert()
@@ -180,8 +181,8 @@ final class RecordingModel {
                                           comment: "Quit alert: do not quit."))
         switch alert.runModal() {
         case .alertFirstButtonReturn:
-            // A save panel is open already: save there, and quit again.
-            if savesInSettings || savesInMain { return .terminateCancel }
+            // A save panel is on screen already: save there, and quit again.
+            if panelOnScreen { return .terminateCancel }
             let panel = NSSavePanel()
             panel.allowedContentTypes = [.wav]
             panel.nameFieldStringValue = file.name
