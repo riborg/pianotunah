@@ -118,14 +118,15 @@ final class RecordingModel {
         pending = WAVFile(data: data, name: Self.fileName(Date()))
     }
 
-    /// Whether the Settings window's save panel is up.
+    /// Whether the Settings window's save panel is up. The quit alert
+    /// leaves it alone: hiding it would read as the user dismissing it.
     var savesInSettings: Bool {
-        pending != nil && !saveFromMain && !quitting
+        pending != nil && !saveFromMain
     }
 
     /// Whether the main window's save panel is up.
     var savesInMain: Bool {
-        pending != nil && saveFromMain && !quitting
+        pending != nil && saveFromMain
     }
 
     /// Whether the main window says that a recording waits to be saved:
@@ -179,6 +180,8 @@ final class RecordingModel {
                                           comment: "Quit alert: do not quit."))
         switch alert.runModal() {
         case .alertFirstButtonReturn:
+            // A save panel is open already: save there, and quit again.
+            if savesInSettings || savesInMain { return .terminateCancel }
             let panel = NSSavePanel()
             panel.allowedContentTypes = [.wav]
             panel.nameFieldStringValue = file.name
