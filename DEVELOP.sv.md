@@ -97,7 +97,7 @@ Om `mac` fallerar förblir releasen ett utkast och apparna stannar på den versi
 
 `mac/scripts/dry-run.sh` kör hela Mac-delen för en låtsad `v0.0.1` med ett engångscertifikat och en engångsnyckel, i en tillfällig nyckelring. CI kör det vid varje push (`release-dry-run`); det går också att köra på din Mac.
 
-**Engångssteg på din Mac.** Gör det före nästa `v*`-tagg: tills de tre hemligheterna finns fallerar Mac-jobbet på varje tagg och GitHub-releasen förblir ett utkast (imagen publiceras ändå). Tre hemligheter, som skapas en gång och sparas:
+**Engångssteg på din Mac.** Gör det före nästa `v*`-tagg: tills de tre hemligheterna finns fallerar Mac-jobbet på varje tagg och GitHub-releasen förblir ett utkast (imagen publiceras ändå). Tre hemligheter, som skapas en gång och sparas. Guiden `mac/scripts/setup-release-secrets.sh` leder dig igenom det: den kör kommandona nedan, kontrollerar EdDSA-nyckeln och certifikatets lösenord och listar hemligheterna på GitHub till sist. För hand:
 
 ```sh
 cd mac && xcodegen generate

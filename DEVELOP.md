@@ -96,7 +96,7 @@ If `mac` fails, the release stays a draft and the apps stay on the version they 
 
 `mac/scripts/dry-run.sh` runs the whole Mac part for a fake `v0.0.1` with a throwaway certificate and key, in a temporary keychain. CI runs it on every push (`release-dry-run`); it also runs on your Mac.
 
-**One-time setup on your Mac.** Do it before the next `v*` tag: until the three secrets exist, the Mac job fails on every tag and the GitHub Release stays a draft (the image is still published). Three secrets, made once and kept:
+**One-time setup on your Mac.** Do it before the next `v*` tag: until the three secrets exist, the Mac job fails on every tag and the GitHub Release stays a draft (the image is still published). Three secrets, made once and kept. The wizard `mac/scripts/setup-release-secrets.sh` walks you through it: it runs the commands below, checks the EdDSA key and the certificate's password, and lists the secrets on GitHub at the end. By hand:
 
 ```sh
 cd mac && xcodegen generate
