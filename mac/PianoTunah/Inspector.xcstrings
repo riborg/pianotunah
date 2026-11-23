@@ -271,6 +271,17 @@
         }
       }
     },
+    "Hide Piano Settings" : {
+      "comment" : "View menu: shows or hides the inspector (⌥⌘I).",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dölj pianots inställningar"
+          }
+        }
+      }
+    },
     "Historical temperaments" : {
       "localizations" : {
         "sv" : {
@@ -697,6 +708,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Visa eller dölj pianots inställningar (⌥⌘I)"
+          }
+        }
+      }
+    },
+    "Show Piano Settings" : {
+      "comment" : "View menu: shows or hides the inspector (⌥⌘I).",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visa pianots inställningar"
           }
         }
       }

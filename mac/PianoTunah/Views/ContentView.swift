@@ -10,7 +10,10 @@ struct ContentView: View {
     @Environment(TunerModel.self) private var tuner
     @AppStorage(ColorMode.storageKey) private var colorMode = ColorMode.auto
     /// The piano's settings beside the tuner, open or closed across launches.
-    @AppStorage("inspectorShown") private var inspectorShown = true
+    @AppStorage(Self.inspectorShownKey) private var inspectorShown = true
+    /// The UserDefaults key of the inspector's state; the View menu's
+    /// Show/Hide Piano Settings (PianoCommands) toggles it too.
+    static let inspectorShownKey = "inspectorShown"
     /// The narrowest the tuner gets: the dial, the header's controls and the
     /// title above them.
     static let tunerMinWidth: CGFloat = 440
@@ -45,7 +48,6 @@ struct ContentView: View {
                                     Image(systemName: "sidebar.trailing")
                                 }
                             }
-                            .keyboardShortcut("i", modifiers: [.command, .option])
                             .help(Text("Show or hide the piano’s settings (⌥⌘I)", tableName: "Inspector"))
                         }
                     }
