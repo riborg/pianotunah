@@ -75,7 +75,7 @@ private final class Recorded: @unchecked Sendable {
     /// 4.1 s of the A4 take into a new piano locked on A4, as the
     /// lock-save scenario plays it, one update per frame.
     private static func playA4(changesInterval: Double) throws -> Recorded {
-        let take = try a4()
+        let take = try a4Take()
         let recorded = Recorded()
         let core = TunerCore(tones: TonePlayer(), changesInterval: changesInterval, clock: { recorded.now }) {
             recorded.updates.append($0)
@@ -100,7 +100,7 @@ private final class Recorded: @unchecked Sendable {
 
     /// The A4 take the engine scenarios play (44.1 kHz, little-endian
     /// Float32), read from the core's test fixtures.
-    private static func a4() throws -> [Float] {
+    private static func a4Take() throws -> [Float] {
         let url = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent().deletingLastPathComponent()
             .appending(path: "Tests/PianoTunahCoreTests/Fixtures/engine/a4.f32")
