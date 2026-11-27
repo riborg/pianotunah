@@ -9,7 +9,8 @@
 #   4. publish: the zip and the appcast go into the draft, which is then
 #      published. If the Mac job fails, the release stays a draft and the
 #      installed apps stay on the previous version (docs/macos-port.md,
-#      step 6).
+#      step 6). Then the appcast becomes the beta feed (beta.xml on the
+#      appcast branch) if its build is the newest, pre-release or not.
 name: Release
 
 on:
@@ -130,6 +131,11 @@ jobs:
   publish:
     needs: [release, mac]
     runs-on: ubuntu-latest
+    # One at a time, so two tags pushed close together do not race on the
+    # beta feed's branch; the later waits and then compares its build.
+    concurrency:
+      group: beta-feed
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
@@ -148,3 +154,38 @@ jobs:
           flags=(--draft=false)
           [[ "$TAG" == *-* ]] && flags+=(--prerelease)
           gh release edit "$TAG" "${flags[@]}"
+
+      - uses: actions/checkout@v7
+        with:
+          path: src
+          sparse-checkout: mac/scripts
+
+      # After the release is public, so the feed never points at a zip that
+      # cannot be downloaded. The branch holds only beta.xml; CI does not
+      # run on it.
+      - name: Put the release in the beta feed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh auth setup-git
+          git init -q feed
+          cd feed
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://github.com/$GH_REPO.git"
+          if git ls-remote --exit-code --heads origin appcast > /dev/null; then
+            git fetch -q --depth 1 origin appcast
+            git checkout -q -B appcast FETCH_HEAD
+          else
+            git checkout -q --orphan appcast
+          fi
+          ../src/mac/scripts/update-beta-feed.sh ../mac-release/appcast.xml beta.xml
+          git add beta.xml
+          if git diff --cached --quiet; then
+            echo "The beta feed is unchanged."
+          else
+            git commit -q -m "Beta feed: $TAG"
+            git push -q origin HEAD:refs/heads/appcast
+          fi
