@@ -40,6 +40,9 @@ final class PianoLibrary {
     @ObservationIgnored private var unsaved: Set<String> = []
     @ObservationIgnored private var saveTask: Task<Void, Never>?
     @ObservationIgnored private var terminationObserver: (any NSObjectProtocol)?
+    /// Run at quit before the last save: hands over the changes the tuner
+    /// still holds back (it sends a ringing note's at most once a second).
+    @ObservationIgnored var beforeQuitSave: (() -> Void)?
 
     /// ~/Library/Application Support/Piano Tunah/.
     static var defaultDirectory: URL {
@@ -58,7 +61,10 @@ final class PianoLibrary {
         terminationObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification, object: nil, queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.saveNow() }
+            MainActor.assumeIsolated {
+                self?.beforeQuitSave?()
+                self?.saveNow()
+            }
         }
     }
 
