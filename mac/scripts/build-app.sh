@@ -10,7 +10,7 @@ source "$(dirname "$0")/lib.sh"
 
 [[ $# -eq 3 ]] || die "usage: build-app.sh VERSION BUILD_NUMBER PUBLIC_KEY"
 version=$1 build_number=$2 public_key=$3
-[[ "$build_number" =~ ^[0-9]+$ ]] || die "the build number must be a whole number, not '$build_number'"
+[[ "$build_number" =~ ^[0-9]+(\.[0-9]+)?$ ]] || die "the build number must be C or C.N (build-number.sh), not '$build_number'"
 [[ -n "$public_key" ]] || die "a release build needs the public key, or it would never update"
 
 (

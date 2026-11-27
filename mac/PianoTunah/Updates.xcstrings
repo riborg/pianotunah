@@ -1,6 +1,17 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Beta versions come before a release and may have faults. Turned off, the beta stays until a release is newer." : {
+      "comment" : "Settings: under Get beta versions.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Betaversioner kommer före en ny version och kan ha fel. Slår du av detta behåller du betan tills en vanlig version är nyare."
+          }
+        }
+      }
+    },
     "Check for Updates…" : {
       "comment" : "App menu item: look for a new version now.",
       "localizations" : {
@@ -8,6 +19,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sök efter uppdateringar…"
+          }
+        }
+      }
+    },
+    "Get beta versions" : {
+      "comment" : "Settings: also update to pre-releases.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hämta betaversioner"
+          }
+        }
+      }
+    },
+    "Updates" : {
+      "comment" : "Settings: section header.",
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uppdateringar"
           }
         }
       }

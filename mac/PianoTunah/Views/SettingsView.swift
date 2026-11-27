@@ -5,8 +5,8 @@ import UniformTypeIdentifiers
 /// section. The language is not here: the app follows macOS (System
 /// Settings › General › Language & Region).
 ///
-/// Needs `TunerModel`, `InputDevices` and `RecordingModel` in the
-/// environment.
+/// Needs `TunerModel`, `InputDevices`, `RecordingModel` and `Updater` in
+/// the environment.
 struct SettingsView: View {
     @Environment(RecordingModel.self) private var recording
 
@@ -48,9 +48,11 @@ struct SettingsView: View {
     }
 }
 
-/// The color mode.
+/// The color mode, and whether to update to beta versions.
 struct GeneralSettings: View {
+    @Environment(Updater.self) private var updater
     @AppStorage(ColorMode.storageKey) private var colorMode = ColorMode.auto
+    @AppStorage(Updater.betaKey) private var getsBetas = false
 
     var body: some View {
         Form {
@@ -60,6 +62,22 @@ struct GeneralSettings: View {
                 }
             }
             .pickerStyle(.segmented)
+            // Only in builds that update themselves, as Check for Updates….
+            if updater.offersBetas {
+                Section {
+                    Toggle(isOn: $getsBetas) {
+                        Text("Get beta versions", tableName: "Updates",
+                             comment: "Settings: also update to pre-releases.")
+                    }
+                } header: {
+                    Text("Updates", tableName: "Updates", comment: "Settings: section header.")
+                } footer: {
+                    Text("Beta versions come before a release and may have faults. Turned off, the beta stays until a release is newer.",
+                         tableName: "Updates", comment: "Settings: under Get beta versions.")
+                        .foregroundStyle(.secondary)
+                }
+                .onChange(of: getsBetas) { updater.betaChanged(getsBetas) }
+            }
         }
         .formStyle(.grouped)
         .fixedSize(horizontal: false, vertical: true)

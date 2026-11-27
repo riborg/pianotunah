@@ -158,12 +158,13 @@ There is no sync. The app does not talk to the Go server; its only network traff
 The app updates itself from GitHub Releases with [Sparkle](https://sparkle-project.org) 2 ([ADR 0004](adr/0004-mac-app-updates-itself-from-github.md)).
 
 - **The feed** is `https://github.com/riborg/pianotunah/releases/latest/download/appcast.xml`, an asset on the latest release. GitHub skips pre-releases and drafts for `latest`, so a `v1.2.0-rc.1` never reaches the app, the same rule as the image's `latest` tag.
+- **The beta feed:** with *Get beta versions* on (Settings › General), the app reads `https://raw.githubusercontent.com/riborg/pianotunah/appcast/beta.xml` instead (`PTBetaFeedURL` in Info.plist; `FeedChooser` in `Updater.swift` answers Sparkle's `feedURLString(for:)` before every check). It is the appcast of the newest build released, pre-release or not, so a beta tester also gets the next release. Sparkle never installs an older build: turned off, the beta stays until a release is newer. Only builds that update themselves show the setting.
 - **Checks:** Sparkle checks once a day and at launch, downloads a new version in the background and installs it when the app quits (`SUEnableAutomaticChecks`, `SUAutomaticallyUpdate`). *Check for Updates…* in the app menu checks at once.
 - **Signature of the update:** every release zip is signed with an EdDSA key. The public key is in Info.plist (`SUPublicEDKey`), the private key is an Actions secret. Sparkle refuses an update that does not match.
 - **Code signing:** no Apple Developer account, so no Developer ID and no notarization. CI signs with a self-signed code-signing certificate, made once and kept as an Actions secret. The same certificate in every release keeps the app's identity stable, so macOS keeps the microphone permission across updates. Ad-hoc signing would give each build a new identity and ask for the microphone again after every update.
 - **First install:** download the zip from the release, move the app to Applications and open it. macOS blocks an app that is not notarized the first time; allow it once under System Settings › Privacy & Security › *Open Anyway*. Updates are installed by Sparkle and should not ask again; check that on the first real update.
 - **No App Sandbox, no hardened runtime.** Sparkle in a sandboxed app needs extra installer services and entitlements, which is not worth it for one Mac. The hardened runtime matters only for notarization. Put `NSMicrophoneUsageDescription` in Info.plist; without it the app is stopped the first time it opens the microphone.
-- **Version numbers:** `CFBundleShortVersionString` is the tag without `v` (1.2.0). `CFBundleVersion`, which Sparkle compares, is the number of commits up to the tag, so it always grows.
+- **Version numbers:** `CFBundleShortVersionString` is the tag without `v` (1.2.0). `CFBundleVersion`, which Sparkle compares part by part, is `C.N` from `mac/scripts/build-number.sh`: C is the number of commits up to the tag, N is 99 for a release and for a pre-release 1–29 (alpha, dev and others), 31–59 (beta) or 61–89 (rc), by its last number. So every build is newer than the one before, and an rc older than the release made from the same commit, which a plain commit count could not tell apart. Releases up to v1.13.0 had plain counts (323), older than all of these.
 
 **The release job.** The release workflow runs on `v*` tags. Today one job builds the image and creates the GitHub Release. It changes like this:
 
@@ -179,7 +180,7 @@ The app updates itself from GitHub Releases with [Sparkle](https://sparkle-proje
       - a `sparkle:releaseNotesLink` to the GitHub Release;
       - an `<enclosure>` whose `url` is the tag's own asset, `releases/download/vX.Y.Z/PianoTunah.zip`, never the `latest` URL, with `sparkle:edSignature` from `sign_update` and `length` the zip's size in bytes;
    5. saves the zip and the appcast as workflow artifacts.
-3. **`publish`** needs both. It uploads the two files to the draft and publishes it (`gh release edit --draft=false`, plus `--prerelease` for tags with `-`).
+3. **`publish`** needs both. It uploads the two files to the draft and publishes it (`gh release edit --draft=false`, plus `--prerelease` for tags with `-`). Then the appcast becomes `beta.xml` on the `appcast` branch, unless that has a newer build (`update-beta-feed.sh`). The branch holds only that file and CI does not run on it. If another release pushed in between, the step fetches again and compares anew, up to five times; there is no concurrency group, as that would cancel a waiting `publish` and leave its release a draft.
 
 **As built** (phase 6), three things the steps above did not say:
 - **The public key is not in the repository.** `SUPublicEDKey` is the build setting `SPARKLE_PUBLIC_KEY`, empty in `mac/project.yml`. The `mac` job derives it from `SPARKLE_ED_PRIVATE_KEY` (CryptoKit, `mac/scripts/ed-key.sh`), so the private key is the only key secret and the two cannot disagree. With the key empty, as in every Xcode and CI build, the app never starts Sparkle and has no *Check for Updates…*, so a development build never updates itself.
@@ -188,7 +189,7 @@ The app updates itself from GitHub Releases with [Sparkle](https://sparkle-proje
 
 If the Mac job fails, the release stays a draft and the run is red. `releases/latest` then keeps pointing at the previous release, which has its appcast, so installed apps see no 404 and simply stay on the version they have. The image is published either way. Fix the build, or build on your Mac, upload the two files to the draft by hand, and publish it.
 
-Pre-release tags (`-rc.1`) build the Mac app too, so a pre-release can be tried by downloading it. Its appcast is never read, because `latest` skips pre-releases.
+Pre-release tags (`-beta.1`, `-rc.1`) build the Mac app too. Apps with *Get beta versions* on get them through the beta feed; the others never see them, because `latest` skips pre-releases.
 
 **Runner.** The job uses GitHub's newest macOS image and selects its newest Xcode. That Xcode must have the SDK of the deployment target; if it does not, the job fails and the rule above applies. If that happens more than once, register your Mac as a self-hosted runner for this job.
 

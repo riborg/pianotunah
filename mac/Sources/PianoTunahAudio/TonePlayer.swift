@@ -20,7 +20,9 @@ import Synchronization
 /// starts with the first tone, is rebuilt when the output device changes,
 /// and stops ``idleSeconds`` after the last tone fell silent: an output
 /// that runs, even silent, keeps Core Audio from letting the Mac idle-sleep
-/// (`kAudioHardwarePropertySleepingIsAllowed` is off by default).
+/// (`kAudioHardwarePropertySleepingIsAllowed` is off by default). While the
+/// sine is on, the engine is checked every ``sineCheckSeconds``: one that
+/// stopped without a configuration change is built again.
 @MainActor
 public final class TonePlayer {
     /// The steady clock ``audibleUntil`` is in: s since boot.
@@ -38,18 +40,26 @@ public final class TonePlayer {
     private var state: ToneControl?
     private var observer: (any NSObjectProtocol)?
     private var idleStop: Task<Void, Never>?
+    private var sineWatch: Task<Void, Never>?
 
     /// How long the engine keeps running after the last tone, in s: long
     /// enough that tuning, with a tone every few seconds, never waits for
     /// it to start (a Bluetooth output can take a moment to wake).
     public let idleSeconds: Double
+    /// How often the engine is checked while the sine is on, in s.
+    public let sineCheckSeconds: Double
 
-    public init(idleSeconds: Double = 60) {
+    public init(idleSeconds: Double = 60, sineCheckSeconds: Double = 1) {
         self.idleSeconds = idleSeconds
+        self.sineCheckSeconds = sineCheckSeconds
     }
 
     /// The engine is running; for tests.
     var isEngineRunning: Bool { engine?.isRunning == true }
+
+    /// Stops the engine as the system might, with no configuration change
+    /// and the sine left on; for tests.
+    func stopEngineSilently() { engine?.stop() }
 
     /// Until when (``now()``) a tone is audible: ∞ while the sine is on.
     public nonisolated var audibleUntil: Double {
@@ -83,6 +93,7 @@ public final class TonePlayer {
         state.setSine(hz)
         isSineOn = true
         sineHz = hz
+        watchSine()
         publish()
     }
 
@@ -96,6 +107,8 @@ public final class TonePlayer {
     public func stopSine() {
         guard isSineOn else { return }
         isSineOn = false
+        sineWatch?.cancel()
+        sineWatch = nil
         state?.setSine(nil) // cannot fail, unlike a queued command
         releaseUntil = Self.now() + ToneSynth.sineRelease
         publish()
@@ -108,6 +121,8 @@ public final class TonePlayer {
         engine?.stop()
         engine = nil
         state = nil
+        sineWatch?.cancel()
+        sineWatch = nil
         if isSineOn {
             isSineOn = false
             releaseUntil = Self.now()
@@ -134,6 +149,23 @@ public final class TonePlayer {
             guard !Task.isCancelled, let self, !self.isSineOn else { return }
             self.idleStop = nil
             self.shutdown()
+        }
+    }
+
+    /// While the sine is on: an engine that stopped with no configuration
+    /// change (around sleep and wake, say) would leave ``isSineOn`` true
+    /// and the readings gated until ▶ is pressed again, with nothing
+    /// sounding. Built again as for a configuration change; if that fails,
+    /// the sine is off.
+    private func watchSine() {
+        sineWatch?.cancel()
+        let interval = sineCheckSeconds
+        sineWatch = Task { [weak self] in
+            while true {
+                try? await Task.sleep(for: .seconds(interval))
+                guard !Task.isCancelled, let self, self.isSineOn else { return }
+                if !self.isEngineRunning { return self.configurationChanged() }
+            }
         }
     }
 

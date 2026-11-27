@@ -158,12 +158,13 @@ Det finns ingen synk. Appen pratar inte med Go-servern; den enda nätverkstrafik
 Appen uppdaterar sig själv från GitHub Releases med [Sparkle](https://sparkle-project.org) 2 ([ADR 0004](adr/0004-mac-app-updates-itself-from-github.sv.md)).
 
 - **Flödet** är `https://github.com/riborg/pianotunah/releases/latest/download/appcast.xml`, en fil på den senaste releasen. GitHub hoppar över förhandsreleaser och utkast för `latest`, så en `v1.2.0-rc.1` når aldrig appen, samma regel som för imagens tagg `latest`.
+- **Betaflödet:** med *Hämta betaversioner* påslaget (Inställningar › Allmänt) läser appen i stället `https://raw.githubusercontent.com/riborg/pianotunah/appcast/beta.xml` (`PTBetaFeedURL` i Info.plist; `FeedChooser` i `Updater.swift` svarar på Sparkles `feedURLString(for:)` före varje kontroll). Det är appcasten för det nyaste bygget som släppts, förhandsrelease eller inte, så den som provar betor får också nästa vanliga version. Sparkle installerar aldrig ett äldre bygge: slår man av det ligger betan kvar tills en vanlig version är nyare. Bara byggen som uppdaterar sig själva visar inställningen.
 - **Kontroller:** Sparkle kontrollerar en gång om dagen och vid start, laddar ner en ny version i bakgrunden och installerar den när appen avslutas (`SUEnableAutomaticChecks`, `SUAutomaticallyUpdate`). *Sök efter uppdateringar…* i appmenyn kontrollerar direkt.
 - **Uppdateringens signatur:** varje release-zip signeras med en EdDSA-nyckel. Den publika nyckeln ligger i Info.plist (`SUPublicEDKey`), den privata är en hemlighet i Actions. Sparkle vägrar en uppdatering som inte stämmer.
 - **Kodsignering:** inget Apple Developer-konto, alltså inget Developer ID och ingen notarisering. CI signerar med ett självsignerat kodsigneringscertifikat, som skapas en gång och sparas som hemlighet i Actions. Samma certifikat i varje release håller appens identitet stabil, så att macOS behåller mikrofonbehörigheten mellan uppdateringar. Ad hoc-signering skulle ge varje bygge en ny identitet och fråga om mikrofonen igen efter varje uppdatering.
 - **Första installationen:** ladda ner zip-filen från releasen, flytta appen till Program och öppna den. macOS stoppar en app som inte är notariserad första gången; tillåt den en gång under Systeminställningar › Integritet och säkerhet › *Öppna ändå*. Uppdateringar installeras av Sparkle och ska inte fråga igen; kontrollera det vid den första riktiga uppdateringen.
 - **Ingen App Sandbox, ingen hardened runtime.** Sparkle i en app i sandlåda kräver extra installationstjänster och entitlements, vilket inte är värt det för en Mac. Hardened runtime behövs bara för notarisering. Lägg `NSMicrophoneUsageDescription` i Info.plist; utan den stoppas appen första gången den öppnar mikrofonen.
-- **Versionsnummer:** `CFBundleShortVersionString` är taggen utan `v` (1.2.0). `CFBundleVersion`, som Sparkle jämför, är antalet commits fram till taggen, så den växer alltid.
+- **Versionsnummer:** `CFBundleShortVersionString` är taggen utan `v` (1.2.0). `CFBundleVersion`, som Sparkle jämför del för del, är `C.N` från `mac/scripts/build-number.sh`: C är antalet commits fram till taggen, N är 99 för en release och för en förhandsrelease 1–29 (alpha, dev och andra), 31–59 (beta) eller 61–89 (rc), efter dess sista tal. Så är varje bygge nyare än det förra, och en rc äldre än releasen från samma commit, vilket ett rent antal commits inte kunde skilja på. Releaser till och med v1.13.0 hade rena antal (323), äldre än alla dessa.
 
 **Release-jobbet.** Release-arbetsflödet körs på `v*`-taggar. I dag bygger ett jobb imagen och skapar GitHub-releasen. Det ändras så här:
 
@@ -179,7 +180,7 @@ Appen uppdaterar sig själv från GitHub Releases med [Sparkle](https://sparkle-
       - en `sparkle:releaseNotesLink` till GitHub-releasen;
       - en `<enclosure>` vars `url` är taggens egen fil, `releases/download/vX.Y.Z/PianoTunah.zip`, aldrig `latest`-adressen, med `sparkle:edSignature` från `sign_update` och `length` som zip-filens storlek i byte;
    5. sparar zip-filen och appcasten som artefakter i arbetsflödet.
-3. **`publish`** behöver båda. Det laddar upp de två filerna till utkastet och publicerar det (`gh release edit --draft=false`, plus `--prerelease` för taggar med `-`).
+3. **`publish`** behöver båda. Det laddar upp de två filerna till utkastet och publicerar det (`gh release edit --draft=false`, plus `--prerelease` för taggar med `-`). Sedan blir appcasten `beta.xml` på grenen `appcast`, om inte den har ett nyare bygge (`update-beta-feed.sh`). Grenen innehåller bara den filen och CI körs inte på den. Hann en annan release pusha emellan hämtar steget igen och jämför på nytt, upp till fem gånger; det finns ingen concurrency-grupp, eftersom den skulle avbryta en väntande `publish` och lämna dess release som utkast.
 
 **Som det byggdes** (fas 6), tre saker som stegen ovan inte sa:
 - **Den publika nyckeln ligger inte i repot.** `SUPublicEDKey` är bygginställningen `SPARKLE_PUBLIC_KEY`, tom i `mac/project.yml`. Jobbet `mac` räknar fram den ur `SPARKLE_ED_PRIVATE_KEY` (CryptoKit, `mac/scripts/ed-key.sh`), så den privata nyckeln är den enda nyckelhemligheten och de två kan inte gå isär. När nyckeln är tom, som i varje bygge från Xcode och CI, startar appen aldrig Sparkle och har inget *Sök efter uppdateringar…*, så ett utvecklingsbygge uppdaterar aldrig sig självt.
@@ -188,7 +189,7 @@ Appen uppdaterar sig själv från GitHub Releases med [Sparkle](https://sparkle-
 
 Om Mac-jobbet fallerar förblir releasen ett utkast och körningen blir röd. `releases/latest` pekar då kvar på den förra releasen, som har sin appcast, så installerade appar får ingen 404 utan stannar på den version de har. Imagen publiceras i vilket fall som helst. Rätta bygget, eller bygg på din Mac, ladda upp de två filerna till utkastet för hand och publicera det.
 
-Förhandstaggar (`-rc.1`) bygger också Mac-appen, så att en förhandsrelease kan provas genom att laddas ner. Dess appcast läses aldrig, eftersom `latest` hoppar över förhandsreleaser.
+Förhandstaggar (`-beta.1`, `-rc.1`) bygger också Mac-appen. Appar med *Hämta betaversioner* påslaget får dem genom betaflödet; de andra ser dem aldrig, eftersom `latest` hoppar över förhandsreleaser.
 
 **Runner.** Jobbet använder GitHubs nyaste macOS-image och väljer dess nyaste Xcode. Den Xcode måste ha SDK:n för deployment target; annars fallerar jobbet och regeln ovan gäller. Händer det mer än en gång: registrera din Mac som self-hosted runner för det här jobbet.
 

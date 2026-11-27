@@ -11,7 +11,8 @@ source "$(dirname "$0")/lib.sh"
 
 export TAG=v0.0.1
 export REPO=${REPO:-${GITHUB_REPOSITORY:-riborg/pianotunah}}
-BUILD_NUMBER=$(git -C "$mac_dir" rev-list --count HEAD)
+# As a real release numbers it; the fake tag has no commits of its own.
+BUILD_NUMBER=$("$scripts_dir/build-number.sh" "$TAG" "$(git -C "$mac_dir" rev-list --count HEAD)")
 export BUILD_NUMBER
 
 work=$(mktemp -d)

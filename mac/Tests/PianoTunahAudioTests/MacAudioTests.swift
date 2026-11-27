@@ -45,6 +45,28 @@ import Testing
     #expect(!tones.isEngineRunning)
     #expect(!tones.gatesReadings())
 }
+
+/// An output engine that stops with no configuration change (as around
+/// sleep) is built again while the sine is on, so the sine neither sticks
+/// silently nor gates readings for good.
+@MainActor @Test func sineSurvivesAnEngineThatStopsSilently() async throws {
+    let tones = TonePlayer(sineCheckSeconds: 0.1)
+    tones.startSine(20)
+    guard tones.isSineOn else { return } // no output device on this runner
+    tones.stopEngineSilently()
+    #expect(!tones.isEngineRunning)
+    // Up to 2 s: a loaded runner may be slow to rebuild it.
+    for _ in 0..<20 where tones.isSineOn && !tones.isEngineRunning {
+        try await Task.sleep(for: .seconds(0.1))
+    }
+    if tones.isSineOn {
+        #expect(tones.isEngineRunning)
+    } else {
+        #expect(!tones.gatesReadings(now: TonePlayer.now() + 1))
+    }
+    tones.shutdown()
+}
+
 /// Which change of inputs restarts a running input: the one in use gone,
 /// the chosen one back after a fallback, or the default moved while the
 /// default is chosen.

@@ -75,6 +75,9 @@ targets:
         # Sparkle (docs/macos-port.md, step 6). The feed skips pre-releases.
         # The app starts the updater only when SUPublicEDKey is not empty.
         SUFeedURL: https://github.com/riborg/pianotunah/releases/latest/download/appcast.xml
+        # Read instead while "Get beta versions" is on (Updater.swift): the
+        # newest build, pre-release or not, kept by release.yml.
+        PTBetaFeedURL: https://raw.githubusercontent.com/riborg/pianotunah/appcast/beta.xml
         SUPublicEDKey: $(SPARKLE_PUBLIC_KEY)
         SUEnableAutomaticChecks: true
         SUAutomaticallyUpdate: true

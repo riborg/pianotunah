@@ -117,6 +117,9 @@ struct TunerSnapshot: Sendable {
 /// to the library and is left as it is there.
 struct EngineChanges: Sendable {
     var pianoID: String
+    /// Counts the core's hand-overs, so the model knows at quit whether one
+    /// is still on its way to the main thread.
+    var serial = 0
     var keys: [Int: Piano.Measurement]
     var inharmonicity: [Int: Double]
     var partials: [Int: Int]
@@ -180,6 +183,16 @@ final class TunerCore: @unchecked Sendable {
 
     private let deliver: @Sendable (Update) -> Void
     private let tones: TonePlayer
+    /// Frames hand the piano's changes to the library at most this often,
+    /// in s; commands at once. A ringing note changes the piano every
+    /// frame, and each change redraws every view that reads the library
+    /// (the sidebar, the inspector, the window's title and toolbar), about
+    /// 11 times a second. The library saves 2.5 s after a change anyway.
+    let changesInterval: Double
+    /// The steady clock the interval is measured on, in s.
+    private let clock: @Sendable () -> Double
+    private var changesSentAt = -Double.infinity
+    private var changesSerial = 0
     private var engine: Engine?
     /// The start of the input the engine has its analyzer for.
     private var generation: Int?
@@ -202,15 +215,19 @@ final class TunerCore: @unchecked Sendable {
 
     private static let log = Logger(subsystem: "io.github.riborg.pianotunah", category: "engine")
 
-    init(tones: TonePlayer, deliver: @escaping @Sendable (Update) -> Void) {
+    init(tones: TonePlayer, changesInterval: Double = 1,
+         clock: @escaping @Sendable () -> Double = { ProcessInfo.processInfo.systemUptime },
+         deliver: @escaping @Sendable (Update) -> Void) {
         self.tones = tones
+        self.changesInterval = changesInterval
+        self.clock = clock
         self.deliver = deliver
     }
 
     /// Opens `piano` in a new engine, or none; the previous engine's
     /// unsaved changes go out first.
     func open(_ piano: Piano?) {
-        if dirty, let engine { deliver(Update(snapshot: nil, changes: EngineChanges(engine.piano), messages: [])) }
+        if dirty, let engine { deliver(Update(snapshot: nil, changes: changes(engine), messages: [])) }
         engine = nil
         dirty = false
         messages = []
@@ -258,7 +275,7 @@ final class TunerCore: @unchecked Sendable {
             wall: Date().timeIntervalSince1970 * 1000,
             ref: reference
         )
-        publish()
+        publish(fromFrame: true)
     }
 
     /// The microphone stopped.
@@ -318,7 +335,36 @@ final class TunerCore: @unchecked Sendable {
         }
     }
 
-    private func publish() {
+    /// The changes a frame has not handed over yet, for the library to save
+    /// at quit; nil if there are none.
+    func takeChanges() -> EngineChanges? {
+        guard dirty, let engine else { return nil }
+        dirty = false
+        changesSentAt = clock()
+        return changes(engine)
+    }
+
+    /// At quit: the open piano as it is now if anything is unsaved, or if
+    /// a hand-over after `applied` (the latest the model has applied) is
+    /// still queued for the main thread, which never runs it now.
+    func changesAtQuit(applied: Int) -> EngineChanges? {
+        guard dirty || changesSerial > applied, let engine else { return nil }
+        dirty = false
+        changesSentAt = clock()
+        return changes(engine)
+    }
+
+    private func changes(_ engine: Engine) -> EngineChanges {
+        changesSerial += 1
+        var c = EngineChanges(engine.piano)
+        c.serial = changesSerial
+        return c
+    }
+
+    /// The snapshot, and the changes unless a frame handed them over less
+    /// than ``changesInterval`` ago: those wait for a later frame, a
+    /// command, the microphone's stop, another piano or the quit.
+    private func publish(fromFrame: Bool = false) {
         if keysChanged, let engine {
             keys = TunerKeys(engine, revision: keys.revision + 1)
             keysChanged = false
@@ -331,8 +377,11 @@ final class TunerCore: @unchecked Sendable {
             snapshot: engine.map { TunerSnapshot($0, reference: reference, keys: keys, flash: flash, order: order) },
             changes: nil, messages: messages)
         if let engine { update.snapshot?.folds = folds.snapshot(engine) }
-        if dirty, let engine { update.changes = EngineChanges(engine.piano) }
-        dirty = false
+        if engine == nil {
+            dirty = false
+        } else if dirty, !fromFrame || clock() - changesSentAt >= changesInterval {
+            update.changes = takeChanges()
+        }
         messages = []
         deliver(update)
     }
@@ -381,6 +430,8 @@ final class TunerModel {
     private let core: TunerCore
     private let queue: DispatchQueue
     @ObservationIgnored private var openID: String?
+    /// The serial of the latest changes from the core put in the library.
+    @ObservationIgnored private var appliedChanges = 0
     @ObservationIgnored private var noticeTask: Task<Void, Never>?
     /// The sticky notice that a passing one covers; it shows again when
     /// that one is gone, so a survey's result is not lost to a warning.
@@ -403,9 +454,10 @@ final class TunerModel {
         }
         self.tones = tones
         self.core = core
-        session = AudioSession(onFrame: { core.frame($0) })
+        session = AudioSession(onFrame: { core.frame($0) }, onStop: { core.stopAudio() })
         queue = session.analysisQueue
         mailbox.model = self
+        library.beforeQuitSave = { [weak self] in self?.handOverChanges() }
     }
 
     // MARK: - The piano
@@ -452,12 +504,25 @@ final class TunerModel {
     fileprivate func receive(_ update: TunerCore.Update) {
         if let changes = update.changes {
             library.change(changes.pianoID) { changes.apply(to: &$0) }
+            appliedChanges = changes.serial
         }
         // Frames of a piano closed meanwhile are dropped.
         guard let s = update.snapshot, s.pianoID == openID else { return }
         snapshot = s
         followSine(s)
         for m in update.messages { show(m, decimal: DecimalSeparator(Locale.current)) }
+    }
+
+    /// The changes the core still holds back, or has sent but the main
+    /// thread has not run, into the library now: at quit, just before it
+    /// saves. The analysis queue never waits for the main thread, so
+    /// waiting for it here cannot deadlock. (A piano left just before the
+    /// quit, whose last changes are still queued, is not covered.)
+    private func handOverChanges() {
+        let core = core
+        let applied = appliedChanges
+        guard let changes = queue.sync(execute: { core.changesAtQuit(applied: applied) }) else { return }
+        library.change(changes.pianoID) { changes.apply(to: &$0) }
     }
 
     // MARK: - Listening
@@ -472,9 +537,7 @@ final class TunerModel {
     }
 
     func stopListening() {
-        session.stop()
-        let core = core
-        queue.async { core.stopAudio() }
+        session.stop() // and the session's onStop tells the core
     }
 
     func toggleListening() {

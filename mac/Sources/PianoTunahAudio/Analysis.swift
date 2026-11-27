@@ -13,6 +13,13 @@ public struct AnalysisFrame: Sendable {
     /// Counts the starts of the input: when it changes, the sample rate may
     /// have changed and `Engine.startAudio(sampleRate:)` is due.
     public var generation: Int
+
+    public init(samples: [Float], time: Double, sampleRate: Double, generation: Int) {
+        self.samples = samples
+        self.time = time
+        self.sampleRate = sampleRate
+        self.generation = generation
+    }
 }
 
 /// Drives the analysis frames: every 90 ms of samples in a ``RingBuffer``
