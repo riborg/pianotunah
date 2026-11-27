@@ -6,7 +6,7 @@ import SwiftUI
 struct AboutSettings: View {
     private static let repo = URL(string: "https://github.com/riborg/pianotunah")!
     private static let releases = URL(string: "https://github.com/riborg/pianotunah/releases")!
-    private static let fontLicense = URL(string: "https://github.com/riborg/pianotunah/blob/main/web/fonts/OFL.txt")!
+    private static let fontLicense = URL(string: "https://github.com/riborg/pianotunah/blob/main/web/static/fonts/OFL.txt")!
 
     private var version: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–"
