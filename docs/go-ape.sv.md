@@ -230,7 +230,7 @@ Cerisano skriver själv att skelettet av terser i följd inte är nytt [PTJ15]. 
 
 ## Hur metoden passar Piano Tunah
 
-Avsnittet är vår analys, gjord genom att köra `web/js/theory.js` med appens modell för inharmonicitet.
+Avsnittet är vår analys, gjord genom att köra `web/static/js/theory.js` med appens modell för inharmonicitet.
 
 **Det appen redan kan.** Den mäter inharmoniciteten per tangent och kan därför räkna ut oktavspridningen i stället för att stämmaren bedömer den efter gehör. Med bara modellen blir spridningen 2,9 cent på ett 100 cm högt pianino, 1,5 cent på ett 140 cm högt pianino eller en 150 cm lång flygel, 1,2 cent på en 180 cm lång flygel och 0,8 cent på en 275 cm lång flygel. Enligt hans gränser hamnar nästan alla pianon i den stora klassen, och bara konsertflygeln i mellanklassen. Appen räknar också ut svävningen för terser, sexter, decimor och septimdecimor med inharmoniciteten inräknad, så den kan visa hur varje fönster ska låta på just det pianot.
 

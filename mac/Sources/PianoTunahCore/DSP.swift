@@ -1,9 +1,9 @@
 import Foundation
 
 // Signal processing: FFT spectrum, key detection, exact partial measurement
-// and inharmonicity estimation. A port of web/js/dsp.js; the numbers follow
+// and inharmonicity estimation. A port of web/static/js/dsp.js; the numbers follow
 // it operation by operation (see docs/macos-port.md, step 2), so the
-// fixtures from test/fixtures.mjs agree to within an ulp of libm.
+// fixtures from web/test/fixtures.mjs agree to within an ulp of libm.
 //
 // The exact frequency is found in two steps: a rough position from the FFT
 // peak (parabolic interpolation), then the phase difference of a DFT at that

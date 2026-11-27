@@ -21,15 +21,15 @@ The app supports one macOS version and no older ones, so it uses the newest Swif
 mac/
 ├── Package.swift                 PianoTunahCore: pure Swift, no Apple-only frameworks
 ├── Sources/PianoTunahCore/
-│   ├── Theory.swift              ← web/js/theory.js
-│   ├── DSP.swift                 ← web/js/dsp.js (own FFT, see below)
-│   ├── Survey.swift              ← web/js/survey.js
-│   ├── Order.swift               ← web/js/order.js
-│   ├── Format.swift              ← web/js/format.js (decimal separator passed in)
-│   ├── Engine.swift              ← web/js/engine.js (logic taken out of app.js, step 0)
+│   ├── Theory.swift              ← web/static/js/theory.js
+│   ├── DSP.swift                 ← web/static/js/dsp.js (own FFT, see below)
+│   ├── Survey.swift              ← web/static/js/survey.js
+│   ├── Order.swift               ← web/static/js/order.js
+│   ├── Format.swift              ← web/static/js/format.js (decimal separator passed in)
+│   ├── Engine.swift              ← web/static/js/engine.js (logic taken out of app.js, step 0)
 │   └── Piano.swift               the saved document, Codable, same JSON as the web
 ├── Tests/PianoTunahCoreTests/    parity tests against the fixtures
-│   └── Fixtures/                 generated from the JS by test/fixtures.mjs
+│   └── Fixtures/                 generated from the JS by web/test/fixtures.mjs
 └── PianoTunah.xcodeproj          the app: SwiftUI, audio, files, menus
     └── PianoTunah/
         ├── Audio/                MicInput, ToneEngine, Recorder, devices
@@ -52,11 +52,11 @@ About 900 of app.js's 2,177 lines are domain logic mixed with the DOM:
 - survey and order progress (`collectSurvey`, `advanceSurvey`, `trackOrder`, `recheckKeys`);
 - the pass summary, `fitRefToPiano` and the clamping rules.
 
-Move these into a DOM-free `web/js/engine.js` with unit tests, and leave app.js as the DOM layer. The web app gets better tests from this, and the Swift port becomes a module-by-module translation with no guessing about what app.js does. This is the riskiest refactor in the plan, so it is checked by the existing end-to-end tests (`e2e`, `survey`, `order`, `sync`) before anything else starts.
+Move these into a DOM-free `web/static/js/engine.js` with unit tests, and leave app.js as the DOM layer. The web app gets better tests from this, and the Swift port becomes a module-by-module translation with no guessing about what app.js does. This is the riskiest refactor in the plan, so it is checked by the existing end-to-end tests (`e2e`, `survey`, `order`, `sync`) before anything else starts.
 
 ## Step 1: fixtures that prove parity
 
-`test/fixtures.mjs` runs the JS modules and writes JSON files of inputs and expected outputs to `mac/Tests/PianoTunahCoreTests/Fixtures/`. The Swift tests read the same files.
+`web/test/fixtures.mjs` runs the JS modules and writes JSON files of inputs and expected outputs to `mac/Tests/PianoTunahCoreTests/Fixtures/`. The Swift tests read the same files.
 
 - **Exact or within 1e-12:**
   - `computeTargets` across presets, sizes, temperaments, roots and measured B, including outliers;
@@ -203,7 +203,7 @@ Pre-release tags (`-beta.1`, `-rc.1`) build the Mac app too. Apps with *Get beta
 | Phase | Work | Parallel |
 |---|---|---|
 | 0 | engine.js out of app.js, unit tests, the end-to-end tests green | 1 agent; it touches all of app.js |
-| 1 | test/fixtures.mjs, the Swift package skeleton, the CI job in `swift:6.4` | 1 agent |
+| 1 | web/test/fixtures.mjs, the Swift package skeleton, the CI job in `swift:6.4` | 1 agent |
 | 2 | Theory, Survey, Order, Format, DSP, Engine, Piano in Swift | three waves of 3, 2 and 2 agents, one file each, against the fixtures |
 | 3 | Audio: input, tone, recording, devices | 1 agent; needs a Mac to run |
 | 4 | Views and models | 3 agents: dial and folds, keyboard and curve, panels and inspector |

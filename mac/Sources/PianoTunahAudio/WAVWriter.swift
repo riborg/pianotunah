@@ -1,6 +1,6 @@
 import Foundation
 
-/// Mono 32-bit float WAV files, byte for byte as web/js/mic.js's `wavBlob`
+/// Mono 32-bit float WAV files, byte for byte as web/static/js/mic.js's `wavBlob`
 /// writes them: a 44-byte RIFF header (format 3, IEEE float) and the
 /// samples, little-endian. Recordings are at most ``maxSeconds`` long.
 ///

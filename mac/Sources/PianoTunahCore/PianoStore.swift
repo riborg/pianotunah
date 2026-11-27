@@ -1,7 +1,7 @@
 import Foundation
 
 /// The saved pianos: one JSON file per piano, `<id>.json`, in one folder, as
-/// the Go server keeps them in DATA_DIR (main.go). The app passes
+/// the Go server keeps them in DATA_DIR (web/main.go). The app passes
 /// ~/Library/Application Support/Piano Tunah/. A save writes a temporary
 /// file and renames it over the old one, so a file is never half written.
 /// The store does not save on its own or set `updatedAt`; the app does that.
@@ -34,7 +34,7 @@ public struct PianoStore: Sendable {
     }
 
     /// Whether `id` can name a file: 1 to 64 ASCII letters, digits and "-"
-    /// (main.go: idPattern, `^[A-Za-z0-9-]{1,64}$`).
+    /// (web/main.go: idPattern, `^[A-Za-z0-9-]{1,64}$`).
     public static func isValidID(_ id: String) -> Bool {
         let u = id.utf8
         return (1...64).contains(u.count) && u.allSatisfy { c in
@@ -63,7 +63,7 @@ public struct PianoStore: Sendable {
     }
 
     /// The piano saved as `id`, decoded leniently. Its id is always the
-    /// file's name, as in `list()` and on the server (main.go refuses a
+    /// file's name, as in `list()` and on the server (web/main.go refuses a
     /// document whose id is not its URL's): a file copied to a new name
     /// without its id edited is that new piano, and saving it updates that
     /// file instead of making another one.

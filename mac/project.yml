@@ -1,5 +1,5 @@
 # The macOS app, for XcodeGen: `xcodegen generate` in this folder writes
-# PianoTunah.xcodeproj, which is not committed. See DEVELOP.md and
+# PianoTunah.xcodeproj, which is not committed. See docs/develop.md and
 # docs/macos-port.md. The core is the Swift package in this same folder.
 name: PianoTunah
 options:

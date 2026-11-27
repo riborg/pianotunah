@@ -5,7 +5,7 @@ import Foundation
 // what to do with it. The targets give the pitch; checks are intervals to
 // play by ear, with the beat rate the targets give.
 //
-// A port of web/js/order.js. The JS names are given in each doc comment.
+// A port of web/static/js/order.js. The JS names are given in each doc comment.
 
 /// The tuning order for one piano: its steps in the order they are worked
 /// through (JS: the array `buildOrder` returns). A position in it is a step

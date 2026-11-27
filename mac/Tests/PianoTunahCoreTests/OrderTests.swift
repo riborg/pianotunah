@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import PianoTunahCore
 
-// Order.swift against order.json and order-checks.json from test/fixtures.mjs.
+// Order.swift against order.json and order-checks.json from web/test/fixtures.mjs.
 
 private typealias Order = TuningOrder
 

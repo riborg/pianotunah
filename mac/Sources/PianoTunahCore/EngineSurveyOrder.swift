@@ -1,7 +1,7 @@
 import Foundation
 
 // The survey and the tuning order as the engine runs them: a port of the
-// Survey and Tuning order sections of web/js/engine.js. See Engine.swift.
+// Survey and Tuning order sections of web/static/js/engine.js. See Engine.swift.
 
 // MARK: - Survey
 

@@ -1,5 +1,5 @@
 // Number formatting with the language's decimal separator: a port of
-// web/js/format.js.
+// web/static/js/format.js.
 //
 // The digits come from JavaScript's own algorithms (`toFixed`,
 // `toExponential`, `String(number)`), done here on the exact value of the

@@ -4,8 +4,8 @@
 // Run with: npm test
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Engine, FRAME_MS, SPEC_COLS, clampRef, clampSize, clampStrings, clampPartial, stepRange } from '../web/js/engine.js';
-import { DEFAULT_SETTINGS, computeTargets, partialFreq, centsBetween, defaultPartial } from '../web/js/theory.js';
+import { Engine, FRAME_MS, SPEC_COLS, clampRef, clampSize, clampStrings, clampPartial, stepRange } from '../static/js/engine.js';
+import { DEFAULT_SETTINGS, computeTargets, partialFreq, centsBetween, defaultPartial } from '../static/js/theory.js';
 
 const SR = 48000;
 const N = 32768; // what the microphone's ring buffer gives each frame

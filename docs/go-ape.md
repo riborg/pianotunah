@@ -230,7 +230,7 @@ Cerisano says himself that the stacked-thirds skeleton is not new [PTJ15]. What 
 
 ## Fit with Piano Tunah
 
-This section is our analysis, made by running `web/js/theory.js` with the app's inharmonicity model.
+This section is our analysis, made by running `web/static/js/theory.js` with the app's inharmonicity model.
 
 **What the app can already do.** It measures inharmonicity per key, so it can compute the octave spread instead of letting the tuner judge it by ear. With the model alone the spread is 2.9 cents on a 100 cm upright, 1.5 cents on a 140 cm upright or 150 cm grand, 1.2 cents on a 180 cm grand and 0.8 cents on a 275 cm grand. By his limits almost every piano is in the large class, and only the concert grand is medium. The app also computes beat rates for thirds, sixths, tenths and seventeenths with inharmonicity included, so it can show what each window should sound like on this piano.
 

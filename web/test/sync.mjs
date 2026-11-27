@@ -4,9 +4,9 @@
 // when it had unsaved changes of its own.
 // Creates a temporary tuning and deletes it afterwards.
 //   docker run --rm --network container:pianotunah -v "$PWD":/home/pptruser/pt ghcr.io/puppeteer/puppeteer \
-//     node pt/test/sync.mjs http://localhost:8080
+//     node pt/web/test/sync.mjs http://localhost:8080
 import puppeteer from 'puppeteer';
-import { DEFAULT_SETTINGS } from '../web/js/theory.js';
+import { DEFAULT_SETTINGS } from '../static/js/theory.js';
 
 const base = process.argv[2] || 'http://localhost:8080';
 const id = 'sync-' + Date.now().toString(36);

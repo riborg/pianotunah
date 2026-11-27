@@ -79,19 +79,19 @@ The image is built `FROM scratch` (~7 MB) for amd64 and arm64. It holds a static
 
 ### Reverse proxy
 
-Browsers allow the microphone only over https or on `localhost`, so the app runs behind a reverse proxy. Put the proxy settings in `compose.override.yaml`. Compose loads it automatically and git ignores it. [`examples/`](examples) has examples:
+Browsers allow the microphone only over https or on `localhost`, so the app runs behind a reverse proxy. Put the proxy settings in `compose.override.yaml`. Compose loads it automatically and git ignores it. [`docs/examples/`](docs/examples) has examples:
 
-- **Traefik.** Run `cp examples/traefik/compose.override.yaml .`, then set the hostname and the Docker network Traefik is attached to. The override removes the published port.
-- **Caddy.** Run `cp examples/caddy/compose.override.yaml .`, which publishes the port on localhost only, and add [`examples/caddy/Caddyfile`](examples/caddy/Caddyfile) to Caddy's config. Caddy gets the certificate itself. A host that is not reachable from the internet needs the DNS challenge or `tls internal`. If Caddy runs in a container, put it on the same Docker network instead and use `reverse_proxy pianotunah:8080`.
+- **Traefik.** Run `cp docs/examples/traefik/compose.override.yaml .`, then set the hostname and the Docker network Traefik is attached to. The override removes the published port.
+- **Caddy.** Run `cp docs/examples/caddy/compose.override.yaml .`, which publishes the port on localhost only, and add [`docs/examples/caddy/Caddyfile`](docs/examples/caddy/Caddyfile) to Caddy's config. Caddy gets the certificate itself. A host that is not reachable from the internet needs the DNS challenge or `tls internal`. If Caddy runs in a container, put it on the same Docker network instead and use `reverse_proxy pianotunah:8080`.
 
 ### Install as an app
 
 Over https you can install the page as an app with its own window and icon: in Chrome or Edge with the install icon in the address bar, in Safari on a Mac with File → Add to Dock, and on an iPhone with Share → Add to Home Screen. Firefox cannot install web apps. An installed app has no reload button, so it says when the server runs a newer version and offers to reload.
 
-[DEVELOP.md](DEVELOP.md) covers tests, releases and code layout.
+[docs/develop.md](docs/develop.md) covers tests, releases and code layout.
 
 ## License
 
 Piano Tunah is in the public domain under [CC0 1.0](LICENSE). It was written with [Claude](https://claude.ai) as co-programmer. You can use it for anything without attribution.
 
-The exception is the font `web/fonts/accidentals.woff2`, and the same font for the Mac in `mac/PianoTunah/Fonts/Accidentals.ttf`, which has ♭ ♮ ♯ adapted from [Bravura Text](https://github.com/steinbergmedia/bravura) by Steinberg. Its license is the SIL Open Font License 1.1, in [web/fonts/OFL.txt](web/fonts/OFL.txt); the Mac app carries a copy.
+The exception is the font `web/static/fonts/accidentals.woff2`, and the same font for the Mac in `mac/PianoTunah/Fonts/Accidentals.ttf`, which has ♭ ♮ ♯ adapted from [Bravura Text](https://github.com/steinbergmedia/bravura) by Steinberg. Its license is the SIL Open Font License 1.1, in [web/static/fonts/OFL.txt](web/static/fonts/OFL.txt); the Mac app carries a copy.

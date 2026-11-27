@@ -79,19 +79,19 @@ Avbilden byggs `FROM scratch` (~7 MB) för amd64 och arm64. Den innehåller en s
 
 ### Omvänd proxy
 
-Webbläsare tillåter mikrofonen bara över https eller på `localhost`, så appen körs bakom en omvänd proxy. Lägg proxyinställningarna i `compose.override.yaml`. Compose läser in den automatiskt och git ignorerar den. [`examples/`](examples) har exempel:
+Webbläsare tillåter mikrofonen bara över https eller på `localhost`, så appen körs bakom en omvänd proxy. Lägg proxyinställningarna i `compose.override.yaml`. Compose läser in den automatiskt och git ignorerar den. [`docs/examples/`](docs/examples) har exempel:
 
-- **Traefik.** Kör `cp examples/traefik/compose.override.yaml .` och ställ sedan in värdnamnet och det Docker-nätverk Traefik är kopplat till. Override-filen tar bort den publicerade porten.
-- **Caddy.** Kör `cp examples/caddy/compose.override.yaml .`, som publicerar porten bara på localhost, och lägg till [`examples/caddy/Caddyfile`](examples/caddy/Caddyfile) i Caddys konfiguration. Caddy hämtar certifikatet själv. En värd som inte nås från internet behöver DNS-utmaningen eller `tls internal`. Om Caddy körs i en container lägger du den i stället på samma Docker-nätverk och använder `reverse_proxy pianotunah:8080`.
+- **Traefik.** Kör `cp docs/examples/traefik/compose.override.yaml .` och ställ sedan in värdnamnet och det Docker-nätverk Traefik är kopplat till. Override-filen tar bort den publicerade porten.
+- **Caddy.** Kör `cp docs/examples/caddy/compose.override.yaml .`, som publicerar porten bara på localhost, och lägg till [`docs/examples/caddy/Caddyfile`](docs/examples/caddy/Caddyfile) i Caddys konfiguration. Caddy hämtar certifikatet själv. En värd som inte nås från internet behöver DNS-utmaningen eller `tls internal`. Om Caddy körs i en container lägger du den i stället på samma Docker-nätverk och använder `reverse_proxy pianotunah:8080`.
 
 ### Installera som app
 
 Över https kan du installera sidan som en app med eget fönster och egen ikon: i Chrome eller Edge med installationsikonen i adressfältet, i Safari på Mac med Arkiv → Lägg till i Dock och på iPhone med Dela → Lägg till på hemskärmen. Firefox kan inte installera webbappar. En installerad app har ingen uppdateringsknapp, så den säger till när servern kör en nyare version och erbjuder sig att ladda om.
 
-[DEVELOP.sv.md](DEVELOP.sv.md) beskriver tester, releaser och kodens upplägg.
+[docs/develop.sv.md](docs/develop.sv.md) beskriver tester, releaser och kodens upplägg.
 
 ## Licens
 
 Piano Tunah är allmän egendom enligt [CC0 1.0](LICENSE). Den skrevs med [Claude](https://claude.ai) som medprogrammerare. Du får använda den till vad som helst utan att ange källa.
 
-Undantaget är typsnittet `web/fonts/accidentals.woff2`, och samma typsnitt för Mac i `mac/PianoTunah/Fonts/Accidentals.ttf`, som har ♭ ♮ ♯ bearbetade från [Bravura Text](https://github.com/steinbergmedia/bravura) av Steinberg. Dess licens är SIL Open Font License 1.1, i [web/fonts/OFL.txt](web/fonts/OFL.txt); Mac-appen har en kopia.
+Undantaget är typsnittet `web/static/fonts/accidentals.woff2`, och samma typsnitt för Mac i `mac/PianoTunah/Fonts/Accidentals.ttf`, som har ♭ ♮ ♯ bearbetade från [Bravura Text](https://github.com/steinbergmedia/bravura) av Steinberg. Dess licens är SIL Open Font License 1.1, i [web/static/fonts/OFL.txt](web/static/fonts/OFL.txt); Mac-appen har en kopia.
