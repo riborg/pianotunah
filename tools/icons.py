@@ -1,4 +1,4 @@
-"""Builds the logo and icons: web/favicon.svg and the PNG icons in web/icons/
+"""Builds the logo and icons: web/static/favicon.svg and the PNG icons in web/static/icons/
 for the home screen (iPhone), installed app (manifest) and older browsers,
 and the Mac app's icon in mac/PianoTunah/Assets.xcassets/AppIcon.appiconset.
 
@@ -65,11 +65,11 @@ def logo(frame_rx=22, inset=15, r=15):
     return "".join(out)
 
 
-os.makedirs("web/icons", exist_ok=True)
+os.makedirs("web/static/icons", exist_ok=True)
 rounded = logo()
-with open("web/favicon.svg", "w") as f:
+with open("web/static/favicon.svg", "w") as f:
     f.write(rounded + "\n")
-png = lambda svg, size, name: cairosvg.svg2png(bytestring=svg.encode(), write_to=f"web/icons/{name}", output_width=size, output_height=size)
+png = lambda svg, size, name: cairosvg.svg2png(bytestring=svg.encode(), write_to=f"web/static/icons/{name}", output_width=size, output_height=size)
 png(rounded, 32, "icon-32.png")
 png(rounded, 192, "icon-192.png")
 png(rounded, 512, "icon-512.png")

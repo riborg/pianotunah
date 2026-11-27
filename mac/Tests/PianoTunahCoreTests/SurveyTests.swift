@@ -1,7 +1,7 @@
 import Testing
 @testable import PianoTunahCore
 
-/// Fixtures/survey.json, written by test/fixtures.mjs from web/js/survey.js.
+/// Fixtures/survey.json, written by web/test/fixtures.mjs from web/static/js/survey.js.
 private func surveyFixture() throws -> JSON {
     try Fixtures.json("survey.json")
 }
@@ -76,7 +76,7 @@ private func sorted(_ s: Set<Int>) -> [Int] { s.sorted() }
 }
 
 /// Measures or skips the keys the run asks for, as the app does, the way
-/// test/fixtures.mjs plays each run.
+/// web/test/fixtures.mjs plays each run.
 @Test func surveyRuns() throws {
     let runs = try #require(try surveyFixture()["runs"].array)
     #expect(runs.count == 5)

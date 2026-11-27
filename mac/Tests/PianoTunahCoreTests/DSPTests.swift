@@ -3,7 +3,7 @@ import Testing
 @testable import PianoTunahCore
 
 // DSP.swift against dsp.json, the sound in dsp/*.f32 and steady.json from
-// test/fixtures.mjs.
+// web/test/fixtures.mjs.
 //
 // Tolerances: frequencies within 0.01 cent (1200·log2(got/want)); B and f0
 // of the inharmonicity fit within 1e-6 relative; dB values (prom, score,

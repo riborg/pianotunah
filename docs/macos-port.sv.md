@@ -21,15 +21,15 @@ Appen stöder en macOS-version och inga äldre, så den använder de nyaste API:
 mac/
 ├── Package.swift                 PianoTunahCore: ren Swift, inga Apple-specifika ramverk
 ├── Sources/PianoTunahCore/
-│   ├── Theory.swift              ← web/js/theory.js
-│   ├── DSP.swift                 ← web/js/dsp.js (egen FFT, se nedan)
-│   ├── Survey.swift              ← web/js/survey.js
-│   ├── Order.swift               ← web/js/order.js
-│   ├── Format.swift              ← web/js/format.js (decimaltecknet skickas in)
-│   ├── Engine.swift              ← web/js/engine.js (logik som lyfts ur app.js, steg 0)
+│   ├── Theory.swift              ← web/static/js/theory.js
+│   ├── DSP.swift                 ← web/static/js/dsp.js (egen FFT, se nedan)
+│   ├── Survey.swift              ← web/static/js/survey.js
+│   ├── Order.swift               ← web/static/js/order.js
+│   ├── Format.swift              ← web/static/js/format.js (decimaltecknet skickas in)
+│   ├── Engine.swift              ← web/static/js/engine.js (logik som lyfts ur app.js, steg 0)
 │   └── Piano.swift               det sparade dokumentet, Codable, samma JSON som webben
 ├── Tests/PianoTunahCoreTests/    paritetstester mot fixturerna
-│   └── Fixtures/                 genereras från JS av test/fixtures.mjs
+│   └── Fixtures/                 genereras från JS av web/test/fixtures.mjs
 └── PianoTunah.xcodeproj          appen: SwiftUI, ljud, filer, menyer
     └── PianoTunah/
         ├── Audio/                MicInput, ToneEngine, Recorder, enheter
@@ -52,11 +52,11 @@ Ungefär 900 av app.js 2 177 rader är domänlogik som är blandad med DOM:en:
 - hur kartläggningen och arbetsordningen går framåt (`collectSurvey`, `advanceSurvey`, `trackOrder`, `recheckKeys`);
 - sammanfattningen av omgången, `fitRefToPiano` och reglerna för gränsvärden.
 
-Flytta detta till en DOM-fri `web/js/engine.js` med enhetstester, och låt app.js vara kvar som DOM-lagret. Webbappen får bättre tester av det, och Swift-porten blir en översättning modul för modul utan gissningar om vad app.js gör. Det är den mest riskabla omstruktureringen i planen, så den kontrolleras med de befintliga end-to-end-testerna (`e2e`, `survey`, `order`, `sync`) innan något annat påbörjas.
+Flytta detta till en DOM-fri `web/static/js/engine.js` med enhetstester, och låt app.js vara kvar som DOM-lagret. Webbappen får bättre tester av det, och Swift-porten blir en översättning modul för modul utan gissningar om vad app.js gör. Det är den mest riskabla omstruktureringen i planen, så den kontrolleras med de befintliga end-to-end-testerna (`e2e`, `survey`, `order`, `sync`) innan något annat påbörjas.
 
 ## Steg 1: fixturer som bevisar paritet
 
-`test/fixtures.mjs` kör JS-modulerna och skriver JSON-filer med indata och förväntade utdata till `mac/Tests/PianoTunahCoreTests/Fixtures/`. Swift-testerna läser samma filer.
+`web/test/fixtures.mjs` kör JS-modulerna och skriver JSON-filer med indata och förväntade utdata till `mac/Tests/PianoTunahCoreTests/Fixtures/`. Swift-testerna läser samma filer.
 
 - **Exakt eller inom 1e-12:**
   - `computeTargets` över förval, storlekar, tempereringar, grundtoner och uppmätt B, inklusive avvikare;
@@ -203,7 +203,7 @@ Förhandstaggar (`-beta.1`, `-rc.1`) bygger också Mac-appen. Appar med *Hämta 
 | Fas | Arbete | Parallellt |
 |---|---|---|
 | 0 | engine.js ur app.js, enhetstester, end-to-end-testerna gröna | 1 agent; den rör hela app.js |
-| 1 | test/fixtures.mjs, skelettet till Swift-paketet, CI-jobbet i `swift:6.4` | 1 agent |
+| 1 | web/test/fixtures.mjs, skelettet till Swift-paketet, CI-jobbet i `swift:6.4` | 1 agent |
 | 2 | Theory, Survey, Order, Format, DSP, Engine, Piano i Swift | tre vågor med 3, 2 och 2 agenter, en fil var, mot fixturerna |
 | 3 | Ljud: ingång, ton, inspelning, enheter | 1 agent; måste köras på en Mac |
 | 4 | Vyer och modeller | 3 agenter: ratt och utfällbara delar, klaviatur och kurva, paneler och inspektör |

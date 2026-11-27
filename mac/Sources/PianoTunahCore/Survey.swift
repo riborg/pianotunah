@@ -1,4 +1,4 @@
-// Port of web/js/survey.js. The JS names are given in each doc comment.
+// Port of web/static/js/survey.js. The JS names are given in each doc comment.
 
 /// The survey: measuring the piano key by key before tuning, to learn its
 /// inharmonicity (B) and current pitch. No tuning happens during a survey.

@@ -1,7 +1,7 @@
 import Foundation
 import PianoTunahCore
 
-/// The reference tones, as web/js/tone.js makes them with Web Audio
+/// The reference tones, as web/static/js/tone.js makes them with Web Audio
 /// oscillators and gain ramps, rendered sample by sample.
 ///
 /// - Pluck: a short piano-like tone of ten inharmonic partials

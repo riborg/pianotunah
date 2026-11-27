@@ -4,14 +4,14 @@ import assert from 'node:assert/strict';
 import {
   computeTargets, temperamentOffsets, partialFreq, centsBetween, noteName,
   migrateSettings, recommendedOverpull, octaveStretch, bOutliers, intervalBeat, DEFAULT_SETTINGS,
-} from '../web/js/theory.js';
-import { Analyzer, steady, BeatMeter } from '../web/js/dsp.js';
-import { wavBlob, inputIsStale, defaultGroup, RestartBudget } from '../web/js/mic.js';
-import { Saver } from '../web/js/saver.js';
-import { TonePlayer } from '../web/js/tone.js';
-import { fmtC, parseNum } from '../web/js/format.js';
-import { newRun, nextPending, handled, wrongKey } from '../web/js/survey.js';
-import { buildOrder, nextPos, prevPos, clampPos, taskAt, progress, newConfirm, confirmReading, checkRows, tunedBefore, unisonAdvice } from '../web/js/order.js';
+} from '../static/js/theory.js';
+import { Analyzer, steady, BeatMeter } from '../static/js/dsp.js';
+import { wavBlob, inputIsStale, defaultGroup, RestartBudget } from '../static/js/mic.js';
+import { Saver } from '../static/js/saver.js';
+import { TonePlayer } from '../static/js/tone.js';
+import { fmtC, parseNum } from '../static/js/format.js';
+import { newRun, nextPending, handled, wrongKey } from '../static/js/survey.js';
+import { buildOrder, nextPos, prevPos, clampPos, taskAt, progress, newConfirm, confirmReading, checkRows, tunedBefore, unisonAdvice } from '../static/js/order.js';
 
 const SR = 48000;
 const N = 32768;

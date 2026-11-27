@@ -2,7 +2,7 @@ import Foundation
 
 // The values the engine hands out (Engine.swift), and the clamping rules for
 // settings typed or stepped in the app. A port of the parts of
-// web/js/engine.js that are data; the JS names are given in each doc comment.
+// web/static/js/engine.js that are data; the JS names are given in each doc comment.
 
 extension Engine {
     /// How the key is chosen.

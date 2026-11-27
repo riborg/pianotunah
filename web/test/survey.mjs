@@ -2,9 +2,9 @@
 // the microphone that plays whatever key the app asks for. Creates a
 // temporary tuning and deletes it afterwards.
 //   docker run --rm --network container:pianotunah -v "$PWD":/home/pptruser/pt ghcr.io/puppeteer/puppeteer \
-//     node pt/test/survey.mjs http://localhost:8080 [full]
+//     node pt/web/test/survey.mjs http://localhost:8080 [full]
 import puppeteer from 'puppeteer';
-import { computeTargets, partialFreq, DEFAULT_SETTINGS } from '../web/js/theory.js';
+import { computeTargets, partialFreq, DEFAULT_SETTINGS } from '../static/js/theory.js';
 
 const base = process.argv[2] || 'http://localhost:8080';
 const withFull = process.argv[3] === 'full';

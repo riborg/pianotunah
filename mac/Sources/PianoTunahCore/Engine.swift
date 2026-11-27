@@ -6,7 +6,7 @@ import Foundation
 // storage, audio or timers: the frame's samples and times come in as
 // arguments, and what the app must show goes out as events.
 //
-// A port of web/js/engine.js, operation by operation and with the same
+// A port of web/static/js/engine.js, operation by operation and with the same
 // thresholds, so the scenarios in Fixtures/engine/ give the same decisions
 // and the same numbers to within the ulps that V8's and the platform's libm
 // give apart. The survey and the tuning order are in EngineSurveyOrder.swift,

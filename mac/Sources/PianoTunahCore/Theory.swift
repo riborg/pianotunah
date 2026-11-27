@@ -1,8 +1,8 @@
 import Foundation
 
 // Tuning theory: key numbering, temperaments, inharmonicity and stretch.
-// A port of web/js/theory.js; the numbers follow it operation by operation,
-// so the fixtures from test/fixtures.mjs agree to the last bits.
+// A port of web/static/js/theory.js; the numbers follow it operation by operation,
+// so the fixtures from web/test/fixtures.mjs agree to the last bits.
 //
 // Key k = 1...88, where 1 = A0, 49 = A4 and 88 = C8. All deviations are in
 // cents relative to theoretical equal temperament from the reference for A4.

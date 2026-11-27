@@ -1,10 +1,10 @@
 // End-to-end: headless Chrome with a synthetic piano tone as the microphone.
 // Creates a temporary tuning, clicks Start microphone, reads the result and deletes it.
 //   docker run --rm --network container:pianotunah -v "$PWD":/home/pptruser/pt ghcr.io/puppeteer/puppeteer \
-//     node pt/test/e2e.mjs http://localhost:8080 [screenshot dir]
+//     node pt/web/test/e2e.mjs http://localhost:8080 [screenshot dir]
 import { writeFileSync, mkdirSync } from 'node:fs';
 import puppeteer from 'puppeteer';
-import { computeTargets, partialFreq, defaultPartial, DEFAULT_SETTINGS } from '../web/js/theory.js';
+import { computeTargets, partialFreq, defaultPartial, DEFAULT_SETTINGS } from '../static/js/theory.js';
 
 const base = process.argv[2] || 'http://localhost:8080';
 const shots = process.argv[3];

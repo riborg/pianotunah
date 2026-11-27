@@ -185,7 +185,7 @@ finish() {
 # Replace the example below. Set TOTAL_STAGES to match the stages you write.
 # ──────────────────────────────────────────────────────────────────────────
 
-# The one-time setup of the Mac release (DEVELOP.md, "One-time setup on your
+# The one-time setup of the Mac release (docs/develop.md, "One-time setup on your
 # Mac"): the three GitHub secrets that release.yml's mac job needs. Run it on
 # your Mac from anywhere in the repo:
 #

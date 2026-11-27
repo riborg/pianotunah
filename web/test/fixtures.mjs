@@ -1,12 +1,12 @@
 // Writes the parity fixtures for the Swift core (mac/) from the web JS.
 // See docs/macos-port.md, step 1. Run with:
-//   docker run --rm -v "$PWD":/app -w /app node:26-alpine node test/fixtures.mjs
+//   docker run --rm -v "$PWD":/app -w /app node:26-alpine node web/test/fixtures.mjs
 // The output is byte-stable: run it twice and git sees no change. CI checks
 // that the committed fixtures match the JS.
 //
 // The two piano documents are sanitized copies of real pianos in data/,
 // which is not in git. To take new copies (replaces piano/a and piano/b):
-//   docker run --rm -v "$PWD":/app -w /app node:26-alpine node test/fixtures.mjs --pianos data
+//   docker run --rm -v "$PWD":/app -w /app node:26-alpine node web/test/fixtures.mjs --pianos data
 //
 // Numbers that JSON cannot hold are strings: "NaN", "Infinity", "-Infinity"
 // and "-0". Typed arrays are written as plain arrays, Sets as sorted arrays.
@@ -24,17 +24,17 @@ const localStorageStub = {
 };
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageStub, configurable: true, writable: true });
 
-const theory = await import('../web/js/theory.js');
-const dsp = await import('../web/js/dsp.js');
-const survey = await import('../web/js/survey.js');
-const order = await import('../web/js/order.js');
-const format = await import('../web/js/format.js');
-const i18n = await import('../web/js/i18n.js');
-const store = await import('../web/js/store.js');
+const theory = await import('../static/js/theory.js');
+const dsp = await import('../static/js/dsp.js');
+const survey = await import('../static/js/survey.js');
+const order = await import('../static/js/order.js');
+const format = await import('../static/js/format.js');
+const i18n = await import('../static/js/i18n.js');
+const store = await import('../static/js/store.js');
 
 const { computeTargets, temperamentOffsets, migrateSettings, bOutliers, DEFAULT_SETTINGS, TEMPERAMENTS, partialFreq, defaultPartial } = theory;
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const OUT = join(ROOT, 'mac/Tests/PianoTunahCoreTests/Fixtures');
 
 // ---------------------------------------------------------------------------
@@ -697,7 +697,7 @@ const ORDER_SETTINGS = [
 // them, with the events and the state after each step.
 
 {
-  const engine = await import('../web/js/engine.js');
+  const engine = await import('../static/js/engine.js');
   const { Engine, FRAME_MS } = engine;
   const SR = 44100;
   const N = 32768; // the ring buffer the engine reads each frame

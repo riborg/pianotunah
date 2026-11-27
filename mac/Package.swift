@@ -25,7 +25,7 @@ let package = Package(
         .testTarget(
             name: "PianoTunahCoreTests",
             dependencies: ["PianoTunahCore"],
-            // Written by test/fixtures.mjs from the web JS; not edited by hand.
+            // Written by web/test/fixtures.mjs from the web JS; not edited by hand.
             resources: [.copy("Fixtures")]
         ),
         .target(name: "PianoTunahAudio", dependencies: ["PianoTunahCore"]),

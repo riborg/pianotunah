@@ -2,7 +2,7 @@ import Foundation
 import Synchronization
 
 /// Records the unprocessed input, at most ``WAVWriter/maxSeconds``, for a
-/// WAV file (web/js/recorder.js and `Mic.startRecording`).
+/// WAV file (web/static/js/recorder.js and `Mic.startRecording`).
 ///
 /// Threads: the control side (``start(sampleRate:maxSeconds:)``,
 /// ``close()``, ``stop()``) runs on one thread at a time, the main actor in

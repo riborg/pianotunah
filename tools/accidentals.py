@@ -1,4 +1,4 @@
-"""Builds web/fonts/accidentals.woff2 for the web and
+"""Builds web/static/fonts/accidentals.woff2 for the web and
 mac/PianoTunah/Fonts/Accidentals.ttf for the Mac app, the same font: ♭ ♮ ♯
 from Bravura Text, scaled and moved to sit in text like letters (Bravura
 places them for a staff, so ♭ rises far above capitals and ♯ hangs below the
@@ -9,7 +9,7 @@ original font (github.com/steinbergmedia/bravura, redist/otf) as argument:
     "pip install -q fonttools brotli && python tools/accidentals.py BravuraText.otf"
 
 Bravura is under the SIL Open Font License with the Reserved Font Name
-"Bravura", so the modified font has its own name. See web/fonts/OFL.txt.
+"Bravura", so the modified font has its own name. See web/static/fonts/OFL.txt.
 """
 import shutil
 import sys
@@ -66,7 +66,7 @@ fb.setupNameTable({
 fb.setupOS2(sTypoAscender=900, sTypoDescender=-200, usWinAscent=900, usWinDescent=200)
 fb.setupPost()
 fb.save("mac/PianoTunah/Fonts/Accidentals.ttf")
-shutil.copyfile("web/fonts/OFL.txt", "mac/PianoTunah/Fonts/OFL.txt")
+shutil.copyfile("web/static/fonts/OFL.txt", "mac/PianoTunah/Fonts/OFL.txt")
 fb.font.flavor = "woff2"
-fb.save("web/fonts/accidentals.woff2")
+fb.save("web/static/fonts/accidentals.woff2")
 print({n: widths[n] for n in GLYPHS})

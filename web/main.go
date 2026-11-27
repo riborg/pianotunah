@@ -27,7 +27,7 @@ import (
 	"time"
 )
 
-//go:embed web
+//go:embed static
 var webFS embed.FS
 
 const maxBody = 2 << 20
@@ -370,7 +370,7 @@ func main() {
 	mime.AddExtensionType(".woff2", "font/woff2")
 	mime.AddExtensionType(".webmanifest", "application/manifest+json")
 
-	web, err := fs.Sub(webFS, "web")
+	web, err := fs.Sub(webFS, "static")
 	if err != nil {
 		log.Fatal(err)
 	}

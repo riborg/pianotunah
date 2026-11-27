@@ -27,7 +27,7 @@ struct RGB: Equatable {
     }
 }
 
-/// The web version's colors (web/style.css): steel-blue accent, ebony and
+/// The web version's colors (web/static/style.css): steel-blue accent, ebony and
 /// ivory, and green, yellow and red kept for the status. One palette for the
 /// light appearance and one for the dark, chosen by the color scheme.
 struct Palette {

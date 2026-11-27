@@ -2,9 +2,9 @@
 // as the microphone, struck in tune or off on the keys the order asks for.
 // Creates a temporary tuning and deletes it afterwards.
 //   docker run --rm --network container:pianotunah -v "$PWD":/home/pptruser/pt ghcr.io/puppeteer/puppeteer \
-//     node pt/test/order.mjs http://localhost:8080
+//     node pt/web/test/order.mjs http://localhost:8080
 import puppeteer from 'puppeteer';
-import { computeTargets, partialFreq, DEFAULT_SETTINGS } from '../web/js/theory.js';
+import { computeTargets, partialFreq, DEFAULT_SETTINGS } from '../static/js/theory.js';
 
 const base = process.argv[2] || 'http://localhost:8080';
 const T = computeTargets(DEFAULT_SETTINGS);

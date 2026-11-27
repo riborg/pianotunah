@@ -1,12 +1,6 @@
-.git
-data
-README.md
-compose.yaml
-test
-docs
-package.json
-DEVELOP.md
-compose.override.yaml
-.claude
-LICENSE
-examples
+# Only what the image is built from (Dockerfile); everything else stays out
+# of the build context.
+*
+!web/go.mod
+!web/main.go
+!web/static

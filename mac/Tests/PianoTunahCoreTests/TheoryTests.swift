@@ -3,7 +3,7 @@ import Testing
 @testable import PianoTunahCore
 
 // Theory.swift against theory-targets.json, theory-temperaments.json and
-// theory-misc.json from test/fixtures.mjs.
+// theory-misc.json from web/test/fixtures.mjs.
 
 extension JSON {
     /// The fixture value as the core's JSONValue.

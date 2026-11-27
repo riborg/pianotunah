@@ -3,7 +3,7 @@ import Testing
 @testable import PianoTunahAudio
 
 @Test func wavHeaderIsTheWebsByteForByte() {
-    // What wavBlob in web/js/mic.js writes for 3 samples at 48 kHz.
+    // What wavBlob in web/static/js/mic.js writes for 3 samples at 48 kHz.
     let want: [UInt8] = [
         0x52, 0x49, 0x46, 0x46, 0x30, 0x00, 0x00, 0x00, // RIFF, 36 + 12
         0x57, 0x41, 0x56, 0x45, 0x66, 0x6D, 0x74, 0x20, // WAVE fmt

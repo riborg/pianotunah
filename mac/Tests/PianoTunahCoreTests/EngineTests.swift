@@ -3,7 +3,7 @@ import Testing
 @testable import PianoTunahCore
 
 // Engine.swift against the scenarios in Fixtures/engine/ from
-// test/fixtures.mjs: each is replayed step by step, commands and frames of
+// web/test/fixtures.mjs: each is replayed step by step, commands and frames of
 // sound, and after every step the events and a snapshot of the engine must
 // match the web version's. Events, keys, modes, positions and every other
 // decision exactly; numbers within 1e-9 relative, or 1e-9 absolute below 1
@@ -103,7 +103,7 @@ private func refAdviceJSON(_ a: Engine.RefAdvice) -> JSON {
     }
 }
 
-/// The snapshot test/fixtures.mjs takes after each step (snap there).
+/// The snapshot web/test/fixtures.mjs takes after each step (snap there).
 private func snapshot(_ e: Engine) -> [String: JSON] {
     let k = e.key
     let m = e.beatMeter

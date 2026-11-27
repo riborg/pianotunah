@@ -3,7 +3,7 @@
 #
 # Makes the self-signed code-signing certificate the releases are signed
 # with, valid for 10 years, and writes it with its private key to OUT.p12,
-# protected by $MAC_SIGNING_PASSWORD. Run once on your Mac (DEVELOP.md); the
+# protected by $MAC_SIGNING_PASSWORD. Run once on your Mac (docs/develop.md); the
 # CI dry run makes a throwaway one the same way. A new certificate is a new
 # identity for macOS, which then asks for the microphone again, so keep the
 # .p12 and make a new one only when this one expires.

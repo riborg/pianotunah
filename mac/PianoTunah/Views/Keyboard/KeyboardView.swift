@@ -1,7 +1,7 @@
 import PianoTunahCore
 import SwiftUI
 
-/// The keys' own colors (web/style.css: --ivory, --ebony and the rest).
+/// The keys' own colors (web/static/style.css: --ivory, --ebony and the rest).
 struct KeyColors {
     var ivory: RGB
     var ebony: RGB

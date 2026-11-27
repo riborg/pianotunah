@@ -1,6 +1,6 @@
 import Foundation
 
-// The FFT and window of web/js/dsp.js. Pure Swift in Float64, not vDSP (see
+// The FFT and window of web/static/js/dsp.js. Pure Swift in Float64, not vDSP (see
 // docs/adr/0003-mac-core-is-pure-swift.md): the same bit reversal, twiddle
 // tables and butterfly order as the JS, so the spectra agree to the last
 // bits but for an ulp or so from the platform's cos and sin.

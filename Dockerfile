@@ -4,9 +4,8 @@
 FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS build
 ARG TARGETOS TARGETARCH VERSION=dev
 WORKDIR /src
-COPY go.mod ./
-COPY main.go ./
-COPY web ./web
+COPY web/go.mod web/main.go ./
+COPY web/static ./static
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -trimpath -ldflags="-s -w -X main.version=${VERSION}" -o /out/pianotunah . \
  && mkdir -p /out/data

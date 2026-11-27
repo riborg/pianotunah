@@ -4,7 +4,7 @@ import AVFoundation
 import Foundation
 import Synchronization
 
-/// Plays the reference tones (web/js/tone.js): its own AVAudioEngine, so the
+/// Plays the reference tones (web/static/js/tone.js): its own AVAudioEngine, so the
 /// tone works with the microphone off, and an AVAudioSourceNode that renders
 /// a ``ToneSynth`` at the output's sample rate.
 ///

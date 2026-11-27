@@ -3,7 +3,7 @@ import Testing
 @testable import PianoTunahCore
 
 // Piano.swift and PianoStore.swift against piano/{a,b,c}.input.json and
-// .normalized.json from test/fixtures.mjs.
+// .normalized.json from web/test/fixtures.mjs.
 
 private let pianos = ["a", "b", "c"]
 

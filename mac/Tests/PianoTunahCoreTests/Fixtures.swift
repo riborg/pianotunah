@@ -1,6 +1,6 @@
 import Foundation
 
-/// A JSON value as test/fixtures.mjs writes it. Numbers JSON cannot hold are
+/// A JSON value as web/test/fixtures.mjs writes it. Numbers JSON cannot hold are
 /// strings there: "NaN", "Infinity", "-Infinity" and "-0"; `double` reads
 /// those back.
 enum JSON: Equatable, Sendable {
@@ -88,7 +88,7 @@ enum FixtureError: Error {
     case badLength(String, Int)
 }
 
-/// The files in Fixtures/, written by test/fixtures.mjs.
+/// The files in Fixtures/, written by web/test/fixtures.mjs.
 enum Fixtures {
     static var directory: URL {
         get throws {

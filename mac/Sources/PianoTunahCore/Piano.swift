@@ -3,7 +3,7 @@ import Foundation
 // The saved piano document, in exactly the JSON format the web version and
 // the Go server store (docs/adr/0002-mac-app-stores-web-json-locally.md).
 //
-// A port of web/js/store.js: `newTuning`, `normalize` and `duplicateTuning`,
+// A port of web/static/js/store.js: `newTuning`, `normalize` and `duplicateTuning`,
 // plus `exportTuning` and `importTuning` from app.js. The JS names are given
 // in each doc comment.
 //
