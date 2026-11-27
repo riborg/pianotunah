@@ -127,6 +127,8 @@ jobs:
             ${{ runner.temp }}/mac-release/PianoTunah.zip
             ${{ runner.temp }}/mac-release/appcast.xml
           if-no-files-found: error
+          # A re-run of all jobs uploads it again to the same run.
+          overwrite: true
 
   publish:
     needs: [release, mac]
@@ -147,7 +149,31 @@ jobs:
         run: |
           gh release upload "$TAG" mac-release/PianoTunah.zip mac-release/appcast.xml --clobber
           flags=(--draft=false)
-          [[ "$TAG" == *-* ]] && flags+=(--prerelease)
+          if [[ "$TAG" == *-* ]]; then
+            flags+=(--prerelease)
+          else
+            # Latest only if no newer release is: GitHub makes the one just
+            # published latest, so an older tag's draft published after a
+            # newer release would turn the feed (releases/latest) back to
+            # its appcast. Installed apps are not downgraded, but new
+            # downloads and older installs would get the older version.
+            # As in release: only "release not found" means there is none.
+            if ! latest=$(gh release view --json tagName -q .tagName 2> view-error.txt); then
+              if ! grep -qE '^(release not found|HTTP 404)' view-error.txt; then
+                echo "gh release view (the latest) failed:" >&2
+                cat view-error.txt >&2
+                exit 1
+              fi
+              latest=
+            fi
+            newest=$(printf '%s\n' "$TAG" $latest | sort -V | tail -n 1)
+            if [[ "$newest" == "$TAG" ]]; then
+              flags+=(--latest)
+            else
+              echo "$latest is newer and stays latest."
+              flags+=(--latest=false)
+            fi
+          fi
           gh release edit "$TAG" "${flags[@]}"
 
       - uses: actions/checkout@v7

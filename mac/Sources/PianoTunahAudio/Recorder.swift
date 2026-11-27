@@ -9,9 +9,10 @@ import Synchronization
 /// the app. ``append(_:count:stride:)`` runs on the audio thread, from the
 /// same callback that fills the ``RingBuffer``; it neither allocates nor
 /// blocks, and does nothing unless a recording is open. The buffer for the
-/// whole recording is allocated in `start` (46 MB at 96 kHz), so the audio
-/// thread only copies. ``isRecording``, ``recordedSeconds`` and ``isFull``
-/// may be read from any thread.
+/// whole recording is allocated and zeroed in `start` (46 MB at 96 kHz),
+/// so the audio thread only copies, into pages already mapped.
+/// ``isRecording``, ``recordedSeconds`` and ``isFull`` may be read from any
+/// thread.
 ///
 /// A small state machine hands the buffer between the two sides: the audio
 /// thread claims it (open → writing) for one copy and gives it back; the
@@ -70,7 +71,17 @@ public final class Recorder: @unchecked Sendable {
         buffer.load(ordering: .relaxed)?.deallocate()
         let n = max(1, WAVWriter.maxSamples(sampleRate: sampleRate, maxSeconds: maxSeconds))
         limitSamples.store(n, ordering: .relaxed)
-        buffer.store(.allocate(capacity: n), ordering: .relaxed)
+        // Zeroed here, so its pages are mapped before the audio thread
+        // writes to them. Otherwise that thread takes a page fault on each
+        // new page (16 kB, 4096 samples, on Apple silicon), and a callback
+        // that runs late drops samples from the recording. This reduces the
+        // faults, not rules them out: under memory pressure macOS can still
+        // compress pages not yet written (mlock would pin them, at 46 MB of
+        // wired memory). The zeroing, some 10–30 ms on the main actor in
+        // the app, comes once as the recording starts.
+        let samples = UnsafeMutablePointer<Float>.allocate(capacity: n)
+        samples.initialize(repeating: 0, count: n)
+        buffer.store(samples, ordering: .relaxed)
         rateBits.store(sampleRate.bitPattern, ordering: .relaxed)
         count.store(0, ordering: .relaxed)
         state.store(State.open.rawValue, ordering: .releasing)

@@ -68,8 +68,13 @@ struct ContentView: View {
         .onChange(of: library.createdID) {
             if library.createdID != nil { inspectorShown = true }
         }
-        .fileImporter(isPresented: $library.isImporting, allowedContentTypes: [.json]) { result in
-            if case .success(let url) = result { library.importFile(at: url) }
+        // The import panel on a view of its own: SwiftUI has presented only
+        // one of a fileImporter and a fileExporter on the same view in
+        // earlier versions.
+        .background {
+            Color.clear.fileImporter(isPresented: $library.isImporting, allowedContentTypes: [.json]) { result in
+                if case .success(let url) = result { library.importFile(at: url) }
+            }
         }
         .fileExporter(
             isPresented: $library.isExporting,
