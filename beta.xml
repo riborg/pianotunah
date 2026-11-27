@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Piano Tunah</title>
+    <link>https://github.com/riborg/pianotunah</link>
+    <item>
+      <title>1.14.0-beta.1</title>
+      <pubDate>Fri, 27 Nov 2026 16:55:33 +0000</pubDate>
+      <sparkle:version>335.31</sparkle:version>
+      <sparkle:shortVersionString>1.14.0-beta.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+      <sparkle:releaseNotesLink>https://github.com/riborg/pianotunah/releases/tag/v1.14.0-beta.1</sparkle:releaseNotesLink>
+      <enclosure url="https://github.com/riborg/pianotunah/releases/download/v1.14.0-beta.1/PianoTunah.zip" length="3351515" type="application/octet-stream" sparkle:edSignature="LVlrGW/xU2X0km0xHwHxDds2lTzvahSVfE/YUH9zFbae1IxxKbw8lMWP1l0PFinkXBRmTJDlF/EUh59m8LZLAw=="/>
+    </item>
+  </channel>
+</rss>
