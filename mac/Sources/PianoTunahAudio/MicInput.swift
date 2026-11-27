@@ -78,7 +78,12 @@ public final class MicInput {
         if input.isVoiceProcessingEnabled { try? input.setVoiceProcessingEnabled(false) }
         guard !input.isVoiceProcessingEnabled else { throw Failure.voiceProcessing }
 
-        let hardware = input.outputFormat(forBus: 0)
+        // The input bus is the hardware's own format. The output bus can
+        // still show the previous device's just after the switch above, and
+        // the input node does not convert the sample rate: connecting at a
+        // stale rate fails the start or raises an exception Swift cannot
+        // catch.
+        let hardware = input.inputFormat(forBus: 0)
         guard hardware.sampleRate > 0, hardware.channelCount > 0,
               let format = AVAudioFormat(standardFormatWithSampleRate: hardware.sampleRate, channels: hardware.channelCount)
         else { throw Failure.noInput }
