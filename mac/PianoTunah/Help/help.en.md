@@ -30,4 +30,6 @@ In the bass, partial 6, 4 or 2 is measured: the fundamental is weak and laptop m
 
 **Temperament:** how the fifths are distributed within the octave. Equal temperament is the standard for pianos; the historical ones, under Historical temperaments in the piano's settings (⌥⌘I), are for early music.
 
+**Updates:** the app looks for a new version once a day and installs it when you quit; *Check for Updates…* in the app menu looks at once. To try versions before they are released, turn on *Get beta versions* in Settings (⌘,) under General. They may have faults; turned off, the beta stays until a release is newer.
+
 *Keyboard: ← → change key, L locks, A auto, O tuning order, T or space plays or stops the target tone. ⌥⌘I shows the piano's settings, ⌘, the app's settings, ⌘? this help.*

@@ -30,4 +30,6 @@ I basen mäts delton 6, 4 eller 2: grundtonen är svag och laptopmikrofoner hör
 
 **Temperatur:** hur kvinterna fördelas inom oktaven. Liksvävande är standard för piano; de historiska, under Historiska temperaturer i pianots inställningar (⌥⌘I), är för tidig musik.
 
+**Uppdateringar:** appen letar efter en ny version en gång om dagen och installerar den när du avslutar; *Sök efter uppdateringar…* i appmenyn letar genast. Vill du prova versioner innan de släpps, slå på *Hämta betaversioner* i Inställningar (⌘,) under Allmänt. De kan ha fel. Slår du av det igen ligger betan kvar tills en vanlig version är nyare.
+
 *Tangentbord: ← → byter tangent, L låser, A auto, O arbetsordning, T eller mellanslag spelar eller stoppar målton. ⌥⌘I visar pianots inställningar, ⌘, appens inställningar, ⌘? den här hjälpen.*

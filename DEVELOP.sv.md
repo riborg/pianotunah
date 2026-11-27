@@ -87,11 +87,11 @@ Mac-appen uppdaterar sig själv från GitHub Releases med Sparkle ([docs/macos-p
 1. `ci` körs, med `release-dry-run` nedan.
 2. `release` publicerar avbilden och skapar GitHub-releasen som ett **utkast**, eller fortsätter med det som en fallerad körning lämnade.
 3. `mac` kör samtidigt `mac/scripts/release.sh` på en macOS-runner. Det:
-   1. bygger appen i Release, version `1.2.0` från taggen och byggnummer = antalet commits fram till taggen;
+   1. bygger appen i Release, version `1.2.0` från taggen och byggnumret från `build-number.sh` (`C.99` för en release, `C.N` för en förhandsrelease, C = antalet commits fram till taggen);
    2. signerar Sparkles hjälpprogram och sedan appen med ditt certifikat, från en tillfällig nyckelring;
    3. zippar appen, signerar zip-filen med Sparkles `sign_update` och skriver `appcast.xml`;
    4. kontrollerar alltihop med `check-release.sh`.
-4. `publish` laddar upp `PianoTunah.zip` och `appcast.xml` till utkastet och publicerar det. De installerade apparna ser den nya appcasten på `releases/latest/download/appcast.xml` inom ett dygn, laddar ner uppdateringen och installerar den när de avslutas.
+4. `publish` laddar upp `PianoTunah.zip` och `appcast.xml` till utkastet och publicerar det. De installerade apparna ser den nya appcasten på `releases/latest/download/appcast.xml` inom ett dygn, laddar ner uppdateringen och installerar den när de avslutas. Sedan blir `appcast.xml` också betaflödet (`beta.xml` på grenen `appcast`) om dess bygge är det nyaste, så att appar med *Hämta betaversioner* påslaget också får förhandsreleaser som `v1.2.0-beta.1`.
 
 Om `mac` fallerar förblir releasen ett utkast och apparna stannar på den version de har. Rätta felet och kör om de fallerade jobben; körningen fortsätter med samma utkast. Eller kör `mac/scripts/release.sh` på din Mac med variablerna som står överst i skriptet, ladda upp `mac/build/dist/*` till utkastet med `gh release upload --clobber` och publicera det med `gh release edit v1.2.0 --draft=false`.
 

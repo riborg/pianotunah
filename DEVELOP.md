@@ -86,11 +86,11 @@ The Mac app updates itself from GitHub Releases with Sparkle ([docs/macos-port.m
 1. `ci` runs, including `release-dry-run` below.
 2. `release` publishes the image and creates the GitHub Release as a **draft**, or continues with the one a failed run left.
 3. `mac`, at the same time, runs `mac/scripts/release.sh` on a macOS runner. It:
-   1. builds the app in Release, version `1.2.0` from the tag and build number = the number of commits up to the tag;
+   1. builds the app in Release, version `1.2.0` from the tag and the build number from `build-number.sh` (`C.99` for a release, `C.N` for a pre-release, C = the commits up to the tag);
    2. signs Sparkle's helpers and then the app with your certificate, from a temporary keychain;
    3. zips the app, signs the zip with Sparkle's `sign_update`, and writes `appcast.xml`;
    4. checks the lot with `check-release.sh`.
-4. `publish` uploads `PianoTunah.zip` and `appcast.xml` to the draft and publishes it. The installed apps see the new appcast at `releases/latest/download/appcast.xml` within a day, download the update and install it when they quit.
+4. `publish` uploads `PianoTunah.zip` and `appcast.xml` to the draft and publishes it. The installed apps see the new appcast at `releases/latest/download/appcast.xml` within a day, download the update and install it when they quit. Then `appcast.xml` also becomes the beta feed (`beta.xml` on the `appcast` branch) if its build is the newest, so apps with *Get beta versions* on get pre-releases such as `v1.2.0-beta.1` too.
 
 If `mac` fails, the release stays a draft and the apps stay on the version they have. Fix it and re-run the failed jobs; the run continues with the same draft. Or run `mac/scripts/release.sh` on your Mac with the variables listed at its top, upload `mac/build/dist/*` to the draft with `gh release upload --clobber`, and publish it with `gh release edit v1.2.0 --draft=false`.
 
