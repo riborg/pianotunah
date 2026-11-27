@@ -47,6 +47,7 @@ struct PianoTunahApp: App {
         SwiftUI.Settings {
             SettingsView()
                 .environment(tuner)
+                .environment(updater)
                 .environment(inputs)
                 .environment(recording)
         }

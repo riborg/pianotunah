@@ -50,6 +50,7 @@ done
 check "CFBundleShortVersionString" "$(plist_value "$info" CFBundleShortVersionString)" "$version"
 check "LSMinimumSystemVersion" "$(plist_value "$info" LSMinimumSystemVersion)" "$minimum_system"
 check "SUFeedURL" "$(plist_value "$info" SUFeedURL)" "$base/latest/download/appcast.xml"
+check "PTBetaFeedURL" "$(plist_value "$info" PTBetaFeedURL)" "https://raw.githubusercontent.com/$REPO/appcast/beta.xml"
 public_key=$(plist_value "$info" SUPublicEDKey)
 [[ -n "$public_key" ]] || { echo "FAIL  SUPublicEDKey is empty"; failures=$((failures + 1)); }
 

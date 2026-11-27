@@ -131,11 +131,6 @@ jobs:
   publish:
     needs: [release, mac]
     runs-on: ubuntu-latest
-    # One at a time, so two tags pushed close together do not race on the
-    # beta feed's branch; the later waits and then compares its build.
-    concurrency:
-      group: beta-feed
-      cancel-in-progress: false
     permissions:
       contents: write
     steps:
@@ -175,17 +170,28 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote add origin "https://github.com/$GH_REPO.git"
-          if git ls-remote --exit-code --heads origin appcast > /dev/null; then
-            git fetch -q --depth 1 origin appcast
-            git checkout -q -B appcast FETCH_HEAD
-          else
-            git checkout -q --orphan appcast
-          fi
-          ../src/mac/scripts/update-beta-feed.sh ../mac-release/appcast.xml beta.xml
-          git add beta.xml
-          if git diff --cached --quiet; then
-            echo "The beta feed is unchanged."
-          else
+          # Another release may push between the fetch and the push: then
+          # fetch again and compare with its build. No concurrency group, as
+          # that cancels a waiting run, here a release left as a draft.
+          for attempt in 1 2 3 4 5; do
+            if git ls-remote --exit-code --heads origin appcast > /dev/null; then
+              git fetch -q --depth 1 origin appcast
+              git checkout -q -f -B appcast FETCH_HEAD
+            else
+              git checkout -q -f --orphan appcast
+            fi
+            ../src/mac/scripts/update-beta-feed.sh ../mac-release/appcast.xml beta.xml
+            git add beta.xml
+            if git diff --cached --quiet; then
+              echo "The beta feed is unchanged."
+              exit 0
+            fi
             git commit -q -m "Beta feed: $TAG"
-            git push -q origin HEAD:refs/heads/appcast
-          fi
+            if git push -q origin HEAD:refs/heads/appcast; then
+              exit 0
+            fi
+            echo "The beta feed moved meanwhile; trying again ($attempt)."
+            sleep $((attempt * 5))
+          done
+          echo "Could not update the beta feed." >&2
+          exit 1
