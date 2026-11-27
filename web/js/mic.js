@@ -28,6 +28,11 @@ export class Mic {
     return this.stream?.getAudioTracks()[0]?.label || '';
   }
 
+  // The deviceId of the input in use, '' where the browser does not say.
+  get deviceId() {
+    return this.stream?.getAudioTracks()[0]?.getSettings?.().deviceId || '';
+  }
+
   // deviceId: an input from inputs(), or '' for the system default.
   // Throws 'insecure' without https, otherwise getUserMedia errors (e.g. NotAllowedError,
   // OverconstrainedError when the chosen input is not connected).
@@ -130,4 +135,54 @@ export function wavBlob(chunks, sampleRate) {
   str(36, 'data');
   h.setUint32(40, n * 4, true);
   return new Blob([h, ...chunks], { type: 'audio/wav' });
+}
+
+// Whether the input in use is no longer the one to use, now that the inputs
+// changed (as AudioSession.isStale in the Mac app): it was unplugged, the
+// chosen one is back after a fallback to the default, or the default moved
+// while it is in use. used: Mic.deviceId. chosen: the chosen deviceId, ''
+// for the default. defaultGroup: defaultGroup(devices) when the input
+// started. devices: enumerateDevices(), all kinds.
+//
+// As in the Mac app, a default that moves after a fallback is not followed
+// (the chosen input is what the user wants); its return is.
+export function inputIsStale(used, { chosen, usedFallback, defaultGroup: atStart, devices }) {
+  if (!used) return false;
+  const inputs = devices.filter((d) => d.kind === 'audioinput');
+  if (!inputs.some((d) => d.deviceId === used)) return true;
+  if (chosen) return usedFallback && inputs.some((d) => d.deviceId === chosen);
+  const now = defaultGroup(devices);
+  return !!(atStart && now && now !== atStart);
+}
+
+// The groupId of the device behind the default input, '' if the browser
+// does not show it: only Chrome lists the default as an entry of its own,
+// so elsewhere a moved default is not seen. Compared with itself over time,
+// not with the track's groupId, which need not match it.
+export function defaultGroup(devices) {
+  return devices.find((d) => d.kind === 'audioinput' && d.deviceId === 'default')?.groupId || '';
+}
+
+// The automatic restarts of the microphone: at most max in windowMs (as the
+// Mac app's RestartPolicy), so an input whose start changes the devices
+// again, such as a Bluetooth headset switching profiles, cannot loop.
+export class RestartBudget {
+  constructor(max = 3, windowMs = 10000) {
+    this.max = max;
+    this.windowMs = windowMs;
+    this.times = [];
+  }
+
+  // True, and counted, if a restart at now (ms) is within the budget.
+  take(now) {
+    this.times = this.times.filter((t) => now - t < this.windowMs);
+    if (this.times.length >= this.max) return false;
+    this.times.push(now);
+    return true;
+  }
+
+  // The user started the microphone: a fresh budget.
+  reset() {
+    this.times = [];
+  }
 }

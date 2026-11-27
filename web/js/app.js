@@ -9,7 +9,7 @@ import {
 import { listTunings, getTuning, saveTuning, deleteTuning, newTuning, normalize, duplicateTuning } from './store.js';
 import { num, short, fmtC, fmtHz, fmtB, parseNum } from './format.js';
 import { tr, trNodes, lang, locale, setLang, translateDom } from './i18n.js';
-import { Mic } from './mic.js';
+import { Mic, inputIsStale, defaultGroup, RestartBudget } from './mic.js';
 import { TonePlayer } from './tone.js';
 import { Saver } from './saver.js';
 import { enableDiag, diagOn, diag } from './diag.js';
@@ -25,6 +25,12 @@ const LS = { tuning: 'pianotunah.lastTuning', tone: 'pianotunah.toneMode', toneO
 
 const mic = new Mic();
 const tones = new TonePlayer();
+tones.onSineLost = () => {
+  diag(`sine off: audio ${tones.ctx?.state}`);
+  state.refUntil = performance.now() + 800;
+  renderToneButton();
+  message(tr('tone.sineLost'), 'warn');
+};
 // The piano, the key, the readings, the survey and the order. What it does
 // is drawn by onEngine.
 const engine = new Engine({ emit: (type, e) => onEngine(type, e) });
@@ -35,6 +41,8 @@ const state = {
   timer: 0,
   beatPhase: 0,
   micId: '', // chosen input, '' = system default
+  micFallback: false, // the chosen input was missing, so the default is in use
+  micDefaultGroup: '', // the default input's groupId when the mic started (Chrome)
   version: '', // the server's version when the page loaded, see checkVersion
   toneMode: 'piano', // piano | sine
   toneOnKey: false, // clicking a key also plays the tone
@@ -591,8 +599,17 @@ function renderMode() {
 // One start at a time: a second click while the permission prompt is open
 // would start a second stream and analysis timer that are never stopped.
 let micStarting = false;
-async function startMic() {
+const micRestarts = new RestartBudget();
+let micRestartTimer = null;
+// auto: a restart after the inputs changed, within micRestarts' budget; any
+// other start is the user's and gives a fresh one.
+async function startMic({ auto = false } = {}) {
   if (micStarting || mic.running) return;
+  if (!auto) {
+    micRestarts.reset();
+    clearTimeout(micRestartTimer); // the user was faster
+    micRestartTimer = null;
+  }
   micStarting = true;
   try {
     await openMic();
@@ -603,6 +620,7 @@ async function startMic() {
 
 async function openMic() {
   try {
+    state.micFallback = false;
     try {
       await mic.start(state.micId);
     } catch (e) {
@@ -610,6 +628,7 @@ async function openMic() {
       // The chosen input is unplugged. Keep the choice for when it is back.
       message(tr('mic.missing'), 'warn');
       await mic.start();
+      state.micFallback = true;
     }
   } catch (e) {
     diag(`mic failed: ${e.name} ${e.message}`);
@@ -627,6 +646,11 @@ async function openMic() {
   }
   engine.startAudio(mic.sampleRate);
   watchMic();
+  state.micDefaultGroup = '';
+  const stream = mic.stream; // a later start's result must not be overwritten by this one
+  navigator.mediaDevices.enumerateDevices().then((d) => {
+    if (mic.stream === stream) state.micDefaultGroup = defaultGroup(d || []);
+  }).catch(() => {});
   state.timer = setInterval(processFrame, FRAME_MS);
   renderMicButton();
   renderMicList(); // names are known now
@@ -640,12 +664,43 @@ function watchMic() {
   mic.ctx.addEventListener('statechange', () => diag(`audio ${mic.ctx?.state}`));
   for (const ev of ['mute', 'unmute', 'ended']) track?.addEventListener(ev, () => diag(`mic track ${ev}`));
   // Unplugged, or the browser took the input back: the analyser would go on
-  // reading silence.
+  // reading silence. Start again, on the default if the chosen one is gone.
   track?.addEventListener('ended', () => {
     if (mic.stream?.getAudioTracks()[0] !== track) return;
-    stopMic();
-    message(tr('mic.ended'), 'warn', 0);
+    restartMicSoon('track ended');
   });
+}
+
+// The microphone follows the inputs as the Mac app's does: unplugged, it
+// goes on with the default; the chosen one plugged in again, or the default
+// moved, it switches. Stopped now, so no frame reads a dead input, and
+// started 0.5 s later, so a burst of devicechange events gives one restart.
+// Past micRestarts' budget it stays off until the user starts it.
+function restartMicSoon(why) {
+  if (micRestartTimer) return;
+  const recorded = mic.recording; // saved by stopMic, and its message kept
+  if (mic.running) stopMic();
+  if (!micRestarts.take(performance.now())) {
+    diag(`mic restart refused, too many: ${why}`);
+    message(tr('mic.tooOften'), 'warn', 0);
+    return;
+  }
+  diag(`mic restart: ${why}`);
+  micRestartTimer = setTimeout(async () => {
+    micRestartTimer = null;
+    await startMic({ auto: true });
+    if (mic.running && !state.micFallback && !recorded) message(tr('mic.switched', { name: mic.label || tr('mic.default') }), 'info');
+  }, 500);
+}
+
+async function checkMicInputs() {
+  if (!mic.running || micRestartTimer) return;
+  let devices = [];
+  try { devices = (await navigator.mediaDevices.enumerateDevices()) || []; } catch { return; }
+  const now = { chosen: state.micId, usedFallback: state.micFallback, defaultGroup: state.micDefaultGroup, devices };
+  if (mic.running && inputIsStale(mic.deviceId, now)) {
+    restartMicSoon('inputs changed');
+  }
 }
 
 // Every 5 s while the microphone runs: frames analysed, readings, and why the
@@ -1559,6 +1614,7 @@ function bindEvents() {
   navigator.mediaDevices?.addEventListener?.('devicechange', () => {
     diag('audio devices changed');
     renderMicList();
+    checkMicInputs();
   });
   window.addEventListener('error', (e) => diag(`error: ${e.message} (${e.filename?.split('/').pop()}:${e.lineno})`));
   window.addEventListener('unhandledrejection', (e) => diag(`error: ${e.reason?.message || e.reason}`));
@@ -1584,6 +1640,10 @@ function bindEvents() {
     }
     if (e.key === 'Escape' && !$('drawer').hidden) return closeDrawer();
     if (e.target.closest('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
+    // Space plays as T does (as in the Mac app), unless it presses what has the focus.
+    if (e.key === ' ' && e.target.closest('button, a, summary, [role^="menuitem"], [tabindex]')) return;
+    // A held T or space would toggle the sine on and off with each repeat.
+    if (e.repeat && ['t', 'T', ' '].includes(e.key)) return e.preventDefault();
     const action = {
       ArrowLeft: () => selectKey(engine.key - 1),
       ArrowRight: () => selectKey(engine.key + 1),
@@ -1591,6 +1651,7 @@ function bindEvents() {
       a: () => setMode('auto'),
       o: () => setOrderOn(!engine.orderOn),
       t: playCurrent,
+      ' ': playCurrent,
       s: () => ($('drawer').hidden ? openDrawer() : closeDrawer()),
       h: toggleHelp,
     }[e.key.length === 1 ? e.key.toLowerCase() : e.key];
