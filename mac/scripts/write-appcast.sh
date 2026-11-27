@@ -21,7 +21,7 @@ version=$(plist_value "$info" CFBundleShortVersionString)
 minimum_system=$("$scripts_dir/deployment-target.sh")
 
 # Nothing below is escaped for XML, so make sure nothing needs it.
-[[ "$build_number" =~ ^[0-9]+$ ]] || die "CFBundleVersion '$build_number' is not a whole number"
+[[ "$build_number" =~ ^[0-9]+(\.[0-9]+)?$ ]] || die "CFBundleVersion '$build_number' is not C or C.N (build-number.sh)"
 [[ "$version" == "${TAG#v}" ]] || die "CFBundleShortVersionString '$version' is not the tag $TAG without v"
 [[ "$TAG" =~ ^v[0-9A-Za-z.+-]+$ ]] || die "unexpected tag '$TAG'"
 [[ "$REPO" =~ ^[0-9A-Za-z_.-]+/[0-9A-Za-z_.-]+$ ]] || die "unexpected repository '$REPO'"

@@ -7,8 +7,8 @@
 # Environment:
 #   TAG                     the tag, v1.2.0 or v1.2.0-rc.1
 #   REPO                    owner/name (default: $GITHUB_REPOSITORY)
-#   BUILD_NUMBER            CFBundleVersion (default: the number of commits
-#                           up to TAG, so it always grows)
+#   BUILD_NUMBER            CFBundleVersion (default: build-number.sh's for
+#                           TAG, which grows with every release and rc)
 #   MAC_SIGNING_P12         the code-signing certificate and key, base64
 #   MAC_SIGNING_PASSWORD    the .p12's password
 #   SPARKLE_ED_PRIVATE_KEY  Sparkle's private EdDSA key (generate_keys -x)
@@ -29,7 +29,7 @@ for secret in MAC_SIGNING_P12 MAC_SIGNING_PASSWORD SPARKLE_ED_PRIVATE_KEY; do
 done
 [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || die "'$TAG' is not a release tag like v1.2.0"
 version=${TAG#v}
-build_number=${BUILD_NUMBER:-$(git -C "$mac_dir" rev-list --count "$TAG")}
+build_number=${BUILD_NUMBER:-$("$scripts_dir/build-number.sh" "$TAG")}
 out_dir=${OUT_DIR:-$BUILD_DIR/dist}
 
 echo "== Piano Tunah $version, build $build_number, for macOS $("$scripts_dir/deployment-target.sh") or later" >&2

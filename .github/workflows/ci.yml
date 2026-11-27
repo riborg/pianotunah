@@ -147,5 +147,7 @@ jobs:
         run: mac/scripts/select-xcode.sh
       - name: Install XcodeGen
         run: brew install xcodegen
+      - name: Build numbers
+        run: mac/scripts/build-number-test.sh # with the bash 3.2 that release.sh runs on
       - name: Release dry run
         run: mac/scripts/dry-run.sh
