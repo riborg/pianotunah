@@ -6,15 +6,41 @@ import { partialFreq } from './theory.js';
 export class TonePlayer {
   ctx = null;
   sine = null;
+  // Called when the sine was stopped because the sound could not run (as
+  // the Mac app's sine watch). The button would otherwise show ■ over
+  // silence, with the readings held back for a tone nobody hears.
+  onSineLost = null;
+  #lostTimer = 0;
+
+  // ms the sound may stay stopped under a playing sine before it is given up:
+  // room for a resume that is slow, as after a change of audio route.
+  static lostAfterMs = 3000;
 
   get sineOn() {
     return !!this.sine;
   }
 
   #context() {
-    this.ctx ||= new AudioContext();
-    this.ctx.resume?.();
+    if (!this.ctx) {
+      this.ctx = new AudioContext();
+      this.ctx.addEventListener?.('statechange', () => this.#watch());
+    }
+    this.ctx.resume?.()?.catch?.(() => {});
     return this.ctx;
+  }
+
+  // Safari suspends or interrupts the context when the screen locks or
+  // another app takes the sound. Under a playing sine: try to resume it, and
+  // if it still does not run a moment later, stop the sine and say so.
+  #watch() {
+    clearTimeout(this.#lostTimer);
+    if (!this.sine || this.ctx.state === 'running') return;
+    this.ctx.resume?.()?.catch?.(() => {});
+    this.#lostTimer = setTimeout(() => {
+      if (!this.sine || this.ctx.state === 'running') return;
+      this.stopSine();
+      this.onSineLost?.();
+    }, TonePlayer.lostAfterMs);
   }
 
   // Short piano-like tone: ten inharmonic partials that decay, the high ones
@@ -57,6 +83,7 @@ export class TonePlayer {
     osc.connect(g).connect(ctx.destination);
     osc.start(t);
     this.sine = { osc, g };
+    this.#watch(); // a context that does not start runs no sine either
   }
 
   setSine(f) {
@@ -64,6 +91,7 @@ export class TonePlayer {
   }
 
   stopSine() {
+    clearTimeout(this.#lostTimer);
     if (!this.sine) return;
     const { osc, g } = this.sine;
     const t = this.ctx.currentTime;

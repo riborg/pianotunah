@@ -6,8 +6,9 @@ import {
   migrateSettings, recommendedOverpull, octaveStretch, bOutliers, intervalBeat, DEFAULT_SETTINGS,
 } from '../web/js/theory.js';
 import { Analyzer, steady, BeatMeter } from '../web/js/dsp.js';
-import { wavBlob } from '../web/js/mic.js';
+import { wavBlob, inputIsStale, defaultGroup, RestartBudget } from '../web/js/mic.js';
 import { Saver } from '../web/js/saver.js';
+import { TonePlayer } from '../web/js/tone.js';
 import { fmtC, parseNum } from '../web/js/format.js';
 import { newRun, nextPending, handled, wrongKey } from '../web/js/survey.js';
 import { buildOrder, nextPos, prevPos, clampPos, taskAt, progress, newConfirm, confirmReading, checkRows, tunedBefore, unisonAdvice } from '../web/js/order.js';
@@ -515,4 +516,103 @@ test('beats: a pulse twice a second or faster counts, a slower one does not', ()
   g.add(buf, SR, 440, 10);
   g.add(buf, SR, 440, 12);
   assert.ok(g.ts[0] > 11.8);
+});
+
+// The microphone follows the inputs (AudioSession.isStale in the Mac app).
+const input = (deviceId, groupId = deviceId + '-g') => ({ kind: 'audioinput', deviceId, groupId });
+const output = (deviceId) => ({ kind: 'audiooutput', deviceId, groupId: deviceId + '-g' });
+const on = (o) => ({ chosen: '', usedFallback: false, defaultGroup: '', ...o });
+
+test('mic: an input that is unplugged is stale', () => {
+  assert.equal(inputIsStale('usb', on({ chosen: 'usb', devices: [input('built-in'), output('usb')] })), true);
+  assert.equal(inputIsStale('usb', on({ chosen: 'usb', devices: [input('built-in'), input('usb')] })), false);
+});
+
+test('mic: the chosen input plugged in again after a fallback is switched to', () => {
+  assert.equal(inputIsStale('built-in', on({ chosen: 'usb', usedFallback: true, devices: [input('built-in')] })), false);
+  assert.equal(inputIsStale('built-in', on({ chosen: 'usb', usedFallback: true, devices: [input('built-in'), input('usb')] })), true);
+  // After a fallback, a moved default is not followed; the chosen one is waited for.
+  const moved = [input('default', 'usb2-g'), input('built-in'), input('usb2')];
+  assert.equal(inputIsStale('built-in', on({ chosen: 'usb', usedFallback: true, defaultGroup: 'built-in-g', devices: moved })), false);
+});
+
+test('mic: on the default, a default that moved is followed where the browser shows it', () => {
+  const devices = (g) => [input('default', g), input('built-in'), input('usb')];
+  assert.equal(defaultGroup(devices('built-in-g')), 'built-in-g');
+  assert.equal(inputIsStale('default', on({ defaultGroup: 'built-in-g', devices: devices('built-in-g') })), false);
+  assert.equal(inputIsStale('default', on({ defaultGroup: 'built-in-g', devices: devices('usb-g') })), true);
+  // No 'default' entry (Firefox, Safari), or none seen at the start: nothing to compare with.
+  assert.equal(defaultGroup([input('built-in'), input('usb')]), '');
+  assert.equal(inputIsStale('built-in', on({ devices: [input('built-in'), input('usb')] })), false);
+  assert.equal(inputIsStale('default', on({ devices: devices('usb-g') })), false);
+});
+
+test('mic: an input the browser does not name is never stale', () => {
+  assert.equal(inputIsStale('', on({ chosen: 'usb', usedFallback: true, devices: [input('usb')] })), false);
+});
+
+test('mic: at most three automatic restarts in 10 s, a fresh budget from the user', () => {
+  const b = new RestartBudget();
+  assert.deepEqual([0, 1000, 2000, 3000].map((t) => b.take(t)), [true, true, true, false]);
+  assert.equal(b.take(10001), true); // the first has left the window
+  b.reset();
+  assert.deepEqual([10002, 10003, 10004].map((t) => b.take(t)), [true, true, true]);
+});
+
+// The sine is not left on over a sound the browser paused (the Mac app's sine watch).
+class FakeAudioContext extends EventTarget {
+  state = 'running';
+  currentTime = 0;
+  destination = {};
+  allowResume = true;
+  resume() {
+    if (this.allowResume && this.state !== 'running') this.set('running');
+    return Promise.resolve();
+  }
+  set(state) {
+    this.state = state;
+    this.dispatchEvent(new Event('statechange'));
+  }
+  createOscillator() {
+    return { frequency: { value: 0, setTargetAtTime() {} }, connect: (n) => n, start() {}, stop() {} };
+  }
+  createGain() {
+    const param = { value: 0, setValueAtTime() {}, linearRampToValueAtTime() {}, cancelScheduledValues() {} };
+    return { gain: param, connect: (n) => n };
+  }
+}
+
+test('sine: a paused sound that resumes keeps the sine', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  globalThis.AudioContext = FakeAudioContext;
+  const p = new TonePlayer();
+  let lost = 0;
+  p.onSineLost = () => lost++;
+  p.startSine(440);
+  p.ctx.set('suspended'); // resumed at once by the watch
+  t.mock.timers.tick(TonePlayer.lostAfterMs + 1);
+  assert.equal(p.sineOn, true);
+  assert.equal(lost, 0);
+});
+
+test('sine: a sound that stays paused stops the sine and says so', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  globalThis.AudioContext = FakeAudioContext;
+  const p = new TonePlayer();
+  let lost = 0;
+  p.onSineLost = () => lost++;
+  p.startSine(440);
+  p.ctx.allowResume = false;
+  p.ctx.set('interrupted');
+  t.mock.timers.tick(TonePlayer.lostAfterMs - 1);
+  assert.equal(p.sineOn, true);
+  t.mock.timers.tick(2);
+  assert.equal(p.sineOn, false);
+  assert.equal(lost, 1);
+  // Stopped by the user before the watch gives up: no message.
+  p.startSine(440);
+  p.ctx.set('suspended');
+  p.stopSine();
+  t.mock.timers.tick(TonePlayer.lostAfterMs + 1);
+  assert.equal(lost, 1);
 });
