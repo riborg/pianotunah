@@ -403,7 +403,7 @@ final class TunerModel {
         }
         self.tones = tones
         self.core = core
-        session = AudioSession(onFrame: { core.frame($0) })
+        session = AudioSession(onFrame: { core.frame($0) }, onStop: { core.stopAudio() })
         queue = session.analysisQueue
         mailbox.model = self
     }
@@ -472,9 +472,7 @@ final class TunerModel {
     }
 
     func stopListening() {
-        session.stop()
-        let core = core
-        queue.async { core.stopAudio() }
+        session.stop() // and the session's onStop tells the core
     }
 
     func toggleListening() {

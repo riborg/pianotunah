@@ -26,6 +26,10 @@ import AppKit
 /// of its own: never the audio thread, never the main thread. When a
 /// frame's ``AnalysisFrame/generation`` changes, the input was started
 /// again and its sample rate may differ: call `Engine.startAudio` with it.
+/// `onStop` runs on the same queue, after the last frame, when the input
+/// stops and no frames follow: ``stop()``, an input that failed or did
+/// not start, and the restart limit. Call `Engine.stopAudio` there. It
+/// may also come with no input running before it (``stop()`` when stopped).
 @MainActor @Observable
 public final class AudioSession {
     public enum State: Sendable, Equatable {
@@ -73,6 +77,7 @@ public final class AudioSession {
 
     private let mic = MicInput()
     private let analysis: Analysis
+    private let onStop: @Sendable () -> Void
     @ObservationIgnored private var activity: (any NSObjectProtocol)?
     @ObservationIgnored private var wakeObserver: (any NSObjectProtocol)?
     /// Watched for retrying a failed input when the inputs change.
@@ -80,8 +85,12 @@ public final class AudioSession {
     @ObservationIgnored private var policy = RestartPolicy()
     @ObservationIgnored private var restartTask: Task<Void, Never>?
 
-    public init(onFrame: @escaping @Sendable (AnalysisFrame) -> Void) {
+    public init(
+        onFrame: @escaping @Sendable (AnalysisFrame) -> Void,
+        onStop: @escaping @Sendable () -> Void = {}
+    ) {
         analysis = Analysis(onFrame: onFrame)
+        self.onStop = onStop
         mic.onConfigurationChange = { [weak self] in self?.trigger(.configurationChange) }
         devices.onChange = { [weak self] in self?.trigger(.inputsChanged) }
         #if canImport(AppKit)
@@ -132,6 +141,7 @@ public final class AudioSession {
         input = nil
         state = .stopped
         endActivity()
+        inputStopped()
     }
 
     // MARK: Restarts
@@ -218,6 +228,13 @@ public final class AudioSession {
         cutRecording(.inputFailed)
         input = nil
         endActivity()
+        inputStopped()
+    }
+
+    /// Tells the owner on the analysis queue, after the detach queued
+    /// before it, so no frame of the stopped input comes after `onStop`.
+    private func inputStopped() {
+        analysis.queue.async(execute: onStop)
     }
 
     // MARK: Engine
@@ -245,6 +262,9 @@ public final class AudioSession {
             input = nil
             state = .failed(String(describing: error))
             endActivity()
+            // A failed restart had frames (reopen() detached them); a
+            // failed first start had none, and onStop is harmless then.
+            inputStopped()
         }
     }
 
