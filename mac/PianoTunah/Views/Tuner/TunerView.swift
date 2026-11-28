@@ -232,7 +232,9 @@ private struct ToneButton: View {
     }
 }
 
-/// Start and stop, the level, and the input in use.
+/// Start and stop, and the level as a line under the button, as the web's.
+/// The control keeps its size whether listening or not, so the bar beside it
+/// does not move; the input in use is in the button's help and in Settings.
 private struct MicControl: View {
     let level: Double
     let palette: Palette
@@ -241,34 +243,47 @@ private struct MicControl: View {
 
     var body: some View {
         let listening = tuner.isListening
-        VStack(alignment: .trailing, spacing: 4) {
-            Group {
-                if listening {
-                    Button("Stop microphone") { tuner.stopListening() }
-                        .buttonStyle(.bordered)
-                } else {
-                    Button("Start microphone") { tuner.startListening() }
-                        .buttonStyle(.borderedProminent)
-                }
+        Group {
+            if listening {
+                Button { tuner.stopListening() } label: { label(listening) }
+                    .buttonStyle(.bordered)
+            } else {
+                Button { tuner.startListening() } label: { label(listening) }
+                    .buttonStyle(.borderedProminent)
             }
-            // The level, as the web's bar under the button: −80 dB to −8.6 dB.
+        }
+        .accessibilityLabel(listening ? Text("Stop microphone") : Text("Start microphone"))
+        .help(inputInUse)
+        .padding(.bottom, 7)
+        .overlay(alignment: .bottom) {
+            // The level over the button's width: −80 dB to −8.6 dB.
             let fraction = listening ? max(0, min(1, (level + 80) * 1.4 / 100)) : 0
             Capsule()
                 .fill(palette.line.color)
-                .frame(width: 96, height: 3)
-                .overlay(alignment: .leading) {
+                .overlay {
+                    // Cut rather than squeezed, so the ends stay round.
                     Capsule()
                         .fill(palette.accent.color)
-                        .frame(width: 96 * fraction, height: 3)
+                        .mask(alignment: .leading) {
+                            Rectangle().scaleEffect(x: fraction, anchor: .leading)
+                        }
                 }
+                .frame(height: 3)
                 .accessibilityHidden(true)
-            if let input = tuner.session.input {
-                Text(verbatim: input.deviceName.isEmpty ? kHz(input.sampleRate) : input.deviceName + " · " + kHz(input.sampleRate))
-                    .font(.caption)
-                    .foregroundStyle(palette.muted.color)
-                    .lineLimit(1)
-            }
         }
+    }
+
+    /// Both texts, one hidden: the button is as wide as the wider of them.
+    private func label(_ listening: Bool) -> some View {
+        ZStack {
+            Text("Start microphone").opacity(listening ? 0 : 1)
+            Text("Stop microphone").opacity(listening ? 1 : 0)
+        }
+    }
+
+    private var inputInUse: Text {
+        guard let input = tuner.session.input else { return Text(verbatim: "") }
+        return Text(verbatim: input.deviceName.isEmpty ? kHz(input.sampleRate) : input.deviceName + " · " + kHz(input.sampleRate))
     }
 
     private func kHz(_ rate: Double) -> String {

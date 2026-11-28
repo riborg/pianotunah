@@ -67,9 +67,10 @@ public final class MicInput {
         let input = engine.inputNode
 
         var usedFallback = false
+        var chosen: AudioDeviceID?
         if let deviceUID {
             if let id = CoreAudioHAL.input(uid: deviceUID), Self.setDevice(id, of: input) {
-                // In use.
+                chosen = id
             } else {
                 usedFallback = true
             }
@@ -110,7 +111,12 @@ public final class MicInput {
         }
         assert(!input.isVoiceProcessingEnabled, "voice processing must stay off")
 
-        let device = Self.currentDevice(of: input) ?? CoreAudioHAL.defaultInput()
+        // On the system default, the node's current device is an aggregate
+        // macOS makes around it ("CADefaultDeviceAggregate-…"), whose UID is
+        // not among the inputs: the session would take every change of the
+        // inputs for this one being unplugged, and the name means nothing
+        // to the user. The default itself is the device listened to.
+        let device = chosen ?? CoreAudioHAL.defaultInput() ?? Self.currentDevice(of: input)
         let info = Info(
             sampleRate: format.sampleRate,
             channels: Int(format.channelCount),
