@@ -4,13 +4,13 @@
     <title>Piano Tunah</title>
     <link>https://github.com/riborg/pianotunah</link>
     <item>
-      <title>1.15.0-beta.2</title>
-      <pubDate>Sat, 28 Nov 2026 08:51:40 +0000</pubDate>
-      <sparkle:version>353.32</sparkle:version>
-      <sparkle:shortVersionString>1.15.0-beta.2</sparkle:shortVersionString>
+      <title>1.15.0</title>
+      <pubDate>Sat, 28 Nov 2026 09:16:37 +0000</pubDate>
+      <sparkle:version>353.99</sparkle:version>
+      <sparkle:shortVersionString>1.15.0</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <sparkle:releaseNotesLink>https://github.com/riborg/pianotunah/releases/tag/v1.15.0-beta.2</sparkle:releaseNotesLink>
-      <enclosure url="https://github.com/riborg/pianotunah/releases/download/v1.15.0-beta.2/PianoTunah.zip" length="3357500" type="application/octet-stream" sparkle:edSignature="9+AktDCTcir0C0T++URR3pOeKpAfdWuOZjTjjr32cIWUukV/zgY11l8LQgRiCZyWvGj1RxPP+SAbcHVij2ycCA=="/>
+      <sparkle:releaseNotesLink>https://github.com/riborg/pianotunah/releases/tag/v1.15.0</sparkle:releaseNotesLink>
+      <enclosure url="https://github.com/riborg/pianotunah/releases/download/v1.15.0/PianoTunah.zip" length="3357487" type="application/octet-stream" sparkle:edSignature="9HBVwKTxqvX9JIatnjSPQF7tqUtQfCTBW+rZxTlDFQQmdbOwFa7GlAKUlgPOZEDZPW5VuHQluxZR4UgCi6f7Cg=="/>
     </item>
   </channel>
 </rss>
